@@ -1,0 +1,110 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: ColumnsReview 1.0\n"
+"Report-Msgid-Bugs-To: 'nvda-translations@freelists.org'\n"
+"POT-Creation-Date: 2014-12-13 23:54+0100\n"
+"PO-Revision-Date: 2014-12-13 23:54+0100\n"
+"Last-Translator: Alberto Buffolino <a.buffolino@gmail.com>\n"
+"Language-Team: Alberto Buffolino <a.buffolino@gmail.com>\n"
+"Language: it_IT\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-KeywordsList: _;gettext;gettext_noop\n"
+"X-Poedit-Basepath: .\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Generator: Poedit 1.6.5\n"
+"X-Poedit-SearchPath-0: ..\\..\\..\\globalPlugins\n"
+
+#: ..\..\..\globalPlugins/columnsReview.py:77
+msgid ""
+"Returns the header and the content of the list column at the index "
+"corresponding to the number pressed"
+msgstr ""
+"Restituisce l'intestazione e il contenuto della colonna della lista "
+"all'indice corrispondente al numero premuto"
+
+#: ..\..\..\globalPlugins/columnsReview.py:103
+#: ..\..\..\globalPlugins/columnsReview.py:137
+#: ..\..\..\globalPlugins/columnsReview.py:191
+msgid "No more columns available"
+msgstr "Nessun'altra colonna disponibile"
+
+#: ..\..\..\globalPlugins/columnsReview.py:123
+#, python-brace-format
+msgid "From {start} to {end}"
+msgstr "Da {start} a {end}"
+
+#: ..\..\..\globalPlugins/columnsReview.py:126
+msgid "Cycles between a variable number of intervals of ten columns"
+msgstr "Cicla fra un numero variabile di intervalli di dieci colonne"
+
+#: ..\..\..\globalPlugins/columnsReview.py:147
+#: ..\..\..\globalPlugins/columnsReview.py:201
+msgid "Not available;"
+msgstr "Non disponibile;"
+
+#: ..\..\..\globalPlugins/columnsReview.py:153
+#: ..\..\..\globalPlugins/columnsReview.py:208
+#, python-format
+msgid "Copied in clipboard: %s"
+msgstr "Copiato negli appunti: %s"
+
+#: ..\..\..\globalPlugins/columnsReview.py:217
+msgid "Columns Review Settings"
+msgstr "Impostazioni di Columns Review"
+
+#: ..\..\..\globalPlugins/columnsReview.py:222
+msgid "Read the column header"
+msgstr "Leggi l'intestazione della colonna"
+
+#: ..\..\..\globalPlugins/columnsReview.py:226
+msgid "Copy the column header"
+msgstr "Copia l'intestazione della colonna"
+
+#: ..\..\..\globalPlugins/columnsReview.py:230
+msgid "Use numpad keys to navigate through the columns"
+msgstr "Usa i tasti del tastierino numerico per navigare fra lecolonne "
+
+#: ..\..\..\globalPlugins/columnsReview.py:235
+msgid ""
+"Insert the char after \"0\" in your keyboard layout, or another char as you "
+"like:"
+msgstr ""
+"Inserisci il carattere dopo lo \"0\" nel tuo layout tastiera, o un altro "
+"carattere a piacere"
+
+#: ..\..\..\globalPlugins/columnsReview.py:281
+msgid "Columns Review Settings..."
+msgstr "Columns Review - Impostazioni..."
+
+#~ msgid "Columns Review"
+#~ msgstr "Columns Review"
+
+#~ msgid ""
+#~ "Provides 10+1 gestures to read and copy the list columns header and "
+#~ "content"
+#~ msgstr ""
+#~ "Fornisce 10+1 comandi per leggere e copiare l'intestazione e il contenuto "
+#~ "delle colonne di una lista"
+
+#, fuzzy
+#~ msgid "Copied in clipboard: %(header)s%(content)s"
+#~ msgstr "Copiato negli appunti: %s"
+
+#~ msgid "From "
+#~ msgstr "Da "
+
+#~ msgid " to "
+#~ msgstr " a "
+
+#~ msgid "Column %d: out of bounds"
+#~ msgstr "Colonna %d: fuori intervallo"
+
+#, fuzzy
+#~ msgid ""
+#~ "Read and copy the header in addition to the content of the chosen column"
+#~ msgstr "Leggi e copia l'intestazione oltre al testo della colonna scelta"
+
+#~ msgid "Column %d: out of bound"
+#~ msgstr "Column %d: out of bound"
