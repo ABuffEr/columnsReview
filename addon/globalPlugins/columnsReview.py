@@ -72,11 +72,11 @@ class ColumnsReview(RowWithFakeNavigation):
 			self.bindGesture("kb:NVDA+control+0", "readColumn")
 			self.bindGesture("kb:NVDA+control+%s" %switchChar, "changeInterval")
 
-	def script_readColumn(self,gesture):
-		raise NotImplementedError
+	#def script_readColumn(self,gesture):
+		#raise NotImplementedError
 
 	# Translators: documentation of script to read columns
-	script_readColumn.__doc__ = _("Returns the header and the content of the list column at the index corresponding to the number pressed")
+	#script_readColumn.__doc__ = _("Returns the header and the content of the list column at the index corresponding to the number pressed")
 
 	def getIndex(self, key):
 		"""get index from key pressed"""
@@ -110,7 +110,8 @@ class ColumnsReview(RowWithFakeNavigation):
 		# the tens (or hundred and tens, etc) in max interval available
 		# not considering the last column
 		if not self.mod:
-			self.mod = int(str(self.childCount+9)[:-1])
+			#self.mod = int(str(self.childCount+9)[:-1])
+			self.mod = self.childCount/10
 		# now, we can scroll ten by ten among intervals, using modulus
 		self.tens = (self.tens+1)%self.mod
 		start = str(self.tens if self.tens != 0 else "")+"1"
