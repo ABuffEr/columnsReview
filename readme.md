@@ -1,5 +1,7 @@
 # Columns Review #
 *   Author: Alberto Buffolino.
+*   Download [development version][2]
+
 
 Columns Review is an add-on to read and copy items in a list column by column. It supports lists (see below) with a potentially infinite number of columns, and you can navigate them using keyboard or numpad digits. The column headers can be read but not copied, or vice versa.
 
@@ -23,3 +25,6 @@ All gestures are associated on and only on supported lists, when these are not e
 
 ## Changes for 1.0 ##
 *   Initial release.
+
+
+[2]: http://addons.nvda-project.org/files/get.php?file=cr-dev
