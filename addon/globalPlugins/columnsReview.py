@@ -162,7 +162,15 @@ class MozillaTable(ColumnsReview32):
 		"""Returns the column header in Mozilla applications"""
 		# get the list with headers, excluding last
 		# that is not a header, but for settings
-		headers = self.parent.firstChild.children[:-1]
+		if self.role != controlTypes.ROLE_TREEVIEWITEM:
+			headers = self.parent.firstChild.children[:-1]
+		# else, we manage the thread grouping case
+		else:
+			level = self._get_IA2Attributes()["level"]
+			parent = self
+			for n in range(0,int(level)):
+				parent = parent.simpleParent
+			headers = parent.firstChild.children[:-1]
 		# now, headers is not ordered as on screen,
 		# but we deduce the order thanks to top location of each header
 		# so, first useful list
@@ -288,7 +296,7 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 			pass
 
 	def chooseNVDAObjectOverlayClasses(self, obj, clsList):
-		if obj.role == controlTypes.ROLE_TABLEROW and obj.windowClassName == u'MozillaWindowClass':
+		if obj.windowClassName == u'MozillaWindowClass' and obj.role in [controlTypes.ROLE_TABLEROW, controlTypes.ROLE_TREEVIEWITEM]:
 			clsList.insert(0, MozillaTable)
 		elif obj.role == controlTypes.ROLE_LISTITEM:
 			if obj.windowClassName == "SysListView32" or u'WindowsForms10.SysListView32.app.0' in obj.windowClassName:
