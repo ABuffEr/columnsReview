@@ -46,8 +46,6 @@ class ColumnsReview(RowWithFakeNavigation):
 	# of current interval (except the last column,
 	# for which it's tens+1)
 	tens = 0
-	# the variable modulus useful in changeInterval script
-	mod = 0
 	# the variable which keeps track of the last chosen column number
 	lastColumn = None
 
@@ -105,17 +103,16 @@ class ColumnsReview(RowWithFakeNavigation):
 			ui.message(_("No more columns available"))
 			return
 		# below operations are complicated to explain, so, for example:
-		# in a list with 13 columns (childCount = 13), adding 9 to 13
-		# we are sure that str(13+9)[:-1] return digits except last, that is,
+		# in a list with 13 columns (childCount = 13),
+		# we are sure that 13/10+1 return digits except last, that is,
 		# the tens (or hundred and tens, etc) in max interval available
 		# not considering the last column
-		if not self.mod:
-			self.mod = int(str(self.childCount+9)[:-1])
+		mod = self.childCount/10+1
 		# now, we can scroll ten by ten among intervals, using modulus
-		self.tens = (self.tens+1)%self.mod
+		self.tens = (self.tens+1)%mod
 		start = str(self.tens if self.tens != 0 else "")+"1"
 		# nice: announce what is the absolutely last column available
-		if self.tens == self.mod-1:
+		if self.tens == mod-1:
 			end = str(self.childCount)
 		else:
 			# last column in interval has tens+1 as tens,
