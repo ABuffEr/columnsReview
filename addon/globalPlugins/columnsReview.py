@@ -105,11 +105,11 @@ class ColumnsReview(RowWithFakeNavigation):
 			ui.message(_("No more columns available"))
 			return
 		# below operations are complicated to explain, so, for example:
-		# in a list with 13 columns (childCount = 13), adding 9 to 13
-		# we are sure that str(13+9)[0] return the first digit, that is,
-		# the tens in max interval available
+		# in a list with 13 columns (childCount = 13),
+		# we are sure that 13/10+1 return digits except last, that is,
+		# the tens (or hundred and tens, etc) in max interval available
 		# not considering the last column
-		mod = int(str(self.childCount+9)[0])
+		mod = self.childCount/10+1
 		# now, we can scroll ten by ten among intervals, using modulus
 		self.tens = (self.tens+1)%mod
 		start = str(self.tens if self.tens != 0 else "")+"1"
@@ -164,7 +164,15 @@ class MozillaTable(ColumnsReview32):
 		"""Returns the column header in Mozilla applications"""
 		# get the list with headers, excluding last
 		# that is not a header, but for settings
-		headers = self.parent.firstChild.children[:-1]
+		if self.role != controlTypes.ROLE_TREEVIEWITEM:
+			headers = self.parent.firstChild.children[:-1]
+		# else, we manage the thread grouping case
+		else:
+			level = self._get_IA2Attributes()["level"]
+			parent = self
+			for n in range(0,int(level)):
+				parent = parent.simpleParent
+			headers = parent.firstChild.children[:-1]
 		# now, headers is not ordered as on screen,
 		# but we deduce the order thanks to top location of each header
 		# so, first useful list
@@ -290,7 +298,7 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 			pass
 
 	def chooseNVDAObjectOverlayClasses(self, obj, clsList):
-		if obj.role == controlTypes.ROLE_TABLEROW and obj.windowClassName == u'MozillaWindowClass':
+		if obj.windowClassName == u'MozillaWindowClass' and obj.role in [controlTypes.ROLE_TABLEROW, controlTypes.ROLE_TREEVIEWITEM]:
 			clsList.insert(0, MozillaTable)
 		elif obj.role == controlTypes.ROLE_LISTITEM:
 			if obj.windowClassName == "SysListView32" or u'WindowsForms10.SysListView32.app.0' in obj.windowClassName:
