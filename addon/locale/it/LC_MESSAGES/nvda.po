@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ColumnsReview 1.0\n"
 "Report-Msgid-Bugs-To: 'nvda-translations@freelists.org'\n"
-"POT-Creation-Date: 2014-12-17 12:35+0100\n"
-"PO-Revision-Date: 2014-12-17 12:38+0100\n"
+"POT-Creation-Date: 2015-02-06 23:21+0100\n"
+"PO-Revision-Date: 2015-02-06 23:21+0100\n"
 "Last-Translator: Alberto Buffolino <a.buffolino@gmail.com>\n"
 "Language-Team: Alberto Buffolino <a.buffolino@gmail.com>\n"
 "Language: it_IT\n"
@@ -17,7 +17,9 @@ msgstr ""
 "X-Poedit-SearchPath-0: ..\\..\\..\\globalPlugins\n"
 
 #. Translators: documentation of script to read columns
-#: addon\globalPlugins\columnsReview.py:77
+#: addon\globalPlugins\columnsReview\__init__.py:80
+#: addon\globalPlugins\columnsReview\__init__.py:162
+#: addon\globalPlugins\columnsReview\__init__.py:230
 msgid ""
 "Returns the header and the content of the list column at the index "
 "corresponding to the number pressed"
@@ -26,58 +28,63 @@ msgstr ""
 "all'indice corrispondente al numero premuto"
 
 #. Translators: message when digit pressed exceed the columns number
-#: addon\globalPlugins\columnsReview.py:103
-#: addon\globalPlugins\columnsReview.py:137
-#: addon\globalPlugins\columnsReview.py:191
+#: addon\globalPlugins\columnsReview\__init__.py:106
+#: addon\globalPlugins\columnsReview\__init__.py:139
+#: addon\globalPlugins\columnsReview\__init__.py:206
 msgid "No more columns available"
 msgstr "Nessun'altra colonna disponibile"
 
 #. Translators: message when you change interval in a list with more ten columns
-#: addon\globalPlugins\columnsReview.py:123
+#: addon\globalPlugins\columnsReview\__init__.py:126
 #, python-brace-format
 msgid "From {start} to {end}"
 msgstr "Da {start} a {end}"
 
 #. Translators: documentation for script to change interval
-#: addon\globalPlugins\columnsReview.py:126
+#: addon\globalPlugins\columnsReview\__init__.py:129
 msgid "Cycles between a variable number of intervals of ten columns"
 msgstr "Cicla fra un numero variabile di intervalli di dieci colonne"
 
 #. Translators: message when cell in specified column is empty
-#: addon\globalPlugins\columnsReview.py:147
-#: addon\globalPlugins\columnsReview.py:201
+#: addon\globalPlugins\columnsReview\__init__.py:149
+#: addon\globalPlugins\columnsReview\__init__.py:216
 msgid "Not available;"
 msgstr "Non disponibile;"
 
 #. Translators: message announcing what was copied
-#: addon\globalPlugins\columnsReview.py:153
-#: addon\globalPlugins\columnsReview.py:208
+#: addon\globalPlugins\columnsReview\__init__.py:155
+#: addon\globalPlugins\columnsReview\__init__.py:223
 #, python-format
 msgid "Copied in clipboard: %s"
 msgstr "Copiato negli appunti: %s"
 
 #. Translators: title of settings dialog
-#: addon\globalPlugins\columnsReview.py:217
+#: addon\globalPlugins\columnsReview\__init__.py:236
 msgid "Columns Review Settings"
 msgstr "Impostazioni di Columns Review"
 
-#. Translators: label for first checkbox in settings
-#: addon\globalPlugins\columnsReview.py:222
+#. Translators: label for read-header checkbox in settings
+#: addon\globalPlugins\columnsReview\__init__.py:241
 msgid "Read the column header"
 msgstr "Leggi l'intestazione della colonna"
 
-#. Translators: label for 2nd checkbox in settings
-#: addon\globalPlugins\columnsReview.py:226
+#. Translators: label for copy-header checkbox in settings
+#: addon\globalPlugins\columnsReview\__init__.py:245
 msgid "Copy the column header"
 msgstr "Copia l'intestazione della colonna"
 
-#. Translators: label for 3rd checkbox in settings
-#: addon\globalPlugins\columnsReview.py:230
+#. Translators: Help message for sub-sizer of keys choices
+#: addon\globalPlugins\columnsReview\__init__.py:250
+msgid "Choose the keys you want to use with numbers:"
+msgstr "Scegliere i tasti che si desidera utilizzare coi numeri:"
+
+#. Translators: label for numpad keys checkbox in settings
+#: addon\globalPlugins\columnsReview\__init__.py:259
 msgid "Use numpad keys to navigate through the columns"
 msgstr "Usa i tasti del tastierino numerico per navigare fra lecolonne "
 
 #. Translators: label for edit field in settings, visible if previous checkbox is disabled
-#: addon\globalPlugins\columnsReview.py:235
+#: addon\globalPlugins\columnsReview\__init__.py:264
 msgid ""
 "Insert the char after \"0\" in your keyboard layout, or another char as you "
 "like:"
@@ -86,7 +93,7 @@ msgstr ""
 "carattere a piacere"
 
 #. Translators: menu item in preferences
-#: addon\globalPlugins\columnsReview.py:281
+#: addon\globalPlugins\columnsReview\__init__.py:314
 msgid "Columns Review Settings..."
 msgstr "Columns Review - Impostazioni..."
 

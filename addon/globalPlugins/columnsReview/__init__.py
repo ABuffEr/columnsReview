@@ -1,7 +1,7 @@
 # -*- coding: UTF-8 -*-
 """
-@author: Alberto Buffolino and other contributors
-Last update: 13.12.2014
+@author: Alberto Buffolino
+Last update: 06.02.2015
 Code inspired by EnhancedListViewSupport plugin,
 by Peter Vagner and contributors
 """
@@ -11,38 +11,39 @@ import controlTypes
 import api
 import ui
 from NVDAObjects.behaviors import RowWithFakeNavigation
-from NVDAObjects.UIA import UIA # For UIA implementations only, chiefly 64-bit.
-from appModules.explorer import GridTileElement, GridListTileElement # Specific for Start Screen tiles.
 import scriptHandler
 import gui
 import os
 from configobj import *
 import globalVars
 import wx
+from msg import message as msg
 
 addonHandler.initTranslation()
 
 # load or create the .ini file
-iniFile = os.path.join(os.path.dirname(__file__), "settings.ini").decode("mbcs")
+iniFile = os.path.join(os.path.dirname(__file__), "..", "settings.ini").decode("mbcs")
 myConf = ConfigObj(iniFile, encoding = "UTF8")
 if not os.path.isfile(iniFile):
 	myConf["general"] = {"readHeader": "True", "copyHeader": "True"}
 	myConf["keyboard"] = {"useNumpadKeys": "False", "switchChar": "-"}
+	myConf["gestures"] = {"NVDA": "True", "control": "True", "alt": "False", "shift": "False", "windows": "False"}
 	myConf.write()
 readHeader = bool(0 if myConf["general"]["readHeader"] == "False" else 1)
 copyHeader = bool(0 if myConf["general"]["copyHeader"] == "False" else 1)
 useNumpadKeys = bool(0 if myConf["keyboard"]["useNumpadKeys"] == "False" else 1)
 switchChar = myConf["keyboard"]["switchChar"]
 
-class ColumnsReview(RowWithFakeNavigation):
-	"""the main abstract class that generates gestures
-	and calculate index; subclasses must override it"""
+def getBaseKeys():
+	chosenKeys = filter(lambda f: f[1] == "True", myConf["gestures"].items())
+	baseKeys = '+'.join([x[0] for x in chosenKeys])
+	return baseKeys
 
-	# set category
-	_addonDir = os.path.join(os.path.dirname(__file__), "..").decode("mbcs")
-	_curAddon = addonHandler.Addon(_addonDir)
-	_addonSummary = _curAddon.manifest['summary']
-	scriptCategory = unicode(_addonSummary)
+baseKeys = getBaseKeys()
+
+class ColumnsReview(RowWithFakeNavigation):
+	"""The main abstract class that generates gestures and calculate index;
+	classes that define new list types must override it"""
 
 	# the variable representing tens
 	# of current interval (except the last column,
@@ -56,21 +57,21 @@ class ColumnsReview(RowWithFakeNavigation):
 		# obviously, empty lists are not handled
 		if self.childCount < 0:
 			return
-		global useNumpadKeys, switchChar
+		global useNumpadKeys, switchChar, baseKeys
 		# a string useful for defining gestures
 		nk = "numpad" if useNumpadKeys else ""
 		# bind gestures from 1 to 9
 		for n in xrange(1,10):
-			self.bindGesture("kb:NVDA+control+%s%d" %(nk, n), "readColumn")
+			self.bindGesture("kb:%s+%s%d" %(baseKeys, nk, n), "readColumn")
 		if useNumpadKeys:
 			# map numpadMinus for 10th column
-			self.bindGesture("kb:NVDA+control+numpadMinus", "readColumn")
+			self.bindGesture("kb:%s+numpadMinus" %baseKeys, "readColumn")
 			# map numpadPlus to change interval
-			self.bindGesture("kb:NVDA+control+numpadPlus", "changeInterval")
+			self.bindGesture("kb:%s+numpadPlus" %baseKeys, "changeInterval")
 		else:
 			# do same things for no numpad case
-			self.bindGesture("kb:NVDA+control+0", "readColumn")
-			self.bindGesture("kb:NVDA+control+%s" %switchChar, "changeInterval")
+			self.bindGesture("kb:%s+0" %baseKeys, "readColumn")
+			self.bindGesture("kb:%s+%s" %(baseKeys, switchChar), "changeInterval")
 
 	def script_readColumn(self,gesture):
 		raise NotImplementedError
@@ -131,7 +132,6 @@ class ColumnsReview32(ColumnsReview):
 # for SysListView32 or WindowsForms10.SysListView32.app.0.*
 
 	def script_readColumn(self, gesture):
-		"""main script to read columns"""
 		# ask for index
 		num = self.getIndex(gesture.mainKeyName[-1])
 		if num > self.childCount:
@@ -158,22 +158,28 @@ class ColumnsReview32(ColumnsReview):
 			self.lastColumn = num
 			ui.message(header+content)
 
+	# Translators: documentation of script to read columns
+	script_readColumn.__doc__ = _("Returns the header and the content of the list column at the index corresponding to the number pressed")
+
 class MozillaTable(ColumnsReview32):
+	"""Class to manage columns headers in Mozilla list"""
 
 	def _getColumnHeader(self, index):
 		"""Returns the column header in Mozilla applications"""
 		# get the list with headers, excluding last
-		# that is not a header, but for settings
+		# that is not a header, but for settings only
 		if self.role != controlTypes.ROLE_TREEVIEWITEM:
 			headers = self.parent.firstChild.children[:-1]
 		# else, we manage the thread grouping case
 		else:
+			# tree-level of current obj
 			level = self._get_IA2Attributes()["level"]
+			# we go up level by level
 			parent = self
 			for n in range(0,int(level)):
 				parent = parent.simpleParent
 			headers = parent.firstChild.children[:-1]
-		# now, headers is not ordered as on screen,
+		# now, headers are not ordered as on screen,
 		# but we deduce the order thanks to top location of each header
 		# so, first useful list
 		origLocs = [x.location[0] for x in headers]
@@ -188,11 +194,10 @@ class MozillaTable(ColumnsReview32):
 		return headers[ordIndexes[index-1]].name
 
 class ColumnsReview64(ColumnsReview):
-# for 64-bit systems (DirectUIHWND window class)
-# see ColumnsReview32 class for more comments
+	"""for 64-bit systems (DirectUIHWND window class)
+	see ColumnsReview32 class for more comments"""
 
 	def script_readColumn(self,gesture):
-		"""main script to read columns"""
 		num = self.getIndex(gesture.mainKeyName[-1])
 		# num is passed as is, excluding the first position (0) of the children list
 		# containing an icon, so this check in this way
@@ -221,22 +226,36 @@ class ColumnsReview64(ColumnsReview):
 			self.lastColumn = num
 			ui.message(header+content)
 
+	# Translators: documentation of script to read columns
+	script_readColumn.__doc__ = _("Returns the header and the content of the list column at the index corresponding to the number pressed")
+
 class ColumnsReviewSettingsDialog(gui.SettingsDialog):
+	"""Class to define settings dialog."""
 
 	# Translators: title of settings dialog
 	title = _("Columns Review Settings")
 
 	def makeSettings(self, settingsSizer):
 		global readHeader, copyHeader, useNumpadKeys, switchChar
-		# Translators: label for first checkbox in settings
+		# Translators: label for read-header checkbox in settings
 		self._readHeader = wx.CheckBox(self, label = _("Read the column header"))
 		self._readHeader.SetValue(readHeader)
 		settingsSizer.Add(self._readHeader)
-		# Translators: label for 2nd checkbox in settings
+		# Translators: label for copy-header checkbox in settings
 		self._copyHeader = wx.CheckBox(self, label = _("Copy the column header"))
 		self._copyHeader.SetValue(copyHeader)
 		settingsSizer.Add(self._copyHeader)
-		# Translators: label for 3rd checkbox in settings
+		keysSizer = wx.StaticBoxSizer(wx.StaticBox(self,
+			# Translators: Help message for sub-sizer of keys choices
+			label=_("Choose the keys you want to use with numbers:")), wx.VERTICAL)
+		self.keysChks = []
+		for key in myConf["gestures"].items():
+			chk = wx.CheckBox(self, label = msg(key[0]))
+			chk.SetValue(True if key[1] == "True" else False)
+			keysSizer.Add(chk)
+			self.keysChks.append((key[0], chk))
+		settingsSizer.Add(keysSizer)
+		# Translators: label for numpad keys checkbox in settings
 		self._useNumpadKeys = wx.CheckBox(self, label = _("Use numpad keys to navigate through the columns"))
 		self._useNumpadKeys.Bind(wx.EVT_CHECKBOX, self.onCheck)
 		self._useNumpadKeys.SetValue(useNumpadKeys)
@@ -258,15 +277,19 @@ class ColumnsReviewSettingsDialog(gui.SettingsDialog):
 	def onOk(self, evt):
 		super(ColumnsReviewSettingsDialog, self).onOk(evt)
 		# Update Configuration and global variables
-		global readHeader, copyHeader, useNumpadKeys, switchChar
+		global readHeader, copyHeader, useNumpadKeys, switchChar, baseKeys
 		readHeader = self._readHeader.IsChecked()
 		myConf["general"]["readHeader"] = str(readHeader)
 		copyHeader = self._copyHeader.IsChecked()
 		myConf["general"]["copyHeader"] = str(copyHeader)
+		for item in self.keysChks:
+			status = item[1].IsChecked()
+			myConf["gestures"][item[0]] = str(status)
 		useNumpadKeys = self._useNumpadKeys.IsChecked()
 		myConf["keyboard"]["useNumpadKeys"] = str(useNumpadKeys)
 		myConf["keyboard"]["switchChar"] = switchChar = self._switchChar.GetValue()
 		myConf.write()
+		baseKeys = getBaseKeys()
 
 	def onCheck(self, evt):
 		if self._useNumpadKeys.IsChecked():
@@ -303,7 +326,7 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 		elif obj.role == controlTypes.ROLE_LISTITEM:
 			if obj.windowClassName == "SysListView32" or u'WindowsForms10.SysListView32.app.0' in obj.windowClassName:
 				clsList.insert(0, ColumnsReview32)
-			elif obj.windowClassName == "DirectUIHWND" and isinstance(obj, UIA):
-				# Windows 8/8.1/10 Start Screen tiles should not expose column info.
-				if not obj.UIAElement.cachedClassName in ("GridTileElement", "GridListTileElement"):
-					clsList.insert(0, ColumnsReview64)
+			elif obj.windowClassName == "DirectUIHWND":
+				clsList.insert(0, ColumnsReview64)
+		else:
+			return

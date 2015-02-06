@@ -19,7 +19,7 @@ addon_info = {
 	# Translators: Long description to be shown for this add-on on add-on information from add-ons manager
 	"addon_description" : _("""Provides 10+1 gestures to read and copy the list columns header and content"""),
 	# version
-	"addon_version" : "1.0-dev",
+	"addon_version" : "2.0-dev",
 	# Author(s)
 	"addon_author" : u"Alberto Buffolino <a.buffolino@gmail.com>",
 	# URL for the add-on documentation support
@@ -33,7 +33,7 @@ import os.path
 
 # Define the python files that are the sources of your add-on.
 # You can use glob expressions here, they will be expanded.
-pythonSources = [os.path.join("addon", "globalPlugins", "*.py"), os.path.join("addon", "installTasks.py")]
+pythonSources = [os.path.join("addon", "globalPlugins", "columnsReview", "*.py"), os.path.join("addon", "installTasks.py")]
 
 # Files that contain strings for translation. Usually your python sources
 i18nSources = pythonSources + ["buildVars.py"]
