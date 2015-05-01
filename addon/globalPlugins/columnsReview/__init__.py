@@ -11,6 +11,8 @@ import controlTypes
 import api
 import ui
 from NVDAObjects.behaviors import RowWithFakeNavigation
+from NVDAObjects.UIA import UIA # For UIA implementations only, chiefly 64-bit.
+from appModules.explorer import GridTileElement, GridListTileElement # Specific for Start Screen tiles.
 import scriptHandler
 import gui
 import os
@@ -326,7 +328,9 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 		elif obj.role == controlTypes.ROLE_LISTITEM:
 			if obj.windowClassName == "SysListView32" or u'WindowsForms10.SysListView32.app.0' in obj.windowClassName:
 				clsList.insert(0, ColumnsReview32)
-			elif obj.windowClassName == "DirectUIHWND":
-				clsList.insert(0, ColumnsReview64)
+			elif obj.windowClassName == "DirectUIHWND" and isinstance(obj, UIA):
+				# Windows 8/8.1/10 Start Screen tiles should not expose column info.
+				if not obj.UIAElement.cachedClassName in ("GridTileElement", "GridListTileElement"):
+					clsList.insert(0, ColumnsReview64)
 		else:
 			return
