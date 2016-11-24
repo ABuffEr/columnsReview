@@ -7,19 +7,22 @@ by Peter Vagner and contributors
 """
 import addonHandler
 import globalPluginHandler
-import controlTypes
+import controlTypes as ct
 import api
 import ui
 from NVDAObjects.behaviors import RowWithFakeNavigation
 from NVDAObjects.UIA import UIA # For UIA implementations only, chiefly 64-bit.
 from appModules.explorer import GridTileElement, GridListTileElement # Specific for Start Screen tiles.
-import scriptHandler
+from scriptHandler import isScriptWaiting, getLastScriptRepeatCount
 import gui
 import os
 from configobj import *
 import globalVars
 import wx
 from msg import message as msg
+import winUser
+#from logHandler import log
+from gui.guiHelper import *
 
 addonHandler.initTranslation()
 
@@ -45,7 +48,8 @@ baseKeys = getBaseKeys()
 
 class ColumnsReview(RowWithFakeNavigation):
 	"""The main abstract class that generates gestures and calculate index;
-	classes that define new list types must override it"""
+	classes that define new list types must override it,
+	defining (or eventually re-defining) methods of this class."""
 
 	# the variable representing tens
 	# of current interval (except the last column,
@@ -64,16 +68,19 @@ class ColumnsReview(RowWithFakeNavigation):
 		nk = "numpad" if useNumpadKeys else ""
 		# bind gestures from 1 to 9
 		for n in xrange(1,10):
-			self.bindGesture("kb:%s+%s%d" %(baseKeys, nk, n), "readColumn")
+			self.bindGesture("kb:%s+%s%d"%(baseKeys, nk, n), "readColumn")
 		if useNumpadKeys:
 			# map numpadMinus for 10th column
-			self.bindGesture("kb:%s+numpadMinus" %baseKeys, "readColumn")
-			# map numpadPlus to change interval
-			self.bindGesture("kb:%s+numpadPlus" %baseKeys, "changeInterval")
+			self.bindGesture("kb:%s+numpadMinus"%baseKeys, "readColumn")
+			# ...numpadPlus to change interval
+			self.bindGesture("kb:%s+numpadPlus"%baseKeys, "changeInterval")
+			# ...and enter to headers manager
+			self.bindGesture("kb:%s+numpadEnter"%baseKeys, "manageHeaders")
 		else:
 			# do same things for no numpad case
-			self.bindGesture("kb:%s+0" %baseKeys, "readColumn")
-			self.bindGesture("kb:%s+%s" %(baseKeys, switchChar), "changeInterval")
+			self.bindGesture("kb:%s+0"%baseKeys, "readColumn")
+			self.bindGesture("kb:%s+%s"%(baseKeys, switchChar), "changeInterval")
+			self.bindGesture("kb:%s+enter"%baseKeys, "manageHeaders")
 
 	def script_readColumn(self,gesture):
 		raise NotImplementedError
@@ -83,20 +90,18 @@ class ColumnsReview(RowWithFakeNavigation):
 
 	def getIndex(self, key):
 		"""get index from key pressed"""
-		# if key is not a digit
-		# that is, "s" from numpadMinus
-		if not key.isdigit():
-			num = 0
-		else:
-			# get the digit pressed as index
-			num = int(key)
+		if key == "numpadMinus":
+			# we assume minus as 0 for a comfortable use
+			key = "0"
+		# get the digit pressed as index
+		num = int(key[-1])
 		# if num == 0, from numpad or keyboard
-		if num == 0:
+		if not num:
 			# set it to 10, 20, etc
 			num = int(str(self.tens+1)+"0")
 		else:
 			# set it to 9, 13, 22, etc
-			num = int(str(self.tens if self.tens != 0 else "")+str(num))
+			num = int(str(self.tens if self.tens else "")+str(num))
 		return num
 
 	def script_changeInterval(self, gesture):
@@ -108,14 +113,14 @@ class ColumnsReview(RowWithFakeNavigation):
 			ui.message(_("No more columns available"))
 			return
 		# below operations are complicated to explain, so, for example:
-		# in a list with 13 columns (childCount = 13),
-		# we are sure that 13/10+1 return digits except last, that is,
+		# in a list with 13 columns (childCount == 13),
+		# we are sure that 13/10+1 (integer operation) let us to control the growth of 
 		# the tens (or hundred and tens, etc) in max interval available
 		# not considering the last column
 		mod = self.childCount/10+1
 		# now, we can scroll ten by ten among intervals, using modulus
 		self.tens = (self.tens+1)%mod
-		start = str(self.tens if self.tens != 0 else "")+"1"
+		start = str(self.tens if self.tens else "")+"1"
 		# nice: announce what is the absolutely last column available
 		if self.tens == mod-1:
 			end = str(self.childCount)
@@ -130,12 +135,28 @@ class ColumnsReview(RowWithFakeNavigation):
 	# Translators: documentation for script to change interval
 	script_changeInterval.__doc__ = _("Cycles between a variable number of intervals of ten columns")
 
+	def script_manageHeaders(self, gesture):
+		def run():
+			gui.mainFrame.prePopup()
+			d = HeadersDialog(None, self.appModule.appName, self.getHeadersParent().children)
+			if d is not None:
+				d.Show()
+			gui.mainFrame.postPopup()
+		wx.CallAfter(run)
+
+	# Translators: documentation for script to manage headers
+	script_manageHeaders.__doc__ = _("Provides a dialog for interactions with list column headers")
+
+	def getHeadersParent(self):
+		"""return the navigator object with header objects as children."""
+		raise NotImplementedError
+
 class ColumnsReview32(ColumnsReview):
 # for SysListView32 or WindowsForms10.SysListView32.app.0.*
 
 	def script_readColumn(self, gesture):
 		# ask for index
-		num = self.getIndex(gesture.mainKeyName[-1])
+		num = self.getIndex(gesture.mainKeyName.rsplit('+', 1)[-1])
 		if num > self.childCount:
 			# Translators: message when digit pressed exceed the columns number
 			ui.message(_("No more columns available"))
@@ -143,14 +164,14 @@ class ColumnsReview32(ColumnsReview):
 		obj = self.getChild(num-1)
 		# generally, an empty name is a None object,
 		# in Mozilla, instead, it's a unicode object with length 0
-		if obj is not None and obj.name is not None and len(obj.name) != 0:
+		if obj is not None and obj.name is not None and len(obj.name):
 			# obj.name is the column content
 			content = unicode(obj.name+";")
 		else:
 			# Translators: message when cell in specified column is empty
 			content = _("Not available;")
 		global readHeader, copyHeader
-		if scriptHandler.getLastScriptRepeatCount() != 0 and self.lastColumn == num:
+		if getLastScriptRepeatCount() and self.lastColumn == num:
 			header = (unicode(self._getColumnHeader(num)+": ") if copyHeader else "")
 			if api.copyToClip(header+content):
 				# Translators: message announcing what was copied
@@ -163,15 +184,26 @@ class ColumnsReview32(ColumnsReview):
 	# Translators: documentation of script to read columns
 	script_readColumn.__doc__ = _("Returns the header and the content of the list column at the index corresponding to the number pressed")
 
+	def getHeadersParent(self):
+		return self.parent.children[-1]
+
 class MozillaTable(ColumnsReview32):
-	"""Class to manage columns headers in Mozilla list"""
+	"""Class to manage column headers in Mozilla list"""
 
 	def _getColumnHeader(self, index):
 		"""Returns the column header in Mozilla applications"""
-		# get the list with headers, excluding last
-		# that is not a header, but for settings only
-		if self.role != controlTypes.ROLE_TREEVIEWITEM:
-			headers = self.parent.firstChild.children[:-1]
+		# get the list with headers, excluding these
+		# which are not header (i.e. for settings, in Thunderbird)
+		headers = filter(lambda i: i.role == ct.ROLE_TABLECOLUMNHEADER, self.getHeadersParent().children)
+		# now, headers are not ordered as on screen,
+		# but we deduce the order thanks to top location of each header
+		headers.sort(key=lambda i: i.location)
+		return headers[index-1].name
+
+	def getHeadersParent(self):
+		# when thread view is disabled
+		if self.role != ct.ROLE_TREEVIEWITEM:
+			return self.parent.firstChild
 		# else, we manage the thread grouping case
 		else:
 			# tree-level of current obj
@@ -180,27 +212,14 @@ class MozillaTable(ColumnsReview32):
 			parent = self
 			for n in range(0,int(level)):
 				parent = parent.simpleParent
-			headers = parent.firstChild.children[:-1]
-		# now, headers are not ordered as on screen,
-		# but we deduce the order thanks to top location of each header
-		# so, first useful list
-		origLocs = [x.location[0] for x in headers]
-		# list with top locations ordered
-		ordLocs = [x for x in origLocs]
-		ordLocs.sort()
-		# list with indexes of headers in real order
-		ordIndexes = []
-		for item in ordLocs:
-			ordIndexes.append(origLocs.index(item))
-		# finally, return the header
-		return headers[ordIndexes[index-1]].name
+			return parent.firstChild
 
 class ColumnsReview64(ColumnsReview):
 	"""for 64-bit systems (DirectUIHWND window class)
 	see ColumnsReview32 class for more comments"""
 
 	def script_readColumn(self,gesture):
-		num = self.getIndex(gesture.mainKeyName[-1])
+		num = self.getIndex(gesture.mainKeyName.rsplit('+', 1)[-1])
 		# num is passed as is, excluding the first position (0) of the children list
 		# containing an icon, so this check in this way
 		if num > self.childCount-1:
@@ -217,7 +236,7 @@ class ColumnsReview64(ColumnsReview):
 			# Translators: message when cell in specified column is empty
 			content = _("Not available;")
 		global readHeader, copyHeader
-		if scriptHandler.getLastScriptRepeatCount() != 0 and self.lastColumn == num:
+		if getLastScriptRepeatCount() and self.lastColumn == num:
 			# obj.name is the column header
 			header = (unicode(self.getChild(num).name+": ") if copyHeader else "")
 			if api.copyToClip(header+content):
@@ -230,6 +249,9 @@ class ColumnsReview64(ColumnsReview):
 
 	# Translators: documentation of script to read columns
 	script_readColumn.__doc__ = _("Returns the header and the content of the list column at the index corresponding to the number pressed")
+
+	def getHeadersParent(self):
+		return filter(lambda i: i.role == ct.ROLE_HEADER, self.parent.children)[0]
 
 class ColumnsReviewSettingsDialog(gui.SettingsDialog):
 	"""Class to define settings dialog."""
@@ -302,6 +324,52 @@ class ColumnsReviewSettingsDialog(gui.SettingsDialog):
 			self.settingsSizer.Show(self._switchChar)
 		self.Fit()
 
+class HeadersDialog(wx.Dialog):
+	"""define dialog for column headers management."""
+
+	def __init__(self, parent, appName, headersList):
+		title = ' - '.join([_("Headers manager"), appName])
+		super(HeadersDialog, self).__init__(parent, title=title)
+		helperSizer = BoxSizerHelper(self, wx.HORIZONTAL)
+		choices = [x.name if x.name else _("Unnamed header") for x in headersList]
+		self.list = helperSizer.addLabeledControl(_("Headers:"), wx.ListBox, choices=choices)
+		self.list.SetSelection(0)
+		self.headersList = headersList
+		actions = ButtonHelper(wx.VERTICAL)
+		leftClickAction = actions.addButton(self, label=_("Left click"))
+		leftClickAction.Bind(wx.EVT_BUTTON, self.onLeftClick)
+		rightClickAction = actions.addButton(self, label=_("Right click"))
+		rightClickAction.Bind(wx.EVT_BUTTON, self.onRightClick)
+		helperSizer.addItem(actions)
+		mainSizer = wx.BoxSizer(wx.VERTICAL)
+		mainSizer.Add(helperSizer.sizer, border=10, flag=wx.ALL)
+		mainSizer.Fit(self)
+		self.SetSizer(mainSizer)
+		for item in [self.list, leftClickAction, rightClickAction]:
+			item.Bind(wx.EVT_KEY_UP, self.onEscape)
+
+	def onLeftClick(self, event):
+		index = self.list.GetSelection()
+		headerObj = self.headersList[index]
+		api.moveMouseToNVDAObject(headerObj)
+		winUser.mouse_event(winUser.MOUSEEVENTF_LEFTDOWN,0,0,None,None)
+		winUser.mouse_event(winUser.MOUSEEVENTF_LEFTUP,0,0,None,None)
+		ui.message(_("%s header clicked")%headerObj.name)
+		self.Destroy()
+
+	def onRightClick(self, event):
+		index = self.list.GetSelection()
+		headerObj = self.headersList[index]
+		api.moveMouseToNVDAObject(headerObj)
+		winUser.mouse_event(winUser.MOUSEEVENTF_RIGHTDOWN,0,0,None,None)
+		winUser.mouse_event(winUser.MOUSEEVENTF_RIGHTUP,0,0,None,None)
+		ui.message(_("%s header clicked")%headerObj.name)
+		self.Destroy()
+
+	def onEscape(self, event):
+		if event.GetKeyCode() == wx.WXK_ESCAPE:
+			self.Destroy()
+
 class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 
 	def __init__(self, *args, **kwargs):
@@ -323,14 +391,14 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 			pass
 
 	def chooseNVDAObjectOverlayClasses(self, obj, clsList):
-		if obj.windowClassName == u'MozillaWindowClass' and obj.role in [controlTypes.ROLE_TABLEROW, controlTypes.ROLE_TREEVIEWITEM]:
+		if obj.windowClassName == u'MozillaWindowClass' and obj.role in [ct.ROLE_TABLEROW, ct.ROLE_TREEVIEWITEM]:
 			clsList.insert(0, MozillaTable)
-		elif obj.role == controlTypes.ROLE_LISTITEM:
+		elif obj.role == ct.ROLE_LISTITEM:
 			if obj.windowClassName == "SysListView32" or u'WindowsForms10.SysListView32.app.0' in obj.windowClassName:
 				clsList.insert(0, ColumnsReview32)
 			elif obj.windowClassName == "DirectUIHWND" and isinstance(obj, UIA):
 				# Windows 8/8.1/10 Start Screen tiles should not expose column info.
 				if not obj.UIAElement.cachedClassName in ("GridTileElement", "GridListTileElement"):
 					clsList.insert(0, ColumnsReview64)
-		else:
-			return
+#		elif obj.role == ct.ROLE_CHECKBOX and obj.windowClassName in [u'WuDuiListView', u'SysListView32']:
+#			clsList.insert(0, CheckboxList)
