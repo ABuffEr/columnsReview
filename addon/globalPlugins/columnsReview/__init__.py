@@ -1,7 +1,6 @@
 # -*- coding: UTF-8 -*-
 """
 @author: Alberto Buffolino
-Last update: 06.02.2015
 Code inspired by EnhancedListViewSupport plugin,
 by Peter Vagner and contributors
 """
@@ -299,7 +298,6 @@ class ColumnsReviewSettingsDialog(gui.SettingsDialog):
 		self._readHeader.SetFocus()
 
 	def onOk(self, evt):
-		super(ColumnsReviewSettingsDialog, self).onOk(evt)
 		# Update Configuration and global variables
 		global readHeader, copyHeader, useNumpadKeys, switchChar, baseKeys
 		readHeader = self._readHeader.IsChecked()
@@ -314,6 +312,7 @@ class ColumnsReviewSettingsDialog(gui.SettingsDialog):
 		myConf["keyboard"]["switchChar"] = switchChar = self._switchChar.GetValue()
 		myConf.write()
 		baseKeys = getBaseKeys()
+		super(ColumnsReviewSettingsDialog, self).onOk(evt)
 
 	def onCheck(self, evt):
 		if self._useNumpadKeys.IsChecked():
