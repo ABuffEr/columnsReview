@@ -111,23 +111,21 @@ class ColumnsReview(RowWithFakeNavigation):
 			# Translators: message when digit pressed exceed the columns number
 			ui.message(_("No more columns available"))
 			return
-		# below operations are complicated to explain, so, for example:
 		# in a list with 13 columns (childCount == 13),
-		# we are sure that 13/10+1 (integer operation) let us to control the growth of 
-		# the tens (or hundred and tens, etc) in max interval available
-		# not considering the last column
-		mod = self.childCount/10+1
+		# childCount/10+1 (integer operation) gives all
+		# intervals (2) of needed  10 columns;
+		# if childCount is a multiple of 10 (es. 30),
+		# we have exactly childCount/10=3 intervals.
+		mod = self.childCount/10+(1 if self.childCount%10 else 0)
 		# now, we can scroll ten by ten among intervals, using modulus
 		self.tens = (self.tens+1)%mod
-		start = str(self.tens if self.tens else "")+"1"
+		# interval bounds to announce
+		start = self.tens*10+1
 		# nice: announce what is the absolutely last column available
 		if self.tens == mod-1:
-			end = str(self.childCount)
+			end = self.childCount
 		else:
-			# last column in interval has tens+1 as tens,
-			# so "1"+"0" = "10" (string) in first interval
-			# of our example
-			end = str(self.tens+1)+"0"
+			end = (self.tens+1)*10
 		# Translators: message when you change interval in a list with more ten columns
 		ui.message(_("From {start} to {end}").format(start=start, end=end))
 
