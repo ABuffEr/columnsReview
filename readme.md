@@ -1,20 +1,14 @@
 # Columns Review #
 
 * Author: Alberto Buffolino.
+* Download [stable version][1]
 * Download [development version][2]
 
-Columns Review is an add-on to read and copy items in a list column by column. It supports lists (see below) with a potentially infinite number of columns, and you can navigate them using keyboard or numpad digits. The column headers can be read but not copied, or vice versa.
+Columns Review is an add-on to read and copy items in a list column by column. It supports lists with a potentially infinite number of columns, and you can navigate them using keyboard or numpad digits. The column headers can be read but not copied, or vice versa.
 
-## For developers and advanced users ##
+Additionally, it provides a way to interact with column headers, and can announce "0 elements" when a list is empty.
 
-List types supported are:
-
-* SysListView32;
-* DirectUIHWND (present in 64-bit systems);
-* WindowsForms10.SysListView32.app.0.x (applications that use .NET);
-* Mozilla list (tipically, Thunderbird message list, thread-grouping supported).
-
-All gestures are associated on and only on supported lists, when these are not empty.
+See below for more details about supported list.
 
 ## Key Commands ##
 
@@ -24,20 +18,23 @@ Default keys associated with numbers are NVDA and control, but you can customize
 * NVDA+control+numpadMinus (numpad mode): read or copy the 10th, 20th, etc column;
 * NVDA+control+- (default, EN-US layout, keyboard mode): in a list with 10+ columns, let you to change interval and read columns from 11 to 20, from 21 to 30, and so on; see settings to change last char according to your layout;
 * NVDA+control+numpadPlus (numpad mode): exactly as previous command;
-* NVDA+control+enter (eventually numpadEnter in numpad mode): open column headers manager.
+* NVDA+control+enter (eventually numpadEnter in numpad mode): open column headers manager;
+* Arrows (in empty list): repeat "0 elements" message.
 
-## Changes for 3.0 ##
+## For developers and advanced users ##
 
-* Added column headers manager;
+List types supported by numeric gestures are:
 
-## Changes for 2.0 ##
+* SysListView32;
+* DirectUIHWND (present in 64-bit systems);
+* WindowsForms10.SysListView32.* (applications that use .NET);
+* Mozilla table (tipically, Thunderbird message list, thread-grouping supported).
 
-* Added thread-grouping support to Mozilla list;
-* Basic keys are customizable now.
+All numeric gestures are associated on and only on supported lists, when these are not empty.
 
-## Changes for 1.0 ##
-
-* Initial release.
+Any listview potentially supports empty announcement (so, not DirectUIHWND nor Mozilla table).
 
 
-[2]: https://raw.githubusercontent.com/ABuffEr/columnsReview/master/columnsReview-3.0-20180825-dev.nvda-addon
+[1]: https://addons.nvda-project.org/files/get.php?file=cr
+
+[2]: https://addons.nvda-project.org/files/get.php?file=cr-dev
