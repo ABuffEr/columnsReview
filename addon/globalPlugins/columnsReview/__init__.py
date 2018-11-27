@@ -1,49 +1,107 @@
-# -*- coding: UTF-8 -*-
-"""
-@author: Alberto Buffolino
-Code inspired by EnhancedListViewSupport plugin,
-by Peter Vagner and contributors
-"""
-import addonHandler
-import globalPluginHandler
-import controlTypes as ct
-import api
-import ui
-from NVDAObjects.behaviors import RowWithFakeNavigation
+# ColumnsReview
+# A global plugin for NVDA
+# Copyright 2014 Alberto Buffolino, released under GPL
+
+# Add-on to manage columns in list views
+# Code inspired by EnhancedListViewSupport plugin,
+# by Peter Vagner and contributors
+
+#from logHandler import log
+from .msg import message as NVDALocale
+from io import StringIO
+from configobj import ConfigObj
+from NVDAObjects.IAccessible.sysListView32 import List, ListItem
 from NVDAObjects.UIA import UIA # For UIA implementations only, chiefly 64-bit.
+from NVDAObjects.behaviors import RowWithFakeNavigation
 from appModules.explorer import GridTileElement, GridListTileElement # Specific for Start Screen tiles.
+from configobj import *
+from globalCommands import commands
+from gui.guiHelper import *
 from scriptHandler import isScriptWaiting, getLastScriptRepeatCount
+from six.moves import range
+import addonHandler
+import api
+import braille
+import config
+import controlTypes as ct
+import globalPluginHandler
+import globalVars
 import gui
 import os
-from configobj import *
-import globalVars
-import wx
-from msg import message as msg
+import speech
+import ui
 import winUser
-#from logHandler import log
-from gui.guiHelper import *
+import wx
 
 addonHandler.initTranslation()
 
-# load or create the .ini file
-iniFile = os.path.join(os.path.dirname(__file__), "..", "settings.ini").decode("mbcs")
-myConf = ConfigObj(iniFile, encoding = "UTF8")
-if not os.path.isfile(iniFile):
-	myConf["general"] = {"readHeader": "True", "copyHeader": "True"}
-	myConf["keyboard"] = {"useNumpadKeys": "False", "switchChar": "-"}
-	myConf["gestures"] = {"NVDA": "True", "control": "True", "alt": "False", "shift": "False", "windows": "False"}
-	myConf.write()
-readHeader = bool(0 if myConf["general"]["readHeader"] == "False" else 1)
-copyHeader = bool(0 if myConf["general"]["copyHeader"] == "False" else 1)
-useNumpadKeys = bool(0 if myConf["keyboard"]["useNumpadKeys"] == "False" else 1)
-switchChar = myConf["keyboard"]["switchChar"]
+# init config
+configSpecString = ("""
+[general]
+	readHeader = boolean(default=True)
+	copyHeader = boolean(default=True)
+	announceEmptyList = boolean(default=True)
+[keyboard]
+	useNumpadKeys = boolean(default=False)
+	switchChar = string(default="-")
+[gestures]
+	NVDA = boolean(default=True)
+	control = boolean(default=True)
+	alt = boolean(default=False)
+	shift = boolean(default=False)
+	windows = boolean(default=False)
+""")
+confspec = ConfigObj(StringIO(configSpecString.decode()), list_values=False, encoding="UTF-8")
+confspec.newlines = "\r\n"
+config.conf.spec["columnsReview"] = confspec
 
-def getBaseKeys():
-	chosenKeys = filter(lambda f: f[1] == "True", myConf["gestures"].items())
-	baseKeys = '+'.join([x[0] for x in chosenKeys])
-	return baseKeys
+# (re)load config
+def loadConfig():
+	global myConf, readHeader, copyHeader, announceEmptyList, useNumpadKeys, switchChar, baseKeys
+	myConf = config.conf["columnsReview"]
+	readHeader = myConf["general"]["readHeader"]
+	copyHeader = myConf["general"]["copyHeader"]
+	announceEmptyList = myConf["general"]["announceEmptyList"]
+	useNumpadKeys = myConf["keyboard"]["useNumpadKeys"]
+	switchChar = myConf["keyboard"]["switchChar"]
+	chosenKeys = [g[0] for g in myConf["gestures"].iteritems() if g[1]]
+	baseKeys = '+'.join(chosenKeys)
 
-baseKeys = getBaseKeys()
+class EmptyList(List):
+	"""Class to announce empty list."""
+
+	def event_gainFocus(self):
+		try:
+			if (
+				# usual condition for SysListView32
+				# (the unique child should be the header list)
+				(len(self.children) == 1 and not isinstance(self.children[0], ListItem))
+				or
+				# condition for possible strange cases
+				(not len(self.children))
+			):
+				super(EmptyList, self).event_gainFocus()
+				# brailled and spoken the "0 elements" message
+				text = ' '.join(["0", NVDALocale("Elements").lower()])
+				speech.speakMessage(text)
+				region = braille.TextRegion(" "+text)
+				region.focusToHardLeft = True
+				region.update()
+				braille.handler.buffer.regions.append(region)
+				braille.handler.buffer.focus(region)
+				braille.handler.buffer.update()
+				braille.handler.update()
+				# bind arrows to focus again (and repeat message)
+				for item in ["Up", "Down", "Left", "Right"]:
+					self.bindGesture("kb:%s" %item+"Arrow", "alert")
+			else:
+				self.clearGestureBindings()
+				super(EmptyList, self).event_gainFocus()
+		except:
+			pass
+
+	def script_alert(self, gesture):
+		self.event_gainFocus()
 
 class ColumnsReview(RowWithFakeNavigation):
 	"""The main abstract class that generates gestures and calculate index;
@@ -66,7 +124,7 @@ class ColumnsReview(RowWithFakeNavigation):
 		# a string useful for defining gestures
 		nk = "numpad" if useNumpadKeys else ""
 		# bind gestures from 1 to 9
-		for n in xrange(1,10):
+		for n in range(1,10):
 			self.bindGesture("kb:%s+%s%d"%(baseKeys, nk, n), "readColumn")
 		if useNumpadKeys:
 			# map numpadMinus for 10th column
@@ -97,10 +155,10 @@ class ColumnsReview(RowWithFakeNavigation):
 		# if num == 0, from numpad or keyboard
 		if not num:
 			# set it to 10, 20, etc
-			num = int(str(self.tens+1)+"0")
+			num = (self.tens+1)*10
 		else:
 			# set it to 9, 13, 22, etc
-			num = int(str(self.tens if self.tens else "")+str(num))
+			num = self.tens*10+num
 		return num
 
 	def script_changeInterval(self, gesture):
@@ -136,7 +194,7 @@ class ColumnsReview(RowWithFakeNavigation):
 		def run():
 			gui.mainFrame.prePopup()
 			d = HeadersDialog(None, self.appModule.appName, self.getHeadersParent().children)
-			if d is not None:
+			if d:
 				d.Show()
 			gui.mainFrame.postPopup()
 		wx.CallAfter(run)
@@ -161,20 +219,20 @@ class ColumnsReview32(ColumnsReview):
 		obj = self.getChild(num-1)
 		# generally, an empty name is a None object,
 		# in Mozilla, instead, it's a unicode object with length 0
-		if obj is not None and obj.name is not None and len(obj.name):
+		if obj and obj.name and len(obj.name):
 			# obj.name is the column content
-			content = unicode(obj.name+";")
+			content = ''.join([obj.name, ";"])
 		else:
 			# Translators: message when cell in specified column is empty
 			content = _("Not available;")
 		global readHeader, copyHeader
 		if getLastScriptRepeatCount() and self.lastColumn == num:
-			header = (unicode(self._getColumnHeader(num)+": ") if copyHeader else "")
+			header = ''.join([self._getColumnHeader(num), ": "]) if copyHeader else ""
 			if api.copyToClip(header+content):
 				# Translators: message announcing what was copied
 				ui.message(_("Copied in clipboard: %s")%(header+content))
 		else:
-			header = (unicode(self._getColumnHeader(num)+": ") if readHeader else "")
+			header = ''.join([self._getColumnHeader(num), ": "]) if readHeader else ""
 			self.lastColumn = num
 			ui.message(header+content)
 
@@ -182,7 +240,7 @@ class ColumnsReview32(ColumnsReview):
 	script_readColumn.__doc__ = _("Returns the header and the content of the list column at the index corresponding to the number pressed")
 
 	def getHeadersParent(self):
-		return self.parent.children[-1]
+		return self.simpleParent.children[-1]
 
 class MozillaTable(ColumnsReview32):
 	"""Class to manage column headers in Mozilla list"""
@@ -191,7 +249,7 @@ class MozillaTable(ColumnsReview32):
 		"""Returns the column header in Mozilla applications"""
 		# get the list with headers, excluding these
 		# which are not header (i.e. for settings, in Thunderbird)
-		headers = filter(lambda i: i.role == ct.ROLE_TABLECOLUMNHEADER, self.getHeadersParent().children)
+		headers = [i for i in self.getHeadersParent().children if i.role == ct.ROLE_TABLECOLUMNHEADER]
 		# now, headers are not ordered as on screen,
 		# but we deduce the order thanks to top location of each header
 		headers.sort(key=lambda i: i.location)
@@ -200,7 +258,7 @@ class MozillaTable(ColumnsReview32):
 	def getHeadersParent(self):
 		# when thread view is disabled
 		if self.role != ct.ROLE_TREEVIEWITEM:
-			return self.parent.firstChild
+			return self.simpleParent.simpleFirstChild
 		# else, we manage the thread grouping case
 		else:
 			# tree-level of current obj
@@ -209,7 +267,7 @@ class MozillaTable(ColumnsReview32):
 			parent = self
 			for n in range(0,int(level)):
 				parent = parent.simpleParent
-			return parent.firstChild
+			return parent.simpleFirstChild
 
 class ColumnsReview64(ColumnsReview):
 	"""for 64-bit systems (DirectUIHWND window class)
@@ -226,21 +284,21 @@ class ColumnsReview64(ColumnsReview):
 		obj = self.getChild(num)
 		# in Windows 7, an empty value is a None object,
 		# in Windows 8, instead, it's a unicode object with length 0
-		if obj is not None and obj.value is not None and len(obj.value) != 0:
+		if obj and obj.value and len(obj.value):
 			# obj.value is the column content
-			content = unicode(obj.value+";")
+			content = ''.join([obj.value, ";"])
 		else:
 			# Translators: message when cell in specified column is empty
 			content = _("Not available;")
 		global readHeader, copyHeader
 		if getLastScriptRepeatCount() and self.lastColumn == num:
 			# obj.name is the column header
-			header = (unicode(self.getChild(num).name+": ") if copyHeader else "")
+			header = ''.join([self.getChild(num).name, ": "]) if copyHeader else ""
 			if api.copyToClip(header+content):
 				# Translators: message announcing what was copied
 				ui.message(_("Copied in clipboard: %s")%(header+content))
 		else:
-			header = (unicode(self.getChild(num).name+": ") if readHeader else "")
+			header = ''.join([self.getChild(num).name, ": "]) if readHeader else ""
 			self.lastColumn = num
 			ui.message(header+content)
 
@@ -248,16 +306,27 @@ class ColumnsReview64(ColumnsReview):
 	script_readColumn.__doc__ = _("Returns the header and the content of the list column at the index corresponding to the number pressed")
 
 	def getHeadersParent(self):
-		return filter(lambda i: i.role == ct.ROLE_HEADER, self.parent.children)[0]
+		return filter(lambda i: i.role == ct.ROLE_HEADER, self.simpleParent.children)[0]
 
-class ColumnsReviewSettingsDialog(gui.SettingsDialog):
+# for settings presentation compatibility
+if hasattr(gui.settingsDialogs, "SettingsPanel"):
+	superDialogClass = gui.settingsDialogs.SettingsPanel
+else:
+	superDialogClass = gui.SettingsDialog
+
+class ColumnsReviewSettingsDialog(superDialogClass):
 	"""Class to define settings dialog."""
 
-	# Translators: title of settings dialog
-	title = _("Columns Review Settings")
+	if hasattr(gui.settingsDialogs, "SettingsPanel"):
+		# Translators: title of settings dialog
+		title = _("Columns Review")
+	else:
+		# Translators: title of settings dialog
+		title = _("Columns Review Settings")
 
+	# common to dialog and panel
 	def makeSettings(self, settingsSizer):
-		global readHeader, copyHeader, useNumpadKeys, switchChar
+		global readHeader, copyHeader, useNumpadKeys, switchChar, announceEmptyList
 		# Translators: label for read-header checkbox in settings
 		self._readHeader = wx.CheckBox(self, label = _("Read the column header"))
 		self._readHeader.SetValue(readHeader)
@@ -270,11 +339,11 @@ class ColumnsReviewSettingsDialog(gui.SettingsDialog):
 			# Translators: Help message for sub-sizer of keys choices
 			label=_("Choose the keys you want to use with numbers:")), wx.VERTICAL)
 		self.keysChks = []
-		for key in myConf["gestures"].items():
-			chk = wx.CheckBox(self, label = msg(key[0]))
-			chk.SetValue(True if key[1] == "True" else False)
+		for keyName,keyEnabled in myConf["gestures"].iteritems():
+			chk = wx.CheckBox(self, label = NVDALocale(keyName))
+			chk.SetValue(keyEnabled)
 			keysSizer.Add(chk)
-			self.keysChks.append((key[0], chk))
+			self.keysChks.append((keyName, chk))
 		settingsSizer.Add(keysSizer)
 		# Translators: label for numpad keys checkbox in settings
 		self._useNumpadKeys = wx.CheckBox(self, label = _("Use numpad keys to navigate through the columns"))
@@ -291,26 +360,36 @@ class ColumnsReviewSettingsDialog(gui.SettingsDialog):
 		if self._useNumpadKeys.IsChecked():
 			settingsSizer.Hide(self._switchCharLabel)
 			settingsSizer.Hide(self._switchChar)
+		# Translators: label for announce-empty-list checkbox in settings
+		self._announceEmptyList = wx.CheckBox(self, label = _("Announce empty list"))
+		self._announceEmptyList.SetValue(announceEmptyList)
+		settingsSizer.Add(self._announceEmptyList)
 
+	# for dialog only
 	def postInit(self):
 		self._readHeader.SetFocus()
 
-	def onOk(self, evt):
-		# Update Configuration and global variables
-		global readHeader, copyHeader, useNumpadKeys, switchChar, baseKeys
-		readHeader = self._readHeader.IsChecked()
-		myConf["general"]["readHeader"] = str(readHeader)
-		copyHeader = self._copyHeader.IsChecked()
-		myConf["general"]["copyHeader"] = str(copyHeader)
+	# shared between onOk and onSave
+	def saveConfig(self):
+		# Update Configuration
+		myConf["general"]["readHeader"] = self._readHeader.IsChecked()
+		myConf["general"]["copyHeader"] = self._copyHeader.IsChecked()
+		myConf["general"]["announceEmptyList"] = self._announceEmptyList.IsChecked()
 		for item in self.keysChks:
-			status = item[1].IsChecked()
-			myConf["gestures"][item[0]] = str(status)
-		useNumpadKeys = self._useNumpadKeys.IsChecked()
-		myConf["keyboard"]["useNumpadKeys"] = str(useNumpadKeys)
-		myConf["keyboard"]["switchChar"] = switchChar = self._switchChar.GetValue()
-		myConf.write()
-		baseKeys = getBaseKeys()
+			myConf["gestures"][item[0]] = item[1].IsChecked()
+		myConf["keyboard"]["useNumpadKeys"] = self._useNumpadKeys.IsChecked()
+		myConf["keyboard"]["switchChar"] = self._switchChar.GetValue()
+		# update global variables
+		loadConfig()
+
+	# for dialog only
+	def onOk(self, evt):
+		self.saveConfig()
 		super(ColumnsReviewSettingsDialog, self).onOk(evt)
+
+	# for panel only
+	def onSave(self):
+		self.saveConfig()
 
 	def onCheck(self, evt):
 		if self._useNumpadKeys.IsChecked():
@@ -348,20 +427,22 @@ class HeadersDialog(wx.Dialog):
 	def onLeftClick(self, event):
 		index = self.list.GetSelection()
 		headerObj = self.headersList[index]
-		api.moveMouseToNVDAObject(headerObj)
+		self.Destroy()
+		api.setNavigatorObject(headerObj)
+		commands.script_moveMouseToNavigatorObject(None)
 		winUser.mouse_event(winUser.MOUSEEVENTF_LEFTDOWN,0,0,None,None)
 		winUser.mouse_event(winUser.MOUSEEVENTF_LEFTUP,0,0,None,None)
 		ui.message(_("%s header clicked")%headerObj.name)
-		self.Destroy()
 
 	def onRightClick(self, event):
 		index = self.list.GetSelection()
 		headerObj = self.headersList[index]
-		api.moveMouseToNVDAObject(headerObj)
+		self.Destroy()
+		api.setNavigatorObject(headerObj)
+		commands.script_moveMouseToNavigatorObject(None)
 		winUser.mouse_event(winUser.MOUSEEVENTF_RIGHTDOWN,0,0,None,None)
 		winUser.mouse_event(winUser.MOUSEEVENTF_RIGHTUP,0,0,None,None)
 		ui.message(_("%s header clicked")%headerObj.name)
-		self.Destroy()
 
 	def onEscape(self, event):
 		if event.GetKeyCode() == wx.WXK_ESCAPE:
@@ -376,22 +457,32 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 		self.createMenu()
 
 	def createMenu(self):
-		self.prefsMenu = gui.mainFrame.sysTrayIcon.menu.GetMenuItems()[0].GetSubMenu()
-		# Translators: menu item in preferences
-		self.ColumnsReviewItem = self.prefsMenu.Append(wx.ID_ANY, _("Columns Review Settings..."), "")
-		gui.mainFrame.sysTrayIcon.Bind(wx.EVT_MENU, lambda e: gui.mainFrame._popupSettingsDialog(ColumnsReviewSettingsDialog), self.ColumnsReviewItem)
+		# Dialog or the panel.
+		if hasattr(gui.settingsDialogs, "SettingsPanel"):
+			gui.settingsDialogs.NVDASettingsDialog.categoryClasses.append(ColumnsReviewSettingsDialog)
+		else:
+			self.prefsMenu = gui.mainFrame.sysTrayIcon.menu.GetMenuItems()[0].GetSubMenu()
+			# Translators: menu item in preferences
+			self.ColumnsReviewItem = self.prefsMenu.Append(wx.ID_ANY, _("Columns Review Settings..."), "")
+			gui.mainFrame.sysTrayIcon.Bind(wx.EVT_MENU, lambda e: gui.mainFrame._popupSettingsDialog(ColumnsReviewSettingsDialog), self.ColumnsReviewItem)
 
 	def terminate(self):
-		try:
-			self.prefsMenu.RemoveItem(self.ColumnsReviewItem)
-		except wx.PyDeadObjectError:
-			pass
+		if hasattr(gui.settingsDialogs, "SettingsPanel"):
+			gui.settingsDialogs.NVDASettingsDialog.categoryClasses.remove(ColumnsReviewSettingsDialog)
+		else:
+			try:
+				self.prefsMenu.RemoveItem(self.ColumnsReviewItem)
+			except wx.PyDeadObjectError:
+				pass
 
 	def chooseNVDAObjectOverlayClasses(self, obj, clsList):
-		if obj.windowClassName == u'MozillaWindowClass' and obj.role in [ct.ROLE_TABLEROW, ct.ROLE_TREEVIEWITEM]:
+		loadConfig()
+		if announceEmptyList and obj.role == ct.ROLE_LIST and "listview" in obj.windowClassName.lower():
+			clsList.insert(0, EmptyList)
+		if obj.windowClassName == 'MozillaWindowClass' and obj.role in [ct.ROLE_TABLEROW, ct.ROLE_TREEVIEWITEM]:
 			clsList.insert(0, MozillaTable)
 		elif obj.role == ct.ROLE_LISTITEM:
-			if obj.windowClassName == "SysListView32" or u'WindowsForms10.SysListView32.app.0' in obj.windowClassName:
+			if obj.windowClassName == "SysListView32" or 'WindowsForms10.SysListView32.' in obj.windowClassName:
 				clsList.insert(0, ColumnsReview32)
 			elif obj.windowClassName == "DirectUIHWND" and isinstance(obj, UIA):
 				# Windows 8/8.1/10 Start Screen tiles should not expose column info.
