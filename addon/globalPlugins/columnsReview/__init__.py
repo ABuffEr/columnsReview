@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 # ColumnsReview
 # A global plugin for NVDA
 # Copyright 2014 Alberto Buffolino, released under GPL
@@ -8,7 +9,7 @@
 
 #from logHandler import log
 from .msg import message as NVDALocale
-from io import StringIO
+from cStringIO import StringIO
 from configobj import ConfigObj
 from NVDAObjects.IAccessible.sysListView32 import List, ListItem
 from NVDAObjects.UIA import UIA # For UIA implementations only, chiefly 64-bit.
@@ -18,7 +19,6 @@ from configobj import *
 from globalCommands import commands
 from gui.guiHelper import *
 from scriptHandler import isScriptWaiting, getLastScriptRepeatCount
-from six.moves import range
 import addonHandler
 import api
 import braille
@@ -32,6 +32,12 @@ import speech
 import ui
 import winUser
 import wx
+try:
+	from six.moves import range as rangeFunc
+except ImportError:
+	rangeFunc = xrange
+except NameError:
+	rangeFunc = range
 
 addonHandler.initTranslation()
 
@@ -51,7 +57,7 @@ configSpecString = ("""
 	shift = boolean(default=False)
 	windows = boolean(default=False)
 """)
-confspec = ConfigObj(StringIO(configSpecString.decode()), list_values=False, encoding="UTF-8")
+confspec = ConfigObj(StringIO(configSpecString), list_values=False, encoding="UTF-8")
 confspec.newlines = "\r\n"
 config.conf.spec["columnsReview"] = confspec
 
@@ -124,7 +130,7 @@ class ColumnsReview(RowWithFakeNavigation):
 		# a string useful for defining gestures
 		nk = "numpad" if useNumpadKeys else ""
 		# bind gestures from 1 to 9
-		for n in range(1,10):
+		for n in rangeFunc(1,10):
 			self.bindGesture("kb:%s+%s%d"%(baseKeys, nk, n), "readColumn")
 		if useNumpadKeys:
 			# map numpadMinus for 10th column
@@ -265,7 +271,7 @@ class MozillaTable(ColumnsReview32):
 			level = self._get_IA2Attributes()["level"]
 			# we go up level by level
 			parent = self
-			for n in range(0,int(level)):
+			for n in rangeFunc(0,int(level)):
 				parent = parent.simpleParent
 			return parent.simpleFirstChild
 
