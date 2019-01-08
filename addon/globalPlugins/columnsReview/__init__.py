@@ -7,10 +7,13 @@
 # Code inspired by EnhancedListViewSupport plugin,
 # by Peter Vagner and contributors
 
-#from logHandler import log
+from logHandler import log
 from .msg import message as NVDALocale
 from cStringIO import StringIO
+from comtypes.client import CreateObject
 from configobj import ConfigObj
+#from cursorManager import FindDialog
+from NVDAObjects.IAccessible import getNVDAObjectFromEvent
 from NVDAObjects.IAccessible.sysListView32 import List, ListItem
 from NVDAObjects.UIA import UIA # For UIA implementations only, chiefly 64-bit.
 from NVDAObjects.behaviors import RowWithFakeNavigation
@@ -24,6 +27,8 @@ import api
 import braille
 import config
 import controlTypes as ct
+import core
+import cursorManager
 import globalPluginHandler
 import globalVars
 import gui
@@ -40,6 +45,37 @@ except NameError:
 	rangeFunc = range
 
 addonHandler.initTranslation()
+
+import ctypes
+WNDENUMPROC = ctypes.WINFUNCTYPE(ctypes.wintypes.BOOL, ctypes.wintypes.HWND, ctypes.wintypes.LPARAM)
+def findAllDescendantWindows(parent, visible=None, controlID=None, className=None):
+	"""See windowUtils.findDescendantWindow for parameters documentation."""
+	results = []
+	@WNDENUMPROC
+	def callback(window, data):
+		if (
+			(visible is None or winUser.isWindowVisible(window) == visible)
+			and (not controlID or winUser.getControlID(window) == controlID)
+			and (not className or winUser.getClassName(window) == className)
+		):
+			results.append(window)
+		return True
+	# call previous func until it returns True,
+	# thus always, getting all windows
+	ctypes.windll.user32.EnumChildWindows(parent, callback, 0)
+	# return all results
+	return results
+
+# to avoid code copying to exclude ui.message
+def runSilently(func, *args, **kwargs):
+	configBackup = {"voice": speech.speechMode, "braille": config.conf["braille"]["messageTimeout"]}
+	speech.speechMode = speech.speechMode_off
+	config.conf["braille"]._cacheLeaf("messageTimeout", None, 0)
+	try:
+		func(*args, **kwargs)
+	finally:
+		speech.speechMode = configBackup["voice"]
+		config.conf["braille"]._cacheLeaf("messageTimeout", None, configBackup["braille"])
 
 # init config
 configSpecString = ("""
@@ -114,6 +150,8 @@ class ColumnsReview(RowWithFakeNavigation):
 	classes that define new list types must override it,
 	defining (or eventually re-defining) methods of this class."""
 
+	_lastFindText = ""
+	_lastCaseSensitivity = False
 	# the variable representing tens
 	# of current interval (except the last column,
 	# for which it's tens+1)
@@ -144,6 +182,9 @@ class ColumnsReview(RowWithFakeNavigation):
 			self.bindGesture("kb:%s+0"%baseKeys, "readColumn")
 			self.bindGesture("kb:%s+%s"%(baseKeys, switchChar), "changeInterval")
 			self.bindGesture("kb:%s+enter"%baseKeys, "manageHeaders")
+		self.bindGesture("kb:NVDA+control+f", "find")
+		self.bindGesture("kb:NVDA+f3", "findNext")
+		self.bindGesture("kb:NVDA+shift+f3", "findPrevious")
 
 	def script_readColumn(self,gesture):
 		raise NotImplementedError
@@ -211,6 +252,90 @@ class ColumnsReview(RowWithFakeNavigation):
 	def getHeadersParent(self):
 		"""return the navigator object with header objects as children."""
 		raise NotImplementedError
+
+	def script_find(self, gesture):
+		d = FindDialog(gui.mainFrame, self, self._lastFindText, self._lastCaseSensitivity)
+		gui.mainFrame.prePopup()
+		d.Show()
+		gui.mainFrame.postPopup()
+
+	def getSubChildren(self, reverse, child=None, limit=50):
+		if not child:
+			return (self.simpleParent.children, True)
+		childrenLen = self.positionInfo["similarItemsInGroup"]
+		curIndex = self.positionInfo["indexInGroup"]
+		if childrenLen <= limit:
+			items = self.simpleParent.children
+			if reverse:
+				items = items[:curIndex]
+				items.reverse()
+			else:
+				items = items[curIndex+1:]
+			return (items, True)
+		items = []
+		finish = False
+		newChild = child.previous if reverse else child.next
+		count = 1
+		while (newChild and count <= limit):
+			items.append(newChild)
+			count += 1
+			newChild = newChild.previous if reverse else newChild.next
+		if (
+			(not newChild)
+			or
+			(newChild.positionInfo["indexInGroup"] == (1 if reverse else childrenLen))
+		):
+			finish = True
+		return (items, finish)
+
+	def doFindText(self, text, reverse=False, caseSensitive=False):
+		if not text:
+			return
+		res = None
+		stop = False
+		child = self
+		while not(res or stop):
+			items, stop = self.getSubChildren(reverse, child)
+			for item in items:
+				if (
+					(item.name)
+					and
+					((text in item.name) if caseSensitive else (text.lower() in item.name.lower()))
+				):
+					res = item
+					break
+			if items:
+				child = items[-1]
+		if res:
+			speech.cancelSpeech()
+			api.setNavigatorObject(res)
+			runSilently(commands.script_navigatorObject_moveFocus, res)
+		else:
+			wx.CallAfter(gui.messageBox, NVDALocale('text "%s" not found')%text, NVDALocale("Find Error"), wx.OK|wx.ICON_ERROR)
+		ColumnsReview._lastFindText=text
+		ColumnsReview._lastCaseSensitivity=caseSensitive
+
+	def script_findNext(self,gesture):
+		if not self._lastFindText:
+			self.script_find(gesture)
+			return
+		self.doFindText(self._lastFindText, caseSensitive = self._lastCaseSensitivity)
+
+	def script_findPrevious(self,gesture):
+		if not self._lastFindText:
+			self.script_find(gesture)
+			return
+		self.doFindText(self._lastFindText, reverse=True, caseSensitive = self._lastCaseSensitivity)
+
+class FindDialog(cursorManager.FindDialog):
+
+	def onOk(self, evt):
+		text = self.findTextField.GetValue()
+		caseSensitive = self.caseSensitiveCheckBox.GetValue()
+		# We must use core.callLater rather than wx.CallLater to ensure that the callback runs within NVDA's core pump.
+		# If it didn't, and it directly or indirectly called wx.Yield, it could start executing NVDA's core pump from within the yield, causing recursion.
+		core.callLater(300, self.activeCursorManager.doFindText, text, caseSensitive=caseSensitive)
+		self.Destroy()
 
 class ColumnsReview32(ColumnsReview):
 # for SysListView32 or WindowsForms10.SysListView32.app.0.*
@@ -313,6 +438,13 @@ class ColumnsReview64(ColumnsReview):
 
 	def getHeadersParent(self):
 		return filter(lambda i: i.role == ct.ROLE_HEADER, self.simpleParent.children)[0]
+
+	def getSubChildren(self):
+		items = []
+		# ...any working idea...
+		return items
+
+	script_find = script_findNext = script_findPrevious = (lambda self, gesture: ui.message("Operation not supported"))
 
 # for settings presentation compatibility
 if hasattr(gui.settingsDialogs, "SettingsPanel"):
