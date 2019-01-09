@@ -8,7 +8,7 @@ addonHandler.initTranslation()
 def onInstall():
 	for addon in addonHandler.getAvailableAddons():
 		if addon.name == "columnsReview":
-			iniFile = os.path.join(addon.path.decode("mbcs"), "globalPlugins", "settings.ini")
+			iniFile = os.path.join(addon.path.encode("mbcs"), "globalPlugins", "settings.ini")
 			if os.path.isfile(iniFile):
 				gui.messageBox(
 					# Translators: the label of a message box dialog.
