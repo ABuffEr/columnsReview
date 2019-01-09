@@ -259,18 +259,17 @@ class ColumnsReview(RowWithFakeNavigation):
 		d.Show()
 		gui.mainFrame.postPopup()
 
-	def getSubChildren(self, reverse, child=None, limit=50):
-		if not child:
-			return (self.simpleParent.children, True)
+	def getSubChildren(self, reverse, child, limit=100):
 		childrenLen = self.positionInfo["similarItemsInGroup"]
-		curIndex = self.positionInfo["indexInGroup"]
 		if childrenLen <= limit:
 			items = self.simpleParent.children
+			# 1-based index
+			curIndex = self.positionInfo["indexInGroup"]
 			if reverse:
-				items = items[:curIndex]
+				items = items[:curIndex-1]
 				items.reverse()
 			else:
-				items = items[curIndex+1:]
+				items = items[curIndex:]
 			return (items, True)
 		items = []
 		finish = False
@@ -280,11 +279,7 @@ class ColumnsReview(RowWithFakeNavigation):
 			items.append(newChild)
 			count += 1
 			newChild = newChild.previous if reverse else newChild.next
-		if (
-			(not newChild)
-			or
-			(newChild.positionInfo["indexInGroup"] == (1 if reverse else childrenLen))
-		):
+		if newChild is None:
 			finish = True
 		return (items, finish)
 
@@ -307,13 +302,16 @@ class ColumnsReview(RowWithFakeNavigation):
 			if items:
 				child = items[-1]
 		if res:
-			speech.cancelSpeech()
-			api.setNavigatorObject(res)
-			runSilently(commands.script_navigatorObject_moveFocus, res)
+			self.successSearchAction(res)
 		else:
 			wx.CallAfter(gui.messageBox, NVDALocale('text "%s" not found')%text, NVDALocale("Find Error"), wx.OK|wx.ICON_ERROR)
-		ColumnsReview._lastFindText=text
-		ColumnsReview._lastCaseSensitivity=caseSensitive
+		ColumnsReview._lastFindText = text
+		ColumnsReview._lastCaseSensitivity = caseSensitive
+
+	def successSearchAction(self, res):
+		speech.cancelSpeech()
+		api.setNavigatorObject(res)
+		runSilently(commands.script_navigatorObject_moveFocus, res)
 
 	def script_findNext(self,gesture):
 		if not self._lastFindText:
@@ -404,6 +402,10 @@ class ColumnsReview64(ColumnsReview):
 	"""for 64-bit systems (DirectUIHWND window class)
 	see ColumnsReview32 class for more comments"""
 
+	def __init__(self, *args, **kwargs):
+		super(ColumnsReview64, self).__init__(*args, **kwargs)
+		folderDoc = None
+
 	def script_readColumn(self,gesture):
 		num = self.getIndex(gesture.mainKeyName.rsplit('+', 1)[-1])
 		# num is passed as is, excluding the first position (0) of the children list
@@ -439,12 +441,36 @@ class ColumnsReview64(ColumnsReview):
 	def getHeadersParent(self):
 		return filter(lambda i: i.role == ct.ROLE_HEADER, self.simpleParent.children)[0]
 
-	def getSubChildren(self):
+	def getSubChildren(self, reverse, child, limit=None):
 		items = []
-		# ...any working idea...
-		return items
+		shell = CreateObject("shell.application")
+		fg = api.getForegroundObject()
+		for window in shell.Windows():
+			if window.hwnd == fg.windowHandle:
+				self.folderDoc = window.Document
+		if not self.folderDoc:
+				return (items, True)
+		for item in self.folderDoc.Folder.Items():
+			items.append(item)
+		if items:
+			if isinstance(child, self.__class__):
+				# 1-based index
+				curIndex = child.positionInfo["indexInGroup"]
+			else:
+				# zero-based index, +1 to normalize
+				curIndex = items.index(child)+1
+			if reverse:
+				items = items[:curIndex-1]
+				items.reverse()
+			else:
+				items = items[curIndex:]
+		return (items, True)
 
-	script_find = script_findNext = script_findPrevious = (lambda self, gesture: ui.message("Operation not supported"))
+	def successSearchAction(self, res):
+			speech.cancelSpeech()
+			self.folderDoc.SelectItem(res, 28)
+
+#	script_find = script_findNext = script_findPrevious = (lambda self, gesture: ui.message("Operation not supported"))
 
 # for settings presentation compatibility
 if hasattr(gui.settingsDialogs, "SettingsPanel"):
