@@ -259,48 +259,22 @@ class ColumnsReview(RowWithFakeNavigation):
 		d.Show()
 		gui.mainFrame.postPopup()
 
-	def getSubChildren(self, reverse, child, limit=100):
-		childrenLen = self.positionInfo["similarItemsInGroup"]
-		if childrenLen <= limit:
-			items = self.simpleParent.children
-			# 1-based index
-			curIndex = self.positionInfo["indexInGroup"]
-			if reverse:
-				items = items[:curIndex-1]
-				items.reverse()
-			else:
-				items = items[curIndex:]
-			return (items, True)
-		items = []
-		finish = False
-		newChild = child.previous if reverse else child.next
-		count = 1
-		while (newChild and count <= limit):
-			items.append(newChild)
-			count += 1
-			newChild = newChild.previous if reverse else newChild.next
-		if newChild is None:
-			finish = True
-		return (items, finish)
+	def findInList(self, text, reverse, caseSensitive):
+		# generic implementation
+		item = self.previous if reverse else self.next
+		while item:
+			if (
+				(caseSensitive and text in item.name)
+				or
+				(not caseSensitive and text.lower() in item.name.lower())
+			):
+				return item
+			item = item.previous if reverse else item.next
 
 	def doFindText(self, text, reverse=False, caseSensitive=False):
 		if not text:
 			return
-		res = None
-		stop = False
-		child = self
-		while not(res or stop):
-			items, stop = self.getSubChildren(reverse, child)
-			for item in items:
-				if (
-					(item.name)
-					and
-					((text in item.name) if caseSensitive else (text.lower() in item.name.lower()))
-				):
-					res = item
-					break
-			if items:
-				child = items[-1]
+		res = self.findInList(text, reverse, caseSensitive)
 		if res:
 			self.successSearchAction(res)
 		else:
@@ -371,6 +345,33 @@ class ColumnsReview32(ColumnsReview):
 	def getHeadersParent(self):
 		return self.simpleParent.children[-1]
 
+	def findInList(self, text, reverse, caseSensitive):
+		# specific implementation
+		fg = api.getForegroundObject()
+		listHandles = findAllDescendantWindows(fg.windowHandle, controlID=self.windowControlID)
+		thisList = None
+		for handle in listHandles:
+			tempList = getNVDAObjectFromEvent(handle, winUser.OBJID_CLIENT, 0)
+			if tempList == self.simpleParent:
+				thisList = tempList
+		if not thisList:
+			res = super(ColumnsReview32, self).findInList(text, reverse, caseSensitive)
+			return res
+		listLen = self.positionInfo["similarItemsInGroup"]
+		curIndex = self.positionInfo["indexInGroup"]
+		if reverse:
+			indexes = rangeFunc(curIndex-1,0,-1)
+		else:
+			indexes = rangeFunc(curIndex+1,listLen+1)
+		for index in indexes:
+			item = getNVDAObjectFromEvent(thisList.windowHandle, winUser.OBJID_CLIENT, index)
+			if (
+				(caseSensitive and text in item.name)
+				or
+				(not caseSensitive and text.lower() in item.name.lower())
+			):
+				return item
+
 class MozillaTable(ColumnsReview32):
 	"""Class to manage column headers in Mozilla list"""
 
@@ -404,7 +405,7 @@ class ColumnsReview64(ColumnsReview):
 
 	def __init__(self, *args, **kwargs):
 		super(ColumnsReview64, self).__init__(*args, **kwargs)
-		folderDoc = None
+		self.folderDoc = None
 
 	def script_readColumn(self,gesture):
 		num = self.getIndex(gesture.mainKeyName.rsplit('+', 1)[-1])
@@ -441,36 +442,45 @@ class ColumnsReview64(ColumnsReview):
 	def getHeadersParent(self):
 		return filter(lambda i: i.role == ct.ROLE_HEADER, self.simpleParent.children)[0]
 
-	def getSubChildren(self, reverse, child, limit=None):
-		items = []
+	def findInList(self, text, reverse, caseSensitive):
 		shell = CreateObject("shell.application")
 		fg = api.getForegroundObject()
 		for window in shell.Windows():
 			if window.hwnd == fg.windowHandle:
 				self.folderDoc = window.Document
+				break
 		if not self.folderDoc:
-				return (items, True)
-		for item in self.folderDoc.Folder.Items():
-			items.append(item)
-		if items:
-			if isinstance(child, self.__class__):
-				# 1-based index
-				curIndex = child.positionInfo["indexInGroup"]
-			else:
-				# zero-based index, +1 to normalize
-				curIndex = items.index(child)+1
-			if reverse:
-				items = items[:curIndex-1]
-				items.reverse()
-			else:
-				items = items[curIndex:]
-		return (items, True)
+				return None
+		listLen = self.positionInfo["similarItemsInGroup"]
+		# 1-based index
+		curIndex = self.positionInfo["indexInGroup"]
+		items = self.folderDoc.Folder.Items()
+		if reverse:
+			res = None
+			indexes = rangeFunc(0,curIndex-1)
+			for index in indexes:
+				item = items.Item(index)
+				if (
+					(caseSensitive and text in item.name)
+					or
+					(not caseSensitive and text.lower() in item.name.lower())
+				):
+					res = item
+			return res
+		else:
+			indexes = rangeFunc(curIndex,listLen)
+			for index in indexes:
+				item = items.Item(index)
+				if (
+					(caseSensitive and text in item.name)
+					or
+					(not caseSensitive and text.lower() in item.name.lower())
+				):
+					return item
 
 	def successSearchAction(self, res):
 			speech.cancelSpeech()
 			self.folderDoc.SelectItem(res, 28)
-
-#	script_find = script_findNext = script_findPrevious = (lambda self, gesture: ui.message("Operation not supported"))
 
 # for settings presentation compatibility
 if hasattr(gui.settingsDialogs, "SettingsPanel"):
