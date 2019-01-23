@@ -7,34 +7,40 @@
 # Code inspired by EnhancedListViewSupport plugin,
 # by Peter Vagner and contributors
 
-from logHandler import log
 from .msg import message as NVDALocale
-from cStringIO import StringIO
-from comtypes.client import CreateObject
-from configobj import ConfigObj
-#from cursorManager import FindDialog
 from NVDAObjects.IAccessible import getNVDAObjectFromEvent
-from NVDAObjects.IAccessible.sysListView32 import List, ListItem
+from NVDAObjects.IAccessible.sysListView32 import List, ListItem, LVM_GETHEADER
 from NVDAObjects.UIA import UIA # For UIA implementations only, chiefly 64-bit.
 from NVDAObjects.behaviors import RowWithFakeNavigation
 from appModules.explorer import GridTileElement, GridListTileElement # Specific for Start Screen tiles.
+from cStringIO import StringIO
+from comtypes.client import CreateObject
 from configobj import *
+from configobj import ConfigObj
 from globalCommands import commands
 from gui.guiHelper import *
+from logHandler import log
 from scriptHandler import isScriptWaiting, getLastScriptRepeatCount
+from threading import Thread
+from time import sleep
+from tones import beep
 import addonHandler
 import api
 import braille
 import config
 import controlTypes as ct
 import core
+import ctypes
 import cursorManager
 import globalPluginHandler
 import globalVars
 import gui
+import locale
 import os
 import speech
+import queueHandler
 import ui
+import watchdog
 import winUser
 import wx
 try:
@@ -46,7 +52,6 @@ except NameError:
 
 addonHandler.initTranslation()
 
-import ctypes
 WNDENUMPROC = ctypes.WINFUNCTYPE(ctypes.wintypes.BOOL, ctypes.wintypes.HWND, ctypes.wintypes.LPARAM)
 def findAllDescendantWindows(parent, visible=None, controlID=None, className=None):
 	"""See windowUtils.findDescendantWindow for parameters documentation."""
@@ -76,6 +81,8 @@ def runSilently(func, *args, **kwargs):
 	finally:
 		speech.speechMode = configBackup["voice"]
 		config.conf["braille"]._cacheLeaf("messageTimeout", None, configBackup["braille"])
+
+getBytePerSector = ctypes.windll.kernel32.GetDiskFreeSpaceW
 
 # init config
 configSpecString = ("""
@@ -150,14 +157,15 @@ class ColumnsReview(RowWithFakeNavigation):
 	classes that define new list types must override it,
 	defining (or eventually re-defining) methods of this class."""
 
-	_lastFindText = ""
-	_lastCaseSensitivity = False
 	# the variable representing tens
 	# of current interval (except the last column,
 	# for which it's tens+1)
 	tens = 0
 	# the variable which keeps track of the last chosen column number
 	lastColumn = None
+	# search parameter variables
+	_lastFindText = ""
+	_lastCaseSensitivity = False
 
 	def initOverlayClass(self):
 		"""maps the correct gestures"""
@@ -240,7 +248,7 @@ class ColumnsReview(RowWithFakeNavigation):
 	def script_manageHeaders(self, gesture):
 		def run():
 			gui.mainFrame.prePopup()
-			d = HeadersDialog(None, self.appModule.appName, self.getHeadersParent().children)
+			d = HeaderDialog(None, self.appModule.appName, self.getHeaderParent().children)
 			if d:
 				d.Show()
 			gui.mainFrame.postPopup()
@@ -249,31 +257,25 @@ class ColumnsReview(RowWithFakeNavigation):
 	# Translators: documentation for script to manage headers
 	script_manageHeaders.__doc__ = _("Provides a dialog for interactions with list column headers")
 
-	def getHeadersParent(self):
+	def getHeaderParent(self):
 		"""return the navigator object with header objects as children."""
 		raise NotImplementedError
 
 	def script_find(self, gesture):
-		d = FindDialog(gui.mainFrame, self, self._lastFindText, self._lastCaseSensitivity)
+		d = cursorManager.FindDialog(gui.mainFrame, self, self._lastFindText, self._lastCaseSensitivity)
 		gui.mainFrame.prePopup()
 		d.Show()
 		gui.mainFrame.postPopup()
 
-	def findInList(self, text, reverse, caseSensitive):
-		# generic implementation
-		item = self.previous if reverse else self.next
-		while item:
-			if (
-				(caseSensitive and text in item.name)
-				or
-				(not caseSensitive and text.lower() in item.name.lower())
-			):
-				return item
-			item = item.previous if reverse else item.next
+	# Translators: documentation for script to find in list
+	script_find.__doc__ = _("Provides a dialog for searching in item list.")
 
 	def doFindText(self, text, reverse=False, caseSensitive=False):
+		"""manages actions pre and post search."""
 		if not text:
 			return
+		speech.cancelSpeech()
+		ui.message(_("Searching..."))
 		res = self.findInList(text, reverse, caseSensitive)
 		if res:
 			self.successSearchAction(res)
@@ -282,8 +284,22 @@ class ColumnsReview(RowWithFakeNavigation):
 		ColumnsReview._lastFindText = text
 		ColumnsReview._lastCaseSensitivity = caseSensitive
 
+	def findInList(self, text, reverse, caseSensitive):
+		"""performs the search in item list, via NVDA object navigation."""
+		# generic implementation
+		item = self.previous if reverse else self.next
+		while (item and item.role == self.role):
+			if (
+				(not caseSensitive and text.lower() in item.name.lower())
+				or
+				(caseSensitive and text in item.name)
+			):
+				return item
+			item = item.previous if reverse else item.next
+
 	def successSearchAction(self, res):
 		speech.cancelSpeech()
+		# TODO: remove selection from previous list item
 		api.setNavigatorObject(res)
 		runSilently(commands.script_navigatorObject_moveFocus, res)
 
@@ -293,20 +309,29 @@ class ColumnsReview(RowWithFakeNavigation):
 			return
 		self.doFindText(self._lastFindText, caseSensitive = self._lastCaseSensitivity)
 
+	# Translators: documentation for script to manage headers
+	script_findNext.__doc__ = _("Goes to next result of current search")
+
 	def script_findPrevious(self,gesture):
 		if not self._lastFindText:
 			self.script_find(gesture)
 			return
 		self.doFindText(self._lastFindText, reverse=True, caseSensitive = self._lastCaseSensitivity)
 
+	# Translators: documentation for script to manage headers
+	script_findPrevious.__doc__ = _("Goes to previous result of current search")
+
 class FindDialog(cursorManager.FindDialog):
+	# not used
+	"""a class extending traditional find dialog."""
 
 	def onOk(self, evt):
 		text = self.findTextField.GetValue()
 		caseSensitive = self.caseSensitiveCheckBox.GetValue()
 		# We must use core.callLater rather than wx.CallLater to ensure that the callback runs within NVDA's core pump.
 		# If it didn't, and it directly or indirectly called wx.Yield, it could start executing NVDA's core pump from within the yield, causing recursion.
-		core.callLater(300, self.activeCursorManager.doFindText, text, caseSensitive=caseSensitive)
+		# self.activeCursorManager is currently a ColumnsReview instance here
+		core.callLater(10, self.activeCursorManager.doFindText, text, caseSensitive=caseSensitive)
 		self.Destroy()
 
 class ColumnsReview32(ColumnsReview):
@@ -342,22 +367,31 @@ class ColumnsReview32(ColumnsReview):
 	# Translators: documentation of script to read columns
 	script_readColumn.__doc__ = _("Returns the header and the content of the list column at the index corresponding to the number pressed")
 
-	def getHeadersParent(self):
-		return self.simpleParent.children[-1]
+	def getHeaderParent(self):
+		# faster than previous self.simpleParent.children[-1]
+		headerHandle = watchdog.cancellableSendMessage(self.simpleParent.windowHandle, LVM_GETHEADER, 0, 0)
+		headerParent = getNVDAObjectFromEvent(headerHandle, winUser.OBJID_CLIENT, 0)
+		return headerParent
 
 	def findInList(self, text, reverse, caseSensitive):
+		"""performs search in item list, via object handles."""
 		# specific implementation
 		fg = api.getForegroundObject()
 		listHandles = findAllDescendantWindows(fg.windowHandle, controlID=self.windowControlID)
 		thisList = None
+		# there may be different lists with same controlID (see eMule)
 		for handle in listHandles:
 			tempList = getNVDAObjectFromEvent(handle, winUser.OBJID_CLIENT, 0)
 			if tempList == self.simpleParent:
 				thisList = tempList
+				break
+		# if handle approach fails, use generic method
 		if not thisList:
+			log.info("Handle method failed")
 			res = super(ColumnsReview32, self).findInList(text, reverse, caseSensitive)
 			return res
 		listLen = self.positionInfo["similarItemsInGroup"]
+		# 1-based index
 		curIndex = self.positionInfo["indexInGroup"]
 		if reverse:
 			indexes = rangeFunc(curIndex-1,0,-1)
@@ -366,9 +400,9 @@ class ColumnsReview32(ColumnsReview):
 		for index in indexes:
 			item = getNVDAObjectFromEvent(thisList.windowHandle, winUser.OBJID_CLIENT, index)
 			if (
-				(caseSensitive and text in item.name)
-				or
 				(not caseSensitive and text.lower() in item.name.lower())
+				or
+				(caseSensitive and text in item.name)
 			):
 				return item
 
@@ -379,13 +413,13 @@ class MozillaTable(ColumnsReview32):
 		"""Returns the column header in Mozilla applications"""
 		# get the list with headers, excluding these
 		# which are not header (i.e. for settings, in Thunderbird)
-		headers = [i for i in self.getHeadersParent().children if i.role == ct.ROLE_TABLECOLUMNHEADER]
+		headers = [i for i in self.getHeaderParent().children if i.role == ct.ROLE_TABLECOLUMNHEADER]
 		# now, headers are not ordered as on screen,
 		# but we deduce the order thanks to top location of each header
 		headers.sort(key=lambda i: i.location)
 		return headers[index-1].name
 
-	def getHeadersParent(self):
+	def getHeaderParent(self):
 		# when thread view is disabled
 		if self.role != ct.ROLE_TREEVIEWITEM:
 			return self.simpleParent.simpleFirstChild
@@ -403,9 +437,8 @@ class ColumnsReview64(ColumnsReview):
 	"""for 64-bit systems (DirectUIHWND window class)
 	see ColumnsReview32 class for more comments"""
 
-	def __init__(self, *args, **kwargs):
-		super(ColumnsReview64, self).__init__(*args, **kwargs)
-		self.folderDoc = None
+	# window shell variable
+	curWindow = None
 
 	def script_readColumn(self,gesture):
 		num = self.getIndex(gesture.mainKeyName.rsplit('+', 1)[-1])
@@ -439,48 +472,117 @@ class ColumnsReview64(ColumnsReview):
 	# Translators: documentation of script to read columns
 	script_readColumn.__doc__ = _("Returns the header and the content of the list column at the index corresponding to the number pressed")
 
-	def getHeadersParent(self):
-		return filter(lambda i: i.role == ct.ROLE_HEADER, self.simpleParent.children)[0]
+	def getHeaderParent(self):
+		# for imperscrutable reasons, this path gives object containing headers
+		# otherwise individually visible as first list children
+		return self.simpleParent.simpleFirstChild.parent
 
-	def findInList(self, text, reverse, caseSensitive):
+	def preCheck(self):
+		# check to ensure shell32 method will work
+		# (not available in all context, as open dialog)
 		shell = CreateObject("shell.application")
 		fg = api.getForegroundObject()
 		for window in shell.Windows():
 			if window.hwnd == fg.windowHandle:
-				self.folderDoc = window.Document
+				self.curWindow = window
 				break
-		if not self.folderDoc:
-				return None
+		if not self.curWindow:
+			ui.message(NVDALocale("Not supported in this document"))
+			return False
+		return True
+
+	def script_find(self, gesture):
+		if self.preCheck():
+			super(ColumnsReview64, self).script_find(gesture)
+
+	def script_findNext(self, gesture):
+		if self.preCheck():
+			super(ColumnsReview64, self).script_findNext(gesture)
+
+	def script_findPrevious(self, gesture):
+		if self.preCheck():
+			super(ColumnsReview64, self).script_findPrevious(gesture)
+
+	def findInList(self, text, reverse, caseSensitive):
+		"""performs search in item list, via shell32 object."""
+		curFolder = self.curWindow.Document.Folder
+		# names of children objects of current list item,
+		# as "size", "modify date", "duration"...
+		# note that icon has no name
+		detailNames = [c.name for c in self.children if c.name]
+		# corresponding indexes to query info for each file
+		detailIndexes = []
+		# 500 limit seems reasonable (they are 300+ on my system!)
+		for index in rangeFunc(0,500):
+			# localized detail name, as "size"
+			detailName = curFolder.GetDetailsOf("", index)
+			# we get index corresponding to name, so update lists
+			if detailName in detailNames:
+				detailNames.remove(detailName)
+				detailIndexes.append(index)
+			# to speed-up process, we want only visible details
+			if not detailNames:
+				break
+		# useful to compute size
+		bytePerSector = ctypes.c_ulonglong(0)
+		# path without leading file://
+		curPath = self.curWindow.LocationURL.rsplit("/", 1)[0][8:]
+		# we get from current path, to ensure precision
+		# also on external drives or different partitions
+		getBytePerSector(ctypes.c_wchar_p(curPath), None, ctypes.pointer(bytePerSector), None, None,)
 		listLen = self.positionInfo["similarItemsInGroup"]
 		# 1-based index
 		curIndex = self.positionInfo["indexInGroup"]
-		items = self.folderDoc.Folder.Items()
+		# pointer to item list
+		items = curFolder.Items()
+		res = None
 		if reverse:
-			res = None
+#			indexes = rangeFunc(curIndex-2,-1,-1)
+			# unfortunately, list pointer seems to change
+			# for each query in reverse order
+			# so, this range
 			indexes = rangeFunc(0,curIndex-1)
-			for index in indexes:
-				item = items.Item(index)
-				if (
-					(caseSensitive and text in item.name)
-					or
-					(not caseSensitive and text.lower() in item.name.lower())
-				):
-					res = item
-			return res
 		else:
 			indexes = rangeFunc(curIndex,listLen)
-			for index in indexes:
-				item = items.Item(index)
-				if (
-					(caseSensitive and text in item.name)
-					or
-					(not caseSensitive and text.lower() in item.name.lower())
-				):
-					return item
+		for index in indexes:
+			# pointer to item
+			item = items.Item(index)
+			# detail value list
+			tempItemInfo = []
+			for index in detailIndexes:
+				# getDetailsOf(item, 1) returns file size in KB, MB, etc,
+				# item.size returns  as file size in bytes
+				# but explorer shows file size on disk, in kilobytes...
+				if (index == 1) and not item.IsFolder:
+				# formula below is an optimization of ((item.size-1)/bytePerSector.value+1)*bytePerSector.value
+					diskSizeB = ((item.size-1)&~(bytePerSector.value-1))+bytePerSector.value if item.size>512 else 1024
+					diskSizeKB = int(round(diskSizeB/1024.0))
+					# to insert thousands separator
+					formattedSize = locale.format_string('%d', diskSizeKB, True)
+					explorerSize = ' '.join([formattedSize, "KB"])
+					tempItemInfo.append(explorerSize)
+				else:
+					tempItemInfo.append(curFolder.GetDetailsOf(item, index))
+			# our reconstruction of item as shown in explorer
+			itemInfo = '; '.join(tempItemInfo)
+			# finally, the search if
+			if (
+				(not caseSensitive and text.lower() in itemInfo.lower())
+				or
+				(caseSensitive and text in itemInfo)
+			):
+				res = item
+				if not reverse:
+					# we can stop; if reverse
+					# we must scroll everything
+					break
+		return res
 
 	def successSearchAction(self, res):
 			speech.cancelSpeech()
-			self.folderDoc.SelectItem(res, 28)
+			# according to MS, 28 should remove any
+			# selection and move focus on chosen item
+			self.curWindow.Document.SelectItem(res, 28)
 
 # for settings presentation compatibility
 if hasattr(gui.settingsDialogs, "SettingsPanel"):
@@ -574,17 +676,17 @@ class ColumnsReviewSettingsDialog(superDialogClass):
 			self.settingsSizer.Show(self._switchChar)
 		self.Fit()
 
-class HeadersDialog(wx.Dialog):
+class HeaderDialog(wx.Dialog):
 	"""define dialog for column headers management."""
 
-	def __init__(self, parent, appName, headersList):
+	def __init__(self, parent, appName, headerList):
 		title = ' - '.join([_("Headers manager"), appName])
-		super(HeadersDialog, self).__init__(parent, title=title)
+		super(HeaderDialog, self).__init__(parent, title=title)
 		helperSizer = BoxSizerHelper(self, wx.HORIZONTAL)
-		choices = [x.name if x.name else _("Unnamed header") for x in headersList]
+		choices = [x.name if x.name else _("Unnamed header") for x in headerList]
 		self.list = helperSizer.addLabeledControl(_("Headers:"), wx.ListBox, choices=choices)
 		self.list.SetSelection(0)
-		self.headersList = headersList
+		self.headerList = headerList
 		actions = ButtonHelper(wx.VERTICAL)
 		leftClickAction = actions.addButton(self, label=_("Left click"))
 		leftClickAction.Bind(wx.EVT_BUTTON, self.onLeftClick)
@@ -600,7 +702,7 @@ class HeadersDialog(wx.Dialog):
 
 	def onLeftClick(self, event):
 		index = self.list.GetSelection()
-		headerObj = self.headersList[index]
+		headerObj = self.headerList[index]
 		self.Destroy()
 		api.setNavigatorObject(headerObj)
 		commands.script_moveMouseToNavigatorObject(None)
@@ -610,7 +712,7 @@ class HeadersDialog(wx.Dialog):
 
 	def onRightClick(self, event):
 		index = self.list.GetSelection()
-		headerObj = self.headersList[index]
+		headerObj = self.headerList[index]
 		self.Destroy()
 		api.setNavigatorObject(headerObj)
 		commands.script_moveMouseToNavigatorObject(None)
