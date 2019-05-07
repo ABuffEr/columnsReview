@@ -311,7 +311,6 @@ class ColumnsReview(RowWithFakeNavigation):
 		if not text:
 			return
 		speech.cancelSpeech()
-		ui.message(_("Searching..."))
 		#Call launchFinder asynchronously, i.e. without expecting it to return
 		Thread(target=self.launchFinder, args=(text, reverse, caseSensitive) ).start()
 		ColumnsReview._lastFindText = text
@@ -360,8 +359,7 @@ class ColumnsReview(RowWithFakeNavigation):
 	def successSearchAction(self, res):
 		speech.cancelSpeech()
 		# TODO: remove selection from previous list item
-		api.setNavigatorObject(res)
-		runSilently(commands.script_navigatorObject_moveFocus, res)
+		res.setFocus()
 
 	def event_loseFocus(self):
 		if gFinder is None:
