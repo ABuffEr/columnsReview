@@ -6,6 +6,8 @@
 # Add-on to manage columns in list views
 # Code inspired by EnhancedListViewSupport plugin,
 # by Peter Vagner and contributors
+# Threaded search code inspired from InstantTranslate addon
+# by Alexy Sadovoy aka Lex <lex@progger.su>, ruslan <ru2020slan@yandex.ru>, beqa <beqaprogger@gmail.com>, Mesar Hameed <mhameed@src.gnome.org>, Alberto Buffolino <a.buffolino@gmail.com>, and other NVDA contributors  sélectionné
 
 from .msg import message as NVDALocale
 from NVDAObjects.IAccessible import getNVDAObjectFromEvent
@@ -21,7 +23,7 @@ from globalCommands import commands
 from gui.guiHelper import *
 from logHandler import log
 from scriptHandler import isScriptWaiting, getLastScriptRepeatCount
-from threading import Thread
+from threading import Thread, Event
 from time import sleep
 from tones import beep
 import addonHandler
@@ -152,6 +154,40 @@ class EmptyList(List):
 	def script_alert(self, gesture):
 		self.event_gainFocus()
 
+#Global ref on current finder
+gFinder = None
+
+class Finder(Thread):
+
+	STATUS_NOT_STARTED = 1
+	STATUS_RUNNING = 2
+	STATUS_COMPLETE = 3
+	STATUS_ABORTED = 4
+	
+	def __init__(self, orig, text, reverse, caseSensitive, *args, **kwargs):
+		super(Finder, self).__init__(*args, **kwargs)
+		self._stop = Event()
+		self.orig = orig
+		self.text = text
+		self.reverse = reverse
+		self.caseSensitive = caseSensitive
+		self.res = None
+		self.status = Finder.STATUS_NOT_STARTED
+		
+	def stop(self):
+		self._stop.set()
+		self.status = Finder.STATUS_ABORTED
+		
+	def stopped(self):
+		return self._stop.is_set()
+	
+	def run(self):
+		self.status = Finder.STATUS_RUNNING
+		self.res = self.orig.findInList(self.text, self.reverse, self.caseSensitive, self.stopped)
+		if self.status == Finder.STATUS_RUNNING:
+			self.status = Finder.STATUS_COMPLETE
+
+	
 class ColumnsReview(RowWithFakeNavigation):
 	"""The main abstract class that generates gestures and calculate index;
 	classes that define new list types must override it,
@@ -166,7 +202,7 @@ class ColumnsReview(RowWithFakeNavigation):
 	# search parameter variables
 	_lastFindText = ""
 	_lastCaseSensitivity = False
-
+	
 	def initOverlayClass(self):
 		"""maps the correct gestures"""
 		# obviously, empty lists are not handled
@@ -275,16 +311,37 @@ class ColumnsReview(RowWithFakeNavigation):
 		if not text:
 			return
 		speech.cancelSpeech()
-		ui.message(_("Searching..."))
-		res = self.findInList(text, reverse, caseSensitive)
-		if res:
-			self.successSearchAction(res)
-		else:
-			wx.CallAfter(gui.messageBox, NVDALocale('text "%s" not found')%text, NVDALocale("Find Error"), wx.OK|wx.ICON_ERROR)
+		#Call launchFinder asynchronously, i.e. without expecting it to return
+		Thread(target=self.launchFinder, args=(text, reverse, caseSensitive) ).start()
 		ColumnsReview._lastFindText = text
 		ColumnsReview._lastCaseSensitivity = caseSensitive
-
-	def findInList(self, text, reverse, caseSensitive):
+		
+	def launchFinder(self, text, reverse, caseSensitive):
+		global gFinder
+		if gFinder is not None:
+			gFinder.stop()
+		gFinder = Finder(self, text, reverse, caseSensitive)
+		#Create local ref to finder. Local ref should be used during this whole function execution, while global ref may be deleted or overriden.
+		finder = gFinder
+		finder.start()
+		i = 0
+		while finder.isAlive():
+			sleep(0.1)
+			i += 1
+			if i == 10:
+				beep(500, 100)
+				i = 0
+		finder.join()
+		if finder.status == Finder.STATUS_COMPLETE:
+			if finder.res:
+				core.callLater(0, self.successSearchAction, finder.res )
+			else:
+				wx.CallAfter(gui.messageBox, NVDALocale('text "%s" not found')%text, NVDALocale("Find Error"), wx.OK|wx.ICON_ERROR)
+		else:
+			core.callLater(0, beep, 220, 150 )
+		finder = None
+	
+	def findInList(self, text, reverse, caseSensitive, stopCheck=lambda:False):
 		"""performs the search in item list, via NVDA object navigation."""
 		# generic implementation
 		item = self.previous if reverse else self.next
@@ -296,13 +353,20 @@ class ColumnsReview(RowWithFakeNavigation):
 			):
 				return item
 			item = item.previous if reverse else item.next
+			if stopCheck():
+				break
 
 	def successSearchAction(self, res):
 		speech.cancelSpeech()
 		# TODO: remove selection from previous list item
-		api.setNavigatorObject(res)
-		runSilently(commands.script_navigatorObject_moveFocus, res)
+		res.setFocus()
 
+	def event_loseFocus(self):
+		if gFinder is None:
+			return
+		if gFinder.orig == self:
+			gFinder.stop()
+	
 	def script_findNext(self,gesture):
 		if not self._lastFindText:
 			self.script_find(gesture)
@@ -373,7 +437,7 @@ class ColumnsReview32(ColumnsReview):
 		headerParent = getNVDAObjectFromEvent(headerHandle, winUser.OBJID_CLIENT, 0)
 		return headerParent
 
-	def findInList(self, text, reverse, caseSensitive):
+	def findInList(self, text, reverse, caseSensitive, stopCheck=lambda:False):
 		"""performs search in item list, via object handles."""
 		# specific implementation
 		fg = api.getForegroundObject()
@@ -388,7 +452,7 @@ class ColumnsReview32(ColumnsReview):
 		# if handle approach fails, use generic method
 		if not thisList:
 			log.info("Handle method failed")
-			res = super(ColumnsReview32, self).findInList(text, reverse, caseSensitive)
+			res = super(ColumnsReview32, self).findInList(text, reverse, caseSensitive, stopCheck)
 			return res
 		listLen = self.positionInfo["similarItemsInGroup"]
 		# 1-based index
@@ -405,6 +469,8 @@ class ColumnsReview32(ColumnsReview):
 				(caseSensitive and text in item.name)
 			):
 				return item
+			if stopCheck():
+				break
 
 class MozillaTable(ColumnsReview32):
 	"""Class to manage column headers in Mozilla list"""
@@ -503,7 +569,7 @@ class ColumnsReview64(ColumnsReview):
 		if self.preCheck():
 			super(ColumnsReview64, self).script_findPrevious(gesture)
 
-	def findInList(self, text, reverse, caseSensitive):
+	def findInList(self, text, reverse, caseSensitive, stopCheck=lambda:False):
 		"""performs search in item list, via shell32 object."""
 		curFolder = self.curWindow.Document.Folder
 		# names of children objects of current list item,
@@ -576,6 +642,8 @@ class ColumnsReview64(ColumnsReview):
 					# we can stop; if reverse
 					# we must scroll everything
 					break
+			if stopCheck():
+				break
 		return res
 
 	def successSearchAction(self, res):
