@@ -2,26 +2,35 @@
 # ColumnsReview
 # A global plugin for NVDA
 # Copyright 2014 Alberto Buffolino, released under GPL
-
 # Add-on to manage columns in list views
 # Code inspired by EnhancedListViewSupport plugin,
 # by Peter Vagner and contributors
-# Threaded search code inspired from InstantTranslate addon
-# by Alexy Sadovoy aka Lex <lex@progger.su>, ruslan <ru2020slan@yandex.ru>, beqa <beqaprogger@gmail.com>, Mesar Hameed <mhameed@src.gnome.org>, Alberto Buffolino <a.buffolino@gmail.com>, and other NVDA contributors  sélectionné
+# Many thanks to Robert HÃ¤nggi and Abdelkrim BensaÃ¯d
+# for shell code suggestions,
+# to Noelia Ruiz MartÃ­nez
+# for original selected items feature, 
+# to Cyrille Bougot
+# for suggestions and sysListView32 threading support,
+# and to other users of NVDA mailing lists
+# for feedback and comments
 
 from .msg import message as NVDALocale
 from NVDAObjects.IAccessible import getNVDAObjectFromEvent
-from NVDAObjects.IAccessible.sysListView32 import List, ListItem, LVM_GETHEADER
+from NVDAObjects.IAccessible.sysListView32 import * #List, ListItem, LVM_GETHEADER
 from NVDAObjects.UIA import UIA # For UIA implementations only, chiefly 64-bit.
 from NVDAObjects.behaviors import RowWithFakeNavigation
 from appModules.explorer import GridTileElement, GridListTileElement # Specific for Start Screen tiles.
 from cStringIO import StringIO
 from comtypes.client import CreateObject
+from comtypes.gen.IAccessible2Lib import IAccessible2
 from configobj import *
 from configobj import ConfigObj
+from ctypes.wintypes import LPARAM as LParam
+#from cursorManager import CursorManager
 from globalCommands import commands
 from gui.guiHelper import *
 from logHandler import log
+from oleacc import STATE_SYSTEM_MULTISELECTABLE, SELFLAG_TAKEFOCUS, SELFLAG_TAKESELECTION, SELFLAG_ADDSELECTION
 from scriptHandler import isScriptWaiting, getLastScriptRepeatCount
 from threading import Thread, Event
 from time import sleep
@@ -39,8 +48,8 @@ import globalVars
 import gui
 import locale
 import os
-import speech
 import queueHandler
+import speech
 import ui
 import watchdog
 import winUser
@@ -84,6 +93,19 @@ def runSilently(func, *args, **kwargs):
 		speech.speechMode = configBackup["voice"]
 		config.conf["braille"]._cacheLeaf("messageTimeout", None, configBackup["braille"])
 
+# to get NVDA script gestures, regardless its user remap
+def getScriptGestures(scriptFunc):
+	from inputCore import manager
+	scriptGestures = []
+	try:
+		scriptCategory = scriptFunc.category if hasattr(scriptFunc, "category") else scriptFunc.im_class.scriptCategory
+		scriptDoc = scriptFunc.__doc__
+		scriptGestures = manager.getAllGestureMappings()[scriptCategory][scriptDoc].gestures
+	except:
+		pass
+	return scriptGestures
+
+# useful in ColumnsReview64 to calculate file size
 getBytePerSector = ctypes.windll.kernel32.GetDiskFreeSpaceW
 
 # init config
@@ -144,7 +166,18 @@ class EmptyList(List):
 				braille.handler.update()
 				# bind arrows to focus again (and repeat message)
 				for item in ["Up", "Down", "Left", "Right"]:
-					self.bindGesture("kb:%s" %item+"Arrow", "alert")
+					self.bindGesture("kb:%sArrow"%item, "alert")
+				# other useful gesture to remap
+				# script_reportCurrentFocus
+				for gesture in getScriptGestures(commands.script_reportCurrentFocus):
+					self.bindGesture(gesture, "alert")
+#				self.bindGesture("kb:NVDA+tab", "alert")
+				# script_reportCurrentLine
+				for gesture in getScriptGestures(commands.script_reportCurrentLine):
+					self.bindGesture(gesture, "alert")
+				# script_reportCurrentSelection
+				for gesture in getScriptGestures(commands.script_reportCurrentSelection):
+					self.bindGesture(gesture, "alert")
 			else:
 				self.clearGestureBindings()
 				super(EmptyList, self).event_gainFocus()
@@ -154,8 +187,10 @@ class EmptyList(List):
 	def script_alert(self, gesture):
 		self.event_gainFocus()
 
-#Global ref on current finder
+# Global ref on current finder
 gFinder = None
+# pref in find dialog
+useMultipleSelection = False
 
 class Finder(Thread):
 
@@ -163,7 +198,7 @@ class Finder(Thread):
 	STATUS_RUNNING = 2
 	STATUS_COMPLETE = 3
 	STATUS_ABORTED = 4
-	
+
 	def __init__(self, orig, text, reverse, caseSensitive, *args, **kwargs):
 		super(Finder, self).__init__(*args, **kwargs)
 		self._stop = Event()
@@ -173,21 +208,20 @@ class Finder(Thread):
 		self.caseSensitive = caseSensitive
 		self.res = None
 		self.status = Finder.STATUS_NOT_STARTED
-		
+
 	def stop(self):
 		self._stop.set()
 		self.status = Finder.STATUS_ABORTED
-		
+
 	def stopped(self):
 		return self._stop.is_set()
-	
+
 	def run(self):
 		self.status = Finder.STATUS_RUNNING
 		self.res = self.orig.findInList(self.text, self.reverse, self.caseSensitive, self.stopped)
 		if self.status == Finder.STATUS_RUNNING:
 			self.status = Finder.STATUS_COMPLETE
 
-	
 class ColumnsReview(RowWithFakeNavigation):
 	"""The main abstract class that generates gestures and calculate index;
 	classes that define new list types must override it,
@@ -200,9 +234,15 @@ class ColumnsReview(RowWithFakeNavigation):
 	# the variable which keeps track of the last chosen column number
 	lastColumn = None
 	# search parameter variables
-	_lastFindText = ""
 	_lastCaseSensitivity = False
-	
+	# compatibility code before/after search history introduction
+	if hasattr(cursorManager, "SEARCH_HISTORY_MOST_RECENT_INDEX"):
+		SEARCH_HISTORY_MOST_RECENT_INDEX = 0
+		SEARCH_HISTORY_LEAST_RECENT_INDEX = 19
+		_searchEntries = []
+	else:
+		_lastFindText = ""
+
 	def initOverlayClass(self):
 		"""maps the correct gestures"""
 		# obviously, empty lists are not handled
@@ -226,9 +266,13 @@ class ColumnsReview(RowWithFakeNavigation):
 			self.bindGesture("kb:%s+0"%baseKeys, "readColumn")
 			self.bindGesture("kb:%s+%s"%(baseKeys, switchChar), "changeInterval")
 			self.bindGesture("kb:%s+enter"%baseKeys, "manageHeaders")
+		# find gestures
 		self.bindGesture("kb:NVDA+control+f", "find")
 		self.bindGesture("kb:NVDA+f3", "findNext")
 		self.bindGesture("kb:NVDA+shift+f3", "findPrevious")
+		# for current selection
+		for gesture in getScriptGestures(commands.script_reportCurrentSelection):
+			self.bindGesture(gesture, "reportCurrentSelection")
 
 	def script_readColumn(self,gesture):
 		raise NotImplementedError
@@ -297,31 +341,63 @@ class ColumnsReview(RowWithFakeNavigation):
 		"""return the navigator object with header objects as children."""
 		raise NotImplementedError
 
+	def script_reportCurrentSelection(self, gesture):
+		# generic (slow) implementation
+		# (actually not used by any subclass)
+		items = []
+		item = self.parent.firstChild
+		while (item and item.role == self.role):
+			if ct.STATE_SELECTED in item.states:
+				itemChild = item.getChild(0)
+				itemName = itemChild.name if itemChild else item.name
+				if itemName:
+					items.append(itemName)
+			item = item.next
+		spokenItems = ', '.join(items)
+		ui.message("%d %s: %s"%(len(items),
+			# translators: message presented when get selected item count and names
+			_("selected items"), spokenItems))
+
+	# Translators: documentation for script to know current selected items
+	script_reportCurrentSelection.__doc__ = _("Reports current selected list items")
+
 	def script_find(self, gesture):
-		d = cursorManager.FindDialog(gui.mainFrame, self, self._lastFindText, self._lastCaseSensitivity)
+		if hasattr(cursorManager, "SEARCH_HISTORY_MOST_RECENT_INDEX"):
+			d = FindDialog(gui.mainFrame, self, self._lastCaseSensitivity, self._searchEntries)
+		else:
+			d = FindDialog(gui.mainFrame, self, self._lastFindText, self._lastCaseSensitivity)
 		gui.mainFrame.prePopup()
 		d.Show()
 		gui.mainFrame.postPopup()
 
 	# Translators: documentation for script to find in list
-	script_find.__doc__ = _("Provides a dialog for searching in item list.")
+	script_find.__doc__ = _("Provides a dialog for searching in item list")
 
 	def doFindText(self, text, reverse=False, caseSensitive=False):
 		"""manages actions pre and post search."""
 		if not text:
 			return
 		speech.cancelSpeech()
-		#Call launchFinder asynchronously, i.e. without expecting it to return
-		Thread(target=self.launchFinder, args=(text, reverse, caseSensitive) ).start()
+		ui.message(_("Searching..."))
+		if self.THREAD_SUPPORTED:
+			# Call launchFinder asynchronously, i.e. without expecting it to return
+			Thread(target=self.launchFinder, args=(text, reverse, caseSensitive) ).start()
+		else:
+			res = self.findInList(text, reverse, caseSensitive)
+			speech.cancelSpeech()
+			if res:
+				self.successSearchAction(res)
+			else:
+				wx.CallAfter(gui.messageBox, NVDALocale('text "%s" not found')%text, NVDALocale("Find Error"), wx.OK|wx.ICON_ERROR)
 		ColumnsReview._lastFindText = text
 		ColumnsReview._lastCaseSensitivity = caseSensitive
-		
+
 	def launchFinder(self, text, reverse, caseSensitive):
 		global gFinder
 		if gFinder is not None:
 			gFinder.stop()
 		gFinder = Finder(self, text, reverse, caseSensitive)
-		#Create local ref to finder. Local ref should be used during this whole function execution, while global ref may be deleted or overriden.
+		# Create local ref to finder. Local ref should be used during this whole function execution, while global ref may be deleted or overridden.
 		finder = gFinder
 		finder.start()
 		i = 0
@@ -334,16 +410,17 @@ class ColumnsReview(RowWithFakeNavigation):
 		finder.join()
 		if finder.status == Finder.STATUS_COMPLETE:
 			if finder.res:
-				core.callLater(0, self.successSearchAction, finder.res )
+				core.callLater(0, self.successSearchAction, finder.res)
 			else:
 				wx.CallAfter(gui.messageBox, NVDALocale('text "%s" not found')%text, NVDALocale("Find Error"), wx.OK|wx.ICON_ERROR)
 		else:
 			core.callLater(0, beep, 220, 150 )
 		finder = None
-	
+
 	def findInList(self, text, reverse, caseSensitive, stopCheck=lambda:False):
 		"""performs the search in item list, via NVDA object navigation."""
 		# generic implementation
+		# (actually not used by any subclass)
 		item = self.previous if reverse else self.next
 		while (item and item.role == self.role):
 			if (
@@ -356,17 +433,16 @@ class ColumnsReview(RowWithFakeNavigation):
 			if stopCheck():
 				break
 
-	def successSearchAction(self, res):
-		speech.cancelSpeech()
-		# TODO: remove selection from previous list item
-		res.setFocus()
+	def isMultipleSelectionSupported(self):
+		raise NotImplementedError
 
-	def event_loseFocus(self):
-		if gFinder is None:
-			return
-		if gFinder.orig == self:
-			gFinder.stop()
-	
+	def successSearchAction(self, res):
+		# generic method
+		# (actually not used by any subclass)
+		speech.cancelSpeech()
+		api.setNavigatorObject(res)
+		runSilently(commands.script_navigatorObject_moveFocus, res)
+
 	def script_findNext(self,gesture):
 		if not self._lastFindText:
 			self.script_find(gesture)
@@ -386,20 +462,34 @@ class ColumnsReview(RowWithFakeNavigation):
 	script_findPrevious.__doc__ = _("Goes to previous result of current search")
 
 class FindDialog(cursorManager.FindDialog):
-	# not used
 	"""a class extending traditional find dialog."""
 
+	def __init__(self, parent, cursorManager, *args):
+		super(FindDialog, self).__init__(parent, cursorManager, *args)
+		mainSizer = self.GetSizer()
+		if not self.activeCursorManager.isMultipleSelectionSupported():
+			return
+		self.multipleSelectionCheckBox = wx.CheckBox(self, wx.ID_ANY, label=_("Use multiple selection"))
+		global useMultipleSelection
+		self.multipleSelectionCheckBox.SetValue(useMultipleSelection)
+		self.multipleSelectionCheckBox.MoveAfterInTabOrder(self.caseSensitiveCheckBox)
+		self.Layout()
+		mainSizer.Fit(self)
+		self.CentreOnScreen()
+
 	def onOk(self, evt):
-		text = self.findTextField.GetValue()
-		caseSensitive = self.caseSensitiveCheckBox.GetValue()
-		# We must use core.callLater rather than wx.CallLater to ensure that the callback runs within NVDA's core pump.
-		# If it didn't, and it directly or indirectly called wx.Yield, it could start executing NVDA's core pump from within the yield, causing recursion.
-		# self.activeCursorManager is currently a ColumnsReview instance here
-		core.callLater(10, self.activeCursorManager.doFindText, text, caseSensitive=caseSensitive)
-		self.Destroy()
+		global useMultipleSelection
+		if not self.activeCursorManager.isMultipleSelectionSupported():
+			useMultipleSelection = False
+		else:
+			useMultipleSelection = self.multipleSelectionCheckBox.GetValue()
+		super(FindDialog, self).onOk(evt)
 
 class ColumnsReview32(ColumnsReview):
 # for SysListView32 or WindowsForms10.SysListView32.app.0.*
+
+	# flag to guarantee thread support
+	THREAD_SUPPORTED = True
 
 	def script_readColumn(self, gesture):
 		# ask for index
@@ -451,8 +541,8 @@ class ColumnsReview32(ColumnsReview):
 				break
 		# if handle approach fails, use generic method
 		if not thisList:
-			log.info("Handle method failed")
-			res = super(ColumnsReview32, self).findInList(text, reverse, caseSensitive, stopCheck)
+			log.info("Use generic method")
+			res = super(ColumnsReview32, self).findInList(text, reverse, caseSensitive)
 			return res
 		listLen = self.positionInfo["similarItemsInGroup"]
 		# 1-based index
@@ -472,8 +562,51 @@ class ColumnsReview32(ColumnsReview):
 			if stopCheck():
 				break
 
+	def isMultipleSelectionSupported(self):
+		try:
+			states = self.IAccessibleObject.accState(self.IAccessibleChildID)
+			if states & STATE_SYSTEM_MULTISELECTABLE:
+				return True
+		except:
+			pass
+
+	def successSearchAction(self, res):
+		speech.cancelSpeech()
+		# for some reasons, in Thunderbird xor of flagsSelect is not supported
+		# so execute same actions but splitting calls
+		global useMultipleSelection
+		if useMultipleSelection:
+			res.IAccessibleObject.accSelect(SELFLAG_ADDSELECTION, res.IAccessibleChildID)
+			res.IAccessibleObject.accSelect(SELFLAG_TAKEFOCUS, res.IAccessibleChildID)
+		else:
+		 res.IAccessibleObject.accSelect(SELFLAG_TAKESELECTION, res.IAccessibleChildID)
+		 res.IAccessibleObject.accSelect(SELFLAG_TAKEFOCUS, res.IAccessibleChildID)
+
+	def script_reportCurrentSelection(self, gesture):
+		parentHandle = self.parent.windowHandle
+		# index of first selected item
+		# use -1 to query first list item too
+		# with index 0L
+		selItemIndex = watchdog.cancellableSendMessage(parentHandle, LVM_GETNEXTITEM, -1, LParam(LVNI_SELECTED))
+		listLen = watchdog.cancellableSendMessage(parentHandle, LVM_GETITEMCOUNT, 0, 0)
+		items = []
+		while (0 <= selItemIndex < listLen):
+			item = getNVDAObjectFromEvent(parentHandle, winUser.OBJID_CLIENT, selItemIndex+1)
+			itemChild = item.getChild(0)
+			itemName = itemChild.name if itemChild else item.name
+			if itemName:
+				items.append(itemName)
+			# index of next selected item
+			selItemIndex = watchdog.cancellableSendMessage(parentHandle, LVM_GETNEXTITEM, selItemIndex, LParam(LVNI_SELECTED))
+		spokenItems = ', '.join(items)
+		ui.message("%d %s: %s"%(len(items),
+			# translators: message presented when get selected item count and names
+			_("selected items"), spokenItems))
+
 class MozillaTable(ColumnsReview32):
 	"""Class to manage column headers in Mozilla list"""
+
+	THREAD_SUPPORTED = False
 
 	def _getColumnHeader(self, index):
 		"""Returns the column header in Mozilla applications"""
@@ -499,9 +632,46 @@ class MozillaTable(ColumnsReview32):
 				parent = parent.simpleParent
 			return parent.simpleFirstChild
 
+	def script_reportCurrentSelection(self, gesture):
+		# specific implementation, see:
+		# https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XPCOM/Reference/Interface/IAccessibleTable2
+		# try to avoid COM call generates a crash
+		if getLastScriptRepeatCount():
+			sleep(0.5)
+		table = self.parent.IAccessibleTable2Object
+		selRowArray, selRowNum = table.selectedRows
+		items = []
+		colNum = table.nColumns
+		for i in rangeFunc(0, selRowNum):
+			row = selRowArray[i]
+			itemCells = []
+			for col in rangeFunc(0, colNum):
+				cellText = table.cellAt(row, col).QueryInterface(IAccessible2).accName[0]
+				itemCells.append(cellText)
+			item = ' '.join(itemCells)
+			items.append(item)
+		spokenItems = ', '.join(items)
+		ui.message("%d %s: %s"%(len(items),
+			# translators: message presented when get selected item count and names
+			_("selected items"), spokenItems))
+
+	def isMultipleSelectionSupported(self):
+		return True
+
+	"""
+	# old non-multiselection method, for reference
+	def successSearchAction(self, res):
+		speech.cancelSpeech()
+		table = self.parent.IAccessibleTable2Object
+		resIndex = res.positionInfo["indexInGroup"]-1
+		table.selectRow(resIndex)
+	"""
+
 class ColumnsReview64(ColumnsReview):
 	"""for 64-bit systems (DirectUIHWND window class)
 	see ColumnsReview32 class for more comments"""
+
+	THREAD_SUPPORTED = False
 
 	# window shell variable
 	curWindow = None
@@ -539,7 +709,7 @@ class ColumnsReview64(ColumnsReview):
 	script_readColumn.__doc__ = _("Returns the header and the content of the list column at the index corresponding to the number pressed")
 
 	def getHeaderParent(self):
-		# for imperscrutable reasons, this path gives object containing headers
+		# for imperscrutable reasons, this path gives the header container object
 		# otherwise individually visible as first list children
 		return self.simpleParent.simpleFirstChild.parent
 
@@ -556,6 +726,20 @@ class ColumnsReview64(ColumnsReview):
 			ui.message(NVDALocale("Not supported in this document"))
 			return False
 		return True
+
+	def script_reportCurrentSelection(self, gesture):
+		if not self.preCheck():
+			ui.message(_("Current selection info not available"))
+			return
+		items = map(lambda i: i.name, self.curWindow.Document.SelectedItems())
+		if items:
+			# for some reasons, the last selected item appears as first, fix it
+			lastItem = items.pop(0)
+			items.append(lastItem)
+		spokenItems = ', '.join(items)
+		ui.message("%d %s: %s"%(len(items),
+			# translators: message presented when get selected item count and names
+			_("selected items"), spokenItems))
 
 	def script_find(self, gesture):
 		if self.preCheck():
@@ -642,15 +826,22 @@ class ColumnsReview64(ColumnsReview):
 					# we can stop; if reverse
 					# we must scroll everything
 					break
-			if stopCheck():
-				break
 		return res
+
+	def isMultipleSelectionSupported(self):
+		return True
 
 	def successSearchAction(self, res):
 			speech.cancelSpeech()
-			# according to MS, 28 should remove any
-			# selection and move focus on chosen item
-			self.curWindow.Document.SelectItem(res, 28)
+			# according to MS:
+			# https://docs.microsoft.com/en-us/windows/desktop/shell/shellfolderview-selectitem
+			# 17 should set focus and add item to selection,
+			# 29 should set focus and exclusive selection
+			global useMultipleSelection
+			if useMultipleSelection:
+				self.curWindow.Document.SelectItem(res, 17)
+			else:
+				self.curWindow.Document.SelectItem(res, 29)
 
 # for settings presentation compatibility
 if hasattr(gui.settingsDialogs, "SettingsPanel"):
