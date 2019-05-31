@@ -808,7 +808,7 @@ class ColumnsReview64(ColumnsReview):
 					diskSizeB = ((item.size-1)&~(bytePerSector.value-1))+bytePerSector.value if item.size>512 else 1024
 					diskSizeKB = int(round(diskSizeB/1024.0))
 					# to insert thousands separator
-					formattedSize = locale.format_string('%d', diskSizeKB, True)
+					formattedSize = locale.format_string('%d', diskSizeKB, True).decode('mbcs')
 					explorerSize = ' '.join([formattedSize, "KB"])
 					tempItemInfo.append(explorerSize)
 				else:
