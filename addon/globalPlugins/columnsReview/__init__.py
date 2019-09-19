@@ -20,7 +20,12 @@ from NVDAObjects.IAccessible.sysListView32 import * #List, ListItem, LVM_GETHEAD
 from NVDAObjects.UIA import UIA # For UIA implementations only, chiefly 64-bit.
 from NVDAObjects.behaviors import RowWithFakeNavigation
 from appModules.explorer import GridTileElement, GridListTileElement # Specific for Start Screen tiles.
-from cStringIO import StringIO
+import sys
+py3 = sys.version.startswith("3")
+if py3:
+	from io import StringIO
+else:
+	from cStringIO import StringIO
 from comtypes.client import CreateObject
 from comtypes.gen.IAccessible2Lib import IAccessible2
 from configobj import *
@@ -98,7 +103,7 @@ def getScriptGestures(scriptFunc):
 	from inputCore import manager
 	scriptGestures = []
 	try:
-		scriptCategory = scriptFunc.category if hasattr(scriptFunc, "category") else scriptFunc.im_class.scriptCategory
+		scriptCategory = scriptFunc.category if hasattr(scriptFunc, "category") else scriptFunc.__self__.__class__.scriptCategory
 		scriptDoc = scriptFunc.__doc__
 		scriptGestures = manager.getAllGestureMappings()[scriptCategory][scriptDoc].gestures
 	except:
@@ -137,7 +142,8 @@ def loadConfig():
 	announceEmptyList = myConf["general"]["announceEmptyList"]
 	useNumpadKeys = myConf["keyboard"]["useNumpadKeys"]
 	switchChar = myConf["keyboard"]["switchChar"]
-	chosenKeys = [g[0] for g in myConf["gestures"].iteritems() if g[1]]
+	configGestures = myConf["gestures"].items() if py3 else myConf["gestures"].iteritems()
+	chosenKeys = [g[0] for g in configGestures if g[1]]
 	baseKeys = '+'.join(chosenKeys)
 
 class EmptyList(List):
@@ -731,7 +737,7 @@ class ColumnsReview64(ColumnsReview):
 		if not self.preCheck():
 			ui.message(_("Current selection info not available"))
 			return
-		items = map(lambda i: i.name, self.curWindow.Document.SelectedItems())
+		items = [i.name for i in self.curWindow.Document.SelectedItems()]
 		if items:
 			# for some reasons, the last selected item appears as first, fix it
 			lastItem = items.pop(0)
@@ -874,7 +880,8 @@ class ColumnsReviewSettingsDialog(superDialogClass):
 			# Translators: Help message for sub-sizer of keys choices
 			label=_("Choose the keys you want to use with numbers:")), wx.VERTICAL)
 		self.keysChks = []
-		for keyName,keyEnabled in myConf["gestures"].iteritems():
+		configGestures = myConf["gestures"].items() if py3 else myConf["gestures"].iteritems()
+		for keyName,keyEnabled in configGestures:
 			chk = wx.CheckBox(self, label = NVDALocale(keyName))
 			chk.SetValue(keyEnabled)
 			keysSizer.Add(chk)

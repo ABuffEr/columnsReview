@@ -2,13 +2,16 @@ import addonHandler
 import gui
 import wx
 import os
+import sys
+py3 = sys.version.startswith("3")
 
 addonHandler.initTranslation()
 
 def onInstall():
 	for addon in addonHandler.getAvailableAddons():
 		if addon.name == "columnsReview":
-			iniFile = os.path.join(addon.path.encode("mbcs"), "globalPlugins", "settings.ini")
+			addonPath = addon.path if py3 else addon.path.encode("mbcs")
+			iniFile = os.path.join(addonPath, "globalPlugins", "settings.ini")
 			if os.path.isfile(iniFile):
 				gui.messageBox(
 					# Translators: the label of a message box dialog.
