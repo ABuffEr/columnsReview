@@ -315,7 +315,7 @@ class ColumnsReview(RowWithFakeNavigation):
 		# intervals (2) of needed  10 columns;
 		# if childCount is a multiple of 10 (es. 30),
 		# we have exactly childCount/10=3 intervals.
-		mod = self.childCount/10+(1 if self.childCount%10 else 0)
+		mod = self.childCount//10+(1 if self.childCount%10 else 0)
 		# now, we can scroll ten by ten among intervals, using modulus
 		self.tens = (self.tens+1)%mod
 		# interval bounds to announce
