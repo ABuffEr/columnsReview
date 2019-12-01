@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ColumnsReview 1.0\n"
 "Report-Msgid-Bugs-To: 'nvda-translations@freelists.org'\n"
-"POT-Creation-Date: 2015-02-06 23:21+0100\n"
-"PO-Revision-Date: 2015-02-06 23:21+0100\n"
+"POT-Creation-Date: 2019-12-01 12:26+0100\n"
+"PO-Revision-Date: 2019-12-01 12:28+0100\n"
 "Last-Translator: Alberto Buffolino <a.buffolino@gmail.com>\n"
 "Language-Team: Alberto Buffolino <a.buffolino@gmail.com>\n"
 "Language: it_IT\n"
@@ -13,13 +13,13 @@ msgstr ""
 "X-Poedit-KeywordsList: _;gettext;gettext_noop\n"
 "X-Poedit-Basepath: .\n"
 "X-Poedit-SourceCharset: UTF-8\n"
-"X-Generator: Poedit 1.6.5\n"
-"X-Poedit-SearchPath-0: ..\\..\\..\\globalPlugins\n"
+"X-Generator: Poedit 2.2.3\n"
+"X-Poedit-SearchPath-0: ../../../globalPlugins\n"
 
 #. Translators: documentation of script to read columns
-#: addon\globalPlugins\columnsReview\__init__.py:80
-#: addon\globalPlugins\columnsReview\__init__.py:162
-#: addon\globalPlugins\columnsReview\__init__.py:230
+#: addon\globalPlugins\columnsReview\__init__.py:303
+#: addon\globalPlugins\columnsReview\__init__.py:574
+#: addon\globalPlugins\columnsReview\__init__.py:771
 msgid ""
 "Returns the header and the content of the list column at the index "
 "corresponding to the number pressed"
@@ -28,63 +28,125 @@ msgstr ""
 "all'indice corrispondente al numero premuto"
 
 #. Translators: message when digit pressed exceed the columns number
-#: addon\globalPlugins\columnsReview\__init__.py:106
-#: addon\globalPlugins\columnsReview\__init__.py:139
-#: addon\globalPlugins\columnsReview\__init__.py:206
+#: addon\globalPlugins\columnsReview\__init__.py:327
+#: addon\globalPlugins\columnsReview\__init__.py:542
+#: addon\globalPlugins\columnsReview\__init__.py:747
 msgid "No more columns available"
 msgstr "Nessun'altra colonna disponibile"
 
 #. Translators: message when you change interval in a list with more ten columns
-#: addon\globalPlugins\columnsReview\__init__.py:126
+#: addon\globalPlugins\columnsReview\__init__.py:345
 #, python-brace-format
 msgid "From {start} to {end}"
 msgstr "Da {start} a {end}"
 
 #. Translators: documentation for script to change interval
-#: addon\globalPlugins\columnsReview\__init__.py:129
+#: addon\globalPlugins\columnsReview\__init__.py:348
 msgid "Cycles between a variable number of intervals of ten columns"
 msgstr "Cicla fra un numero variabile di intervalli di dieci colonne"
 
+#. Translators: documentation for script to manage headers
+#: addon\globalPlugins\columnsReview\__init__.py:360
+msgid "Provides a dialog for interactions with list column headers"
+msgstr ""
+
+#. translators: message presented when get selected item count and names
+#: addon\globalPlugins\columnsReview\__init__.py:381
+#: addon\globalPlugins\columnsReview\__init__.py:663
+#: addon\globalPlugins\columnsReview\__init__.py:718
+#: addon\globalPlugins\columnsReview\__init__.py:804
+msgid "selected items"
+msgstr ""
+
+#. Translators: documentation for script to know current selected items
+#: addon\globalPlugins\columnsReview\__init__.py:384
+msgid "Reports current selected list items"
+msgstr ""
+
+#. Translators: documentation for script to find in list
+#: addon\globalPlugins\columnsReview\__init__.py:396
+msgid "Provides a dialog for searching in item list"
+msgstr ""
+
+#: addon\globalPlugins\columnsReview\__init__.py:403
+msgid "Searching..."
+msgstr ""
+
+#. Translators: documentation for script to manage headers
+#: addon\globalPlugins\columnsReview\__init__.py:475
+msgid "Goes to next result of current search"
+msgstr ""
+
+#. Translators: documentation for script to manage headers
+#: addon\globalPlugins\columnsReview\__init__.py:484
+msgid "Goes to previous result of current search"
+msgstr ""
+
+#. Translators: documentation for script to manage headers
+#: addon\globalPlugins\columnsReview\__init__.py:490
+msgid "Launches say all for next list items"
+msgstr ""
+
+#: addon\globalPlugins\columnsReview\__init__.py:500
+msgid "Use multiple selection"
+msgstr ""
+
+#. Translators: message when digit pressed not match a visible column
+#: addon\globalPlugins\columnsReview\__init__.py:552
+msgid "No more visible columns available"
+msgstr "Nessun'altra colonna visibile disponibile"
+
 #. Translators: message when cell in specified column is empty
-#: addon\globalPlugins\columnsReview\__init__.py:149
-#: addon\globalPlugins\columnsReview\__init__.py:216
+#: addon\globalPlugins\columnsReview\__init__.py:561
+#: addon\globalPlugins\columnsReview\__init__.py:757
 msgid "Not available;"
 msgstr "Non disponibile;"
 
 #. Translators: message announcing what was copied
-#: addon\globalPlugins\columnsReview\__init__.py:155
-#: addon\globalPlugins\columnsReview\__init__.py:223
+#: addon\globalPlugins\columnsReview\__init__.py:567
+#: addon\globalPlugins\columnsReview\__init__.py:764
 #, python-format
 msgid "Copied in clipboard: %s"
 msgstr "Copiato negli appunti: %s"
 
+#: addon\globalPlugins\columnsReview\__init__.py:794
+msgid "Current selection info not available"
+msgstr ""
+
 #. Translators: title of settings dialog
-#: addon\globalPlugins\columnsReview\__init__.py:236
+#. Add-on summary, usually the user visible name of the addon.
+#. Translators: Summary for this add-on to be shown on installation and add-on information.
+#: addon\globalPlugins\columnsReview\__init__.py:920 buildVars.py:17
+msgid "Columns Review"
+msgstr "Columns Review"
+
+#. Translators: title of settings dialog
+#: addon\globalPlugins\columnsReview\__init__.py:923
 msgid "Columns Review Settings"
 msgstr "Impostazioni di Columns Review"
 
 #. Translators: label for read-header checkbox in settings
-#: addon\globalPlugins\columnsReview\__init__.py:241
+#: addon\globalPlugins\columnsReview\__init__.py:929
 msgid "Read the column header"
 msgstr "Leggi l'intestazione della colonna"
 
 #. Translators: label for copy-header checkbox in settings
-#: addon\globalPlugins\columnsReview\__init__.py:245
+#: addon\globalPlugins\columnsReview\__init__.py:933
 msgid "Copy the column header"
 msgstr "Copia l'intestazione della colonna"
 
 #. Translators: Help message for sub-sizer of keys choices
-#: addon\globalPlugins\columnsReview\__init__.py:250
+#: addon\globalPlugins\columnsReview\__init__.py:938
 msgid "Choose the keys you want to use with numbers:"
 msgstr "Scegliere i tasti che si desidera utilizzare coi numeri:"
 
 #. Translators: label for numpad keys checkbox in settings
-#: addon\globalPlugins\columnsReview\__init__.py:259
+#: addon\globalPlugins\columnsReview\__init__.py:948
 msgid "Use numpad keys to navigate through the columns"
 msgstr "Usa i tasti del tastierino numerico per navigare fra lecolonne "
 
 #. Translators: label for edit field in settings, visible if previous checkbox is disabled
-#: addon\globalPlugins\columnsReview\__init__.py:264
+#: addon\globalPlugins\columnsReview\__init__.py:953
 msgid ""
 "Insert the char after \"0\" in your keyboard layout, or another char as you "
 "like:"
@@ -92,16 +154,53 @@ msgstr ""
 "Inserisci il carattere dopo lo \"0\" nel tuo layout tastiera, o un altro "
 "carattere a piacere"
 
+#. Translators: label for announce-empty-list checkbox in settings
+#: addon\globalPlugins\columnsReview\__init__.py:963
+msgid "Announce empty list"
+msgstr ""
+
+#: addon\globalPlugins\columnsReview\__init__.py:1006
+msgid "Headers manager"
+msgstr ""
+
+#: addon\globalPlugins\columnsReview\__init__.py:1009
+msgid "Unnamed header"
+msgstr ""
+
+#: addon\globalPlugins\columnsReview\__init__.py:1010
+msgid "Headers:"
+msgstr ""
+
+#: addon\globalPlugins\columnsReview\__init__.py:1014
+msgid "Left click"
+msgstr ""
+
+#: addon\globalPlugins\columnsReview\__init__.py:1016
+msgid "Right click"
+msgstr ""
+
+#: addon\globalPlugins\columnsReview\__init__.py:1034
+#: addon\globalPlugins\columnsReview\__init__.py:1044
+#, python-format
+msgid "%s header clicked"
+msgstr ""
+
 #. Translators: menu item in preferences
-#: addon\globalPlugins\columnsReview\__init__.py:314
+#: addon\globalPlugins\columnsReview\__init__.py:1065
 msgid "Columns Review Settings..."
 msgstr "Columns Review - Impostazioni..."
 
-#. Add-on summary, usually the user visible name of the addon.
-#. Translators: Summary for this add-on to be shown on installation and add-on information.
-#: buildVars.py:17
-msgid "Columns Review"
-msgstr "Columns Review"
+#. Translators: the label of a message box dialog.
+#: addon\installTasks.py:18
+msgid ""
+"Previous add-on settings will be lost. Please configure it again, from NVDA "
+"preferences."
+msgstr ""
+
+#. Translators: the title of a message box dialog.
+#: addon\installTasks.py:20
+msgid "Add-on settings reset"
+msgstr ""
 
 #. Add-on description
 #. Translators: Long description to be shown for this add-on on add-on information from add-ons manager

@@ -24,8 +24,12 @@ import sys
 py3 = sys.version.startswith("3")
 if py3:
 	from io import StringIO
+	from sayAllHandler import _activeSayAll, _ObjectsReader
+	import weakref
+	sayAllSuperclass = _ObjectsReader
 else:
 	from cStringIO import StringIO
+	sayAllSuperclass = object
 from comtypes.client import CreateObject
 from comtypes.gen.IAccessible2Lib import IAccessible2
 from configobj import *
@@ -53,7 +57,6 @@ import globalVars
 import gui
 import locale
 import os
-import queueHandler
 import speech
 import ui
 import watchdog
@@ -207,7 +210,8 @@ class Finder(Thread):
 
 	def __init__(self, orig, text, reverse, caseSensitive, *args, **kwargs):
 		super(Finder, self).__init__(*args, **kwargs)
-		self._stop = Event()
+		# renamed from _stop to _stopEvent, to avoid Py3 conflicts
+		self._stopEvent = Event()
 		self.orig = orig
 		self.text = text
 		self.reverse = reverse
@@ -215,12 +219,19 @@ class Finder(Thread):
 		self.res = None
 		self.status = Finder.STATUS_NOT_STARTED
 
+	def isAlive(self):
+		if py3:
+			# isAlive() is present, but deprecated
+			return super(Finder, self).is_alive()
+		else:
+			return super(Finder, self).isAlive()
+
 	def stop(self):
-		self._stop.set()
+		self._stopEvent.set()
 		self.status = Finder.STATUS_ABORTED
 
 	def stopped(self):
-		return self._stop.is_set()
+		return self._stopEvent.is_set()
 
 	def run(self):
 		self.status = Finder.STATUS_RUNNING
@@ -279,6 +290,11 @@ class ColumnsReview(RowWithFakeNavigation):
 		# for current selection
 		for gesture in getScriptGestures(commands.script_reportCurrentSelection):
 			self.bindGesture(gesture, "reportCurrentSelection")
+		# for say all
+		# (available only after Py3 speech refactoring)
+		if py3:
+			for gesture in getScriptGestures(commands.script_sayAll):
+				self.bindGesture(gesture, "sayAll")
 
 	def script_readColumn(self,gesture):
 		raise NotImplementedError
@@ -467,6 +483,12 @@ class ColumnsReview(RowWithFakeNavigation):
 	# Translators: documentation for script to manage headers
 	script_findPrevious.__doc__ = _("Goes to previous result of current search")
 
+	def script_sayAll(self,gesture):
+		readRows(self)
+
+	# Translators: documentation for script to manage headers
+	script_sayAll.__doc__ = _("Launches say all for next list items")
+
 class FindDialog(cursorManager.FindDialog):
 	"""a class extending traditional find dialog."""
 
@@ -491,6 +513,21 @@ class FindDialog(cursorManager.FindDialog):
 			useMultipleSelection = self.multipleSelectionCheckBox.GetValue()
 		super(FindDialog, self).onOk(evt)
 
+def readRows(obj):
+	global _activeSayAll
+	reader = _RowsReader(obj)
+	_activeSayAll = weakref.ref(reader)
+	reader.next()
+
+class _RowsReader(sayAllSuperclass):
+
+	def walk(self, obj):
+		yield obj
+		nextObj = obj.next
+		while nextObj:
+			yield nextObj
+			nextObj = nextObj.next
+
 class ColumnsReview32(ColumnsReview):
 # for SysListView32 or WindowsForms10.SysListView32.app.0.*
 
@@ -504,10 +541,19 @@ class ColumnsReview32(ColumnsReview):
 			# Translators: message when digit pressed exceed the columns number
 			ui.message(_("No more columns available"))
 			return
+		# for invisible column case
+		num = self.getFixedNum(num)
+		# getChild is zero-based
 		obj = self.getChild(num-1)
+		# None obj should be generated
+		# only in invisible column case
+		if not obj:
+			# Translators: message when digit pressed not match a visible column
+			ui.message(_("No more visible columns available"))
+			return
 		# generally, an empty name is a None object,
 		# in Mozilla, instead, it's a unicode object with length 0
-		if obj and obj.name and len(obj.name):
+		if obj.name and len(obj.name):
 			# obj.name is the column content
 			content = ''.join([obj.name, ";"])
 		else:
@@ -515,17 +561,25 @@ class ColumnsReview32(ColumnsReview):
 			content = _("Not available;")
 		global readHeader, copyHeader
 		if getLastScriptRepeatCount() and self.lastColumn == num:
-			header = ''.join([self._getColumnHeader(num), ": "]) if copyHeader else ""
+			header = ''.join([obj.columnHeaderText, ": "]) if copyHeader else ""
 			if api.copyToClip(header+content):
 				# Translators: message announcing what was copied
 				ui.message(_("Copied in clipboard: %s")%(header+content))
 		else:
-			header = ''.join([self._getColumnHeader(num), ": "]) if readHeader else ""
+			header = ''.join([obj.columnHeaderText, ": "]) if readHeader else ""
 			self.lastColumn = num
 			ui.message(header+content)
 
 	# Translators: documentation of script to read columns
 	script_readColumn.__doc__ = _("Returns the header and the content of the list column at the index corresponding to the number pressed")
+
+	def getFixedNum(self, num):
+		child = self.simpleFirstChild
+		for n in rangeFunc(1, num):
+			child = child.simpleNext
+			if not child:
+				return self.childCount+1
+		return child.columnNumber
 
 	def getHeaderParent(self):
 		# faster than previous self.simpleParent.children[-1]
@@ -547,7 +601,6 @@ class ColumnsReview32(ColumnsReview):
 				break
 		# if handle approach fails, use generic method
 		if not thisList:
-			log.info("Use generic method")
 			res = super(ColumnsReview32, self).findInList(text, reverse, caseSensitive)
 			return res
 		listLen = self.positionInfo["similarItemsInGroup"]
@@ -623,6 +676,9 @@ class MozillaTable(ColumnsReview32):
 		# but we deduce the order thanks to top location of each header
 		headers.sort(key=lambda i: i.location)
 		return headers[index-1].name
+
+	def getFixedNum(self, num):
+		return num
 
 	def getHeaderParent(self):
 		# when thread view is disabled
