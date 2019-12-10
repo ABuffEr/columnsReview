@@ -276,15 +276,15 @@ class ColumnsReview(RowWithFakeNavigation):
 			self.bindGesture("kb:%s+numpadMinus"%baseKeys, "readColumn")
 			# ...numpadPlus to change interval
 			self.bindGesture("kb:%s+numpadPlus"%baseKeys, "changeInterval")
-			# delete for listitems total number
-			self.bindGesture("kb:%s+numpadDelete"%baseKeys, "listInfo")
+			# delete for list item info
+			self.bindGesture("kb:%s+numpadDelete"%baseKeys, "itemInfo")
 			# ...and enter to headers manager
 			self.bindGesture("kb:%s+numpadEnter"%baseKeys, "manageHeaders")
 		else:
 			# do same things for no numpad case
 			self.bindGesture("kb:%s+0"%baseKeys, "readColumn")
 			self.bindGesture("kb:%s+%s"%(baseKeys, switchChar), "changeInterval")
-			self.bindGesture("kb:%s+delete"%baseKeys, "listInfo")
+			self.bindGesture("kb:%s+delete"%baseKeys, "itemInfo")
 			self.bindGesture("kb:%s+enter"%baseKeys, "manageHeaders")
 		# find gestures
 		self.bindGesture("kb:NVDA+control+f", "find")
@@ -350,20 +350,24 @@ class ColumnsReview(RowWithFakeNavigation):
 	# Translators: documentation for script to change interval
 	script_changeInterval.__doc__ = _("Cycles between a variable number of intervals of ten columns")
 
-	def script_listInfo(self, gesture):
-		info = None
+	def script_itemInfo(self, gesture):
+		number = total = None
 		try:
-			info = self.positionInfo["similarItemsInGroup"]
+			number = self.positionInfo["indexInGroup"]
+			total = self.positionInfo["similarItemsInGroup"]
 		except:
 			tempList = [i for i in self.parent.children if i.role == ct.ROLE_LISTITEM]
-			info = len(tempList)
-		if info is None:
+			if tempList:
+				number = tempList.index(self)
+				total = len(tempList)
+		if None in (number, total):
 			ui.message(_("No information available"))
 		else:
-			ui.message(_("{info} items in list").format(info=info))
+			info = ' '.join([NVDALocale("item"), NVDALocale("{number} of {total}").format(number=number, total=total)])
+			ui.message(info)
 
-	# Translators: documentation for script to announce list info
-	script_listInfo.__doc__ = _("Announces item amount.")
+	# Translators: documentation for script to announce list item info
+	script_itemInfo.__doc__ = _("Announces list item position information")
 
 	def script_manageHeaders(self, gesture):
 		def run():
