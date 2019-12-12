@@ -69,6 +69,12 @@ except ImportError:
 except NameError:
 	rangeFunc = range
 
+addonDir = os.path.join(os.path.dirname(__file__), "..", "..")
+if isinstance(addonDir, bytes):
+	addonDir = addonDir.decode("mbcs")
+curAddon = addonHandler.Addon(addonDir)
+addonSummary = curAddon.manifest['summary']
+
 addonHandler.initTranslation()
 
 WNDENUMPROC = ctypes.WINFUNCTYPE(ctypes.wintypes.BOOL, ctypes.wintypes.HWND, ctypes.wintypes.LPARAM)
@@ -243,6 +249,8 @@ class ColumnsReview(RowWithFakeNavigation):
 	"""The main abstract class that generates gestures and calculate index;
 	classes that define new list types must override it,
 	defining (or eventually re-defining) methods of this class."""
+
+	scriptCategory = ' '.join([addonSummary, _("(DO NOT EDIT!)")])
 
 	# the variable representing tens
 	# of current interval (except the last column,
