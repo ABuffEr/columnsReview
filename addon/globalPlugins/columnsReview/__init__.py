@@ -68,6 +68,8 @@ except ImportError:
 	rangeFunc = xrange
 except NameError:
 	rangeFunc = range
+# rename for code clarity
+SysLV32List = List
 
 addonDir = os.path.join(os.path.dirname(__file__), "..", "..")
 if isinstance(addonDir, bytes):
@@ -155,7 +157,7 @@ def loadConfig():
 	chosenKeys = [g[0] for g in configGestures if g[1]]
 	baseKeys = '+'.join(chosenKeys)
 
-class EmptyList(List):
+class EmptyList(SysLV32List):
 	"""Class to announce empty list."""
 
 	def event_gainFocus(self):
@@ -1110,12 +1112,12 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 
 	def chooseNVDAObjectOverlayClasses(self, obj, clsList):
 		loadConfig()
-		if announceEmptyList and obj.role == ct.ROLE_LIST and "listview" in obj.windowClassName.lower():
+		if announceEmptyList and isinstance(obj, SysLV32List):
 			clsList.insert(0, EmptyList)
-		if obj.windowClassName == 'MozillaWindowClass' and obj.role in [ct.ROLE_TABLEROW, ct.ROLE_TREEVIEWITEM]:
+		if obj.windowClassName == "MozillaWindowClass" and obj.role in (ct.ROLE_TABLEROW, ct.ROLE_TREEVIEWITEM):
 			clsList.insert(0, MozillaTable)
 		elif obj.role == ct.ROLE_LISTITEM:
-			if obj.windowClassName == "SysListView32" or 'WindowsForms10.SysListView32.' in obj.windowClassName:
+			if isinstance(obj.parent, SysLV32List):
 				clsList.insert(0, ColumnsReview32)
 			elif obj.windowClassName == "DirectUIHWND" and isinstance(obj, UIA):
 				# Windows 8/8.1/10 Start Screen tiles should not expose column info.
