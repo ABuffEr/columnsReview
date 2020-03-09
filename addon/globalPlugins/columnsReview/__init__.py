@@ -803,7 +803,11 @@ class ColumnsReview64(ColumnsReview):
 	def getHeaderParent(self):
 		# for imperscrutable reasons, this path gives the header container object
 		# otherwise individually visible as first list children
-		return self.simpleParent.simpleFirstChild.parent
+		headerParent = self.simpleParent.simpleFirstChild
+		if headerParent.parent.role == ct.ROLE_HEADER:
+			return headerParent.parent
+		else:
+			return headerParent.next
 
 	def preCheck(self):
 		# check to ensure shell32 method will work
