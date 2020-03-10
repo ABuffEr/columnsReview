@@ -7,4 +7,3 @@ addon/doc/en/
 *.pot
 *.pyc
 .sconsign.dblite
-*.nvda-addon
