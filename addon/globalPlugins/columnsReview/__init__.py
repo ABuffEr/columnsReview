@@ -1120,7 +1120,7 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 
 	def event_foreground(self, obj, nextHandler):
 		if nvdaVersion < '2018.3':
-			self.handleConfigProfileSwitc()
+			self.handleConfigProfileSwitch()
 		nextHandler()
 
 	def chooseNVDAObjectOverlayClasses(self, obj, clsList):
