@@ -68,6 +68,9 @@ except ImportError:
 	rangeFunc = xrange
 except NameError:
 	rangeFunc = range
+from versionInfo import version_year, version_major
+# useful to simulate profile switch handling
+nvdaVersion = '.'.join([str(version_year), str(version_major)])
 # rename for code clarity
 SysLV32List = List
 
@@ -1090,6 +1093,8 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 		if globalVars.appArgs.secure:
 			return
 		self.createMenu()
+		if hasattr(config, "post_configProfileSwitch"):
+			config.post_configProfileSwitch.register(self.handleConfigProfileSwitch)
 
 	def createMenu(self):
 		# Dialog or the panel.
@@ -1109,6 +1114,14 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 				self.prefsMenu.RemoveItem(self.ColumnsReviewItem)
 			except wx.PyDeadObjectError:
 				pass
+
+	def handleConfigProfileSwitch(self):
+		loadConfig()
+
+	def event_foreground(self, obj, nextHandler):
+		if nvdaVersion < '2018.3':
+			self.handleConfigProfileSwitc()
+		nextHandler()
 
 	def chooseNVDAObjectOverlayClasses(self, obj, clsList):
 		loadConfig()
