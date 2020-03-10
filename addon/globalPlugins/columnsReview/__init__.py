@@ -1125,6 +1125,9 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 
 	def chooseNVDAObjectOverlayClasses(self, obj, clsList):
 		loadConfig()
+		# to avoid crash in Win10 task manager
+		if obj.role == ct.ROLE_LISTITEM and getattr(obj.appModule, "appName", None) == "taskmgr" and getattr(obj, "UIAElement", None):
+			return
 		if announceEmptyList and isinstance(obj, SysLV32List):
 			clsList.insert(0, EmptyList)
 		if obj.windowClassName == "MozillaWindowClass" and obj.role in (ct.ROLE_TABLEROW, ct.ROLE_TREEVIEWITEM):
@@ -1132,7 +1135,7 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 		elif obj.role == ct.ROLE_LISTITEM:
 			if isinstance(obj.parent, SysLV32List):
 				clsList.insert(0, ColumnsReview32)
-			elif obj.windowClassName == "DirectUIHWND" and isinstance(obj, UIA):
+			elif isinstance(obj, UIA):
 				# Windows 8/8.1/10 Start Screen tiles should not expose column info.
 				if not obj.UIAElement.cachedClassName in ("GridTileElement", "GridListTileElement"):
 					clsList.insert(0, ColumnsReview64)
