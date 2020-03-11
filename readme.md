@@ -41,4 +41,4 @@ Any listview potentially supports empty announcement (so, not DirectUIHWND nor M
 
 [2]: https://addons.nvda-project.org/files/get.php?file=cr-dev
 
-[3]: https://raw.githubusercontent.com/ABuffEr/columnsReview/master/packages/columnsReview-3.0-20200310-dev.nvda-addon
+[3]: https://raw.githubusercontent.com/ABuffEr/columnsReview/master/packages/columnsReview-3.0-20200311-dev.nvda-addon

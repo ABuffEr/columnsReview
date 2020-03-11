@@ -1128,14 +1128,14 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 		# to avoid crash in Win10 task manager
 		if obj.role == ct.ROLE_LISTITEM and getattr(obj.appModule, "appName", None) == "taskmgr" and getattr(obj, "UIAElement", None):
 			return
-		if announceEmptyList and isinstance(obj, SysLV32List):
+		if announceEmptyList and SysLV32List in clsList:
 			clsList.insert(0, EmptyList)
 		if obj.windowClassName == "MozillaWindowClass" and obj.role in (ct.ROLE_TABLEROW, ct.ROLE_TREEVIEWITEM):
 			clsList.insert(0, MozillaTable)
 		elif obj.role == ct.ROLE_LISTITEM:
 			if isinstance(obj.parent, SysLV32List):
 				clsList.insert(0, ColumnsReview32)
-			elif isinstance(obj, UIA):
+			elif UIA in clsList:
 				# Windows 8/8.1/10 Start Screen tiles should not expose column info.
 				if not obj.UIAElement.cachedClassName in ("GridTileElement", "GridListTileElement"):
 					clsList.insert(0, ColumnsReview64)
