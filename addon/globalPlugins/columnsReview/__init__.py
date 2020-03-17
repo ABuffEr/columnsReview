@@ -73,6 +73,7 @@ from versionInfo import version_year, version_major
 nvdaVersion = '.'.join([str(version_year), str(version_major)])
 # rename for code clarity
 SysLV32List = List
+SysLV32Item = ListItem
 
 addonDir = os.path.join(os.path.dirname(__file__), "..", "..")
 if isinstance(addonDir, bytes):
@@ -124,6 +125,24 @@ def getScriptGestures(scriptFunc):
 		pass
 	return scriptGestures
 
+def isEmptyList(lstObj):
+	try:
+		if (
+				# simple and fast check
+				(not lstObj.rowCount)
+				or
+				# usual condition for SysListView32
+				# (the unique child should be the header list, that usually follows items)
+				(lstObj.firstChild.role != ct.ROLE_LISTITEM and lstObj.firstChild == lstObj.lastChild)
+				or
+				# condition for possible strange cases
+				(lstObj.childCount <= 1)
+			):
+				return True
+		return False
+	except:
+		pass
+
 # useful in ColumnsReview64 to calculate file size
 getBytePerSector = ctypes.windll.kernel32.GetDiskFreeSpaceW
 
@@ -164,45 +183,34 @@ class EmptyList(SysLV32List):
 	"""Class to announce empty list."""
 
 	def event_gainFocus(self):
-		try:
-			if (
-				# usual condition for SysListView32
-				# (the unique child should be the header list)
-				(len(self.children) == 1 and not isinstance(self.children[0], ListItem))
-				or
-				# condition for possible strange cases
-				(not len(self.children))
-			):
-				super(EmptyList, self).event_gainFocus()
-				# brailled and spoken the "0 elements" message
-				text = ' '.join(["0", NVDALocale("Elements").lower()])
-				speech.speakMessage(text)
-				region = braille.TextRegion(" "+text)
-				region.focusToHardLeft = True
-				region.update()
-				braille.handler.buffer.regions.append(region)
-				braille.handler.buffer.focus(region)
-				braille.handler.buffer.update()
-				braille.handler.update()
-				# bind arrows to focus again (and repeat message)
-				for item in ["Up", "Down", "Left", "Right"]:
-					self.bindGesture("kb:%sArrow"%item, "alert")
-				# other useful gesture to remap
-				# script_reportCurrentFocus
-				for gesture in getScriptGestures(commands.script_reportCurrentFocus):
-					self.bindGesture(gesture, "alert")
-#				self.bindGesture("kb:NVDA+tab", "alert")
-				# script_reportCurrentLine
-				for gesture in getScriptGestures(commands.script_reportCurrentLine):
-					self.bindGesture(gesture, "alert")
-				# script_reportCurrentSelection
-				for gesture in getScriptGestures(commands.script_reportCurrentSelection):
-					self.bindGesture(gesture, "alert")
-			else:
-				self.clearGestureBindings()
-				super(EmptyList, self).event_gainFocus()
-		except:
-			pass
+		if not isEmptyList(self):
+			self.clearGestureBindings()
+			super(EmptyList, self).event_gainFocus()
+			return
+		super(EmptyList, self).event_gainFocus()
+		# brailled and spoken the "0 elements" message
+		text = ' '.join(["0", NVDALocale("Elements").lower()])
+		speech.speakMessage(text)
+		region = braille.TextRegion(" "+text)
+		region.focusToHardLeft = True
+		region.update()
+		braille.handler.buffer.regions.append(region)
+		braille.handler.buffer.focus(region)
+		braille.handler.buffer.update()
+		braille.handler.update()
+		# bind arrows to focus again (and repeat message)
+		for item in ["Up", "Down", "Left", "Right"]:
+			self.bindGesture("kb:%sArrow"%item, "alert")
+		# other useful gesture to remap
+		# script_reportCurrentFocus
+		for gesture in getScriptGestures(commands.script_reportCurrentFocus):
+			self.bindGesture(gesture, "alert")
+		# script_reportCurrentLine
+		for gesture in getScriptGestures(commands.script_reportCurrentLine):
+			self.bindGesture(gesture, "alert")
+		# script_reportCurrentSelection
+		for gesture in getScriptGestures(commands.script_reportCurrentSelection):
+			self.bindGesture(gesture, "alert")
 
 	def script_alert(self, gesture):
 		self.event_gainFocus()
@@ -1130,10 +1138,11 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 			return
 		if announceEmptyList and SysLV32List in clsList:
 			clsList.insert(0, EmptyList)
+			return
 		if obj.windowClassName == "MozillaWindowClass" and obj.role in (ct.ROLE_TABLEROW, ct.ROLE_TREEVIEWITEM):
 			clsList.insert(0, MozillaTable)
 		elif obj.role == ct.ROLE_LISTITEM:
-			if isinstance(obj.parent, SysLV32List):
+			if SysLV32Item in clsList:
 				clsList.insert(0, ColumnsReview32)
 			elif UIA in clsList:
 				# Windows 8/8.1/10 Start Screen tiles should not expose column info.
