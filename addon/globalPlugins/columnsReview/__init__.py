@@ -74,6 +74,14 @@ nvdaVersion = '.'.join([str(version_year), str(version_major)])
 # rename for code clarity
 SysLV32List = List
 SysLV32Item = ListItem
+# current list item
+curItem = None
+# the variable representing tens
+# of current interval (except the last column,
+# for which it's tens+1)
+tens = 0
+# the variable which keeps track of the last chosen column number
+lastColumn = None
 
 addonDir = os.path.join(os.path.dirname(__file__), "..", "..")
 if isinstance(addonDir, bytes):
@@ -265,12 +273,6 @@ class ColumnsReview(RowWithFakeNavigation):
 
 	scriptCategory = ' '.join([addonSummary, _("(DO NOT EDIT!)")])
 
-	# the variable representing tens
-	# of current interval (except the last column,
-	# for which it's tens+1)
-	tens = 0
-	# the variable which keeps track of the last chosen column number
-	lastColumn = None
 	# search parameter variables
 	_lastCaseSensitivity = False
 	# compatibility code before/after search history introduction
@@ -336,50 +338,52 @@ class ColumnsReview(RowWithFakeNavigation):
 		# if num == 0, from numpad or keyboard
 		if not num:
 			# set it to 10, 20, etc
-			num = (self.tens+1)*10
+			num = (tens+1)*10
 		else:
 			# set it to 9, 13, 22, etc
-			num = self.tens*10+num
+			num = tens*10+num
 		return num
 
 	def script_changeInterval(self, gesture):
 		"""controls the grow of tens variable,
 		it's built so to have always all gestures from 1 to 0"""
 		# no further interval
-		if self.childCount<10:
+		if curItem.childCount<10:
 			# Translators: message when digit pressed exceed the columns number
 			ui.message(_("No more columns available"))
 			return
+		global tens
 		# in a list with 13 columns (childCount == 13),
 		# childCount/10+1 (integer operation) gives all
 		# intervals (2) of needed  10 columns;
 		# if childCount is a multiple of 10 (es. 30),
 		# we have exactly childCount/10=3 intervals.
-		mod = self.childCount//10+(1 if self.childCount%10 else 0)
+		mod = curItem.childCount//10+(1 if curItem.childCount%10 else 0)
 		# now, we can scroll ten by ten among intervals, using modulus
-		self.tens = (self.tens+1)%mod
+		tens = (tens+1)%mod
 		# interval bounds to announce
-		start = self.tens*10+1
+		start = tens*10+1
 		# nice: announce what is the absolutely last column available
-		if self.tens == mod-1:
-			end = self.childCount
+		if tens == mod-1:
+			end = curItem.childCount
 		else:
-			end = (self.tens+1)*10
+			end = (tens+1)*10
 		# Translators: message when you change interval in a list with more ten columns
 		ui.message(_("From {start} to {end}").format(start=start, end=end))
 
+	script_changeInterval.canPropagate = True
 	# Translators: documentation for script to change interval
 	script_changeInterval.__doc__ = _("Cycles between a variable number of intervals of ten columns")
 
 	def script_itemInfo(self, gesture):
 		number = total = None
 		try:
-			number = self.positionInfo["indexInGroup"]
-			total = self.positionInfo["similarItemsInGroup"]
+			number = curItem.positionInfo["indexInGroup"]
+			total = curItem.positionInfo["similarItemsInGroup"]
 		except:
-			tempList = [i for i in self.parent.children if i.role == ct.ROLE_LISTITEM]
+			tempList = [i for i in self.children if i.role == ct.ROLE_LISTITEM]
 			if tempList:
-				number = tempList.index(self)
+				number = tempList.index(curItem)
 				total = len(tempList)
 		if None in (number, total):
 			ui.message(_("No information available"))
@@ -387,6 +391,7 @@ class ColumnsReview(RowWithFakeNavigation):
 			info = ' '.join([NVDALocale("item"), NVDALocale("{number} of {total}").format(number=number, total=total)])
 			ui.message(info)
 
+	script_itemInfo.canPropagate = True
 	# Translators: documentation for script to announce list item info
 	script_itemInfo.__doc__ = _("Announces list item position information")
 
@@ -398,7 +403,6 @@ class ColumnsReview(RowWithFakeNavigation):
 				d.Show()
 			gui.mainFrame.postPopup()
 		wx.CallAfter(run)
-
 	# Translators: documentation for script to manage headers
 	script_manageHeaders.__doc__ = _("Provides a dialog for interactions with list column headers")
 
@@ -422,7 +426,6 @@ class ColumnsReview(RowWithFakeNavigation):
 		ui.message("%d %s: %s"%(len(items),
 			# translators: message presented when get selected item count and names
 			_("selected items"), spokenItems))
-
 	# Translators: documentation for script to know current selected items
 	script_reportCurrentSelection.__doc__ = _("Reports current selected list items")
 
@@ -513,7 +516,6 @@ class ColumnsReview(RowWithFakeNavigation):
 			self.script_find(gesture)
 			return
 		self.doFindText(self._lastFindText, caseSensitive = self._lastCaseSensitivity)
-
 	# Translators: documentation for script to manage headers
 	script_findNext.__doc__ = _("Goes to next result of current search")
 
@@ -522,13 +524,11 @@ class ColumnsReview(RowWithFakeNavigation):
 			self.script_find(gesture)
 			return
 		self.doFindText(self._lastFindText, reverse=True, caseSensitive = self._lastCaseSensitivity)
-
 	# Translators: documentation for script to manage headers
 	script_findPrevious.__doc__ = _("Goes to previous result of current search")
 
 	def script_sayAll(self,gesture):
 		readRows(self)
-
 	# Translators: documentation for script to manage headers
 	script_sayAll.__doc__ = _("Launches say all for next list items")
 
@@ -580,14 +580,14 @@ class ColumnsReview32(ColumnsReview):
 	def script_readColumn(self, gesture):
 		# ask for index
 		num = self.getIndex(gesture.mainKeyName.rsplit('+', 1)[-1])
-		if num > self.childCount:
+		if num > curItem.childCount:
 			# Translators: message when digit pressed exceed the columns number
 			ui.message(_("No more columns available"))
 			return
 		# for invisible column case
 		num = self.getFixedNum(num)
 		# getChild is zero-based
-		obj = self.getChild(num-1)
+		obj = curItem.getChild(num-1)
 		# None obj should be generated
 		# only in invisible column case
 		if not obj:
@@ -602,22 +602,23 @@ class ColumnsReview32(ColumnsReview):
 		else:
 			# Translators: message when cell in specified column is empty
 			content = _("Not available;")
-		global readHeader, copyHeader
-		if getLastScriptRepeatCount() and self.lastColumn == num:
+		global readHeader, copyHeader, lastColumn
+		if getLastScriptRepeatCount() and lastColumn == num:
 			header = ''.join([obj.columnHeaderText, ": "]) if copyHeader else ""
 			if api.copyToClip(header+content):
 				# Translators: message announcing what was copied
 				ui.message(_("Copied in clipboard: %s")%(header+content))
 		else:
 			header = ''.join([obj.columnHeaderText, ": "]) if readHeader else ""
-			self.lastColumn = num
+			lastColumn = num
 			ui.message(header+content)
 
+	script_readColumn.canPropagate = True
 	# Translators: documentation of script to read columns
 	script_readColumn.__doc__ = _("Returns the header and the content of the list column at the index corresponding to the number pressed")
 
 	def getFixedNum(self, num):
-		child = self.simpleFirstChild
+		child = curItem.simpleFirstChild
 		startNum = child.columnNumber-1
 		if num == 1:
 			return startNum+1
@@ -631,7 +632,7 @@ class ColumnsReview32(ColumnsReview):
 				counter += 1
 			if counter == num:
 				stop = True
-		return child.columnNumber if child else self.childCount+1
+		return child.columnNumber if child else curItem.childCount+1
 
 	def getHeaderParent(self):
 		# faster than previous self.simpleParent.children[-1]
@@ -807,8 +808,8 @@ class ColumnsReview64(ColumnsReview):
 		else:
 			# Translators: message when cell in specified column is empty
 			content = _("Not available;")
-		global readHeader, copyHeader
-		if getLastScriptRepeatCount() and self.lastColumn == num:
+		global readHeader, copyHeader, lastColumn
+		if getLastScriptRepeatCount() and lastColumn == num:
 			# obj.name is the column header
 			header = ''.join([self.getChild(num).name, ": "]) if copyHeader else ""
 			if api.copyToClip(header+content):
@@ -816,7 +817,7 @@ class ColumnsReview64(ColumnsReview):
 				ui.message(_("Copied in clipboard: %s")%(header+content))
 		else:
 			header = ''.join([self.getChild(num).name, ": "]) if readHeader else ""
-			self.lastColumn = num
+			lastColumn = num
 			ui.message(header+content)
 
 	# Translators: documentation of script to read columns
@@ -1148,14 +1149,19 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 		if announceEmptyList and SysLV32List in clsList and obj.childCount <= 1:
 			clsList.insert(0, EmptyList)
 			return
+		if obj.role == ct.ROLE_LIST and SysLV32List in clsList:
+			global curItem
+			curItem = api.getFocusObject()
+			clsList.insert(0, ColumnsReview32)
+			return
 #			elif obj.parent.windowClassName == "ListBox" and obj.role == ct.ROLE_UNKNOWN and not obj.name:
 #				obj.name = NVDALocale("%s items")%0
 		if obj.windowClassName == "MozillaWindowClass" and obj.role in (ct.ROLE_TABLEROW, ct.ROLE_TREEVIEWITEM):
 			clsList.insert(0, MozillaTable)
 		elif obj.role == ct.ROLE_LISTITEM:
-			if SysLV32Item in clsList:
-				clsList.insert(0, ColumnsReview32)
-			elif UIA in clsList:
+#			if SysLV32Item in clsList:
+#				clsList.insert(0, ColumnsReview32)
+			if UIA in clsList:
 				# Windows 8/8.1/10 Start Screen tiles should not expose column info.
 				if not obj.UIAElement.cachedClassName in ("GridTileElement", "GridListTileElement"):
 					clsList.insert(0, ColumnsReview64)
