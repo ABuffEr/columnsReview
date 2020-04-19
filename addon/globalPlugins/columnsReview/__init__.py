@@ -618,11 +618,20 @@ class ColumnsReview32(ColumnsReview):
 
 	def getFixedNum(self, num):
 		child = self.simpleFirstChild
-		for n in rangeFunc(1, num):
-			child = child.simpleNext
+		startNum = child.columnNumber-1
+		if num == 1:
+			return startNum+1
+		counter = 1
+		stop = False
+		while not stop:
+			child = child.next
 			if not child:
-				return self.childCount+1
-		return child.columnNumber
+				break
+			if ct.STATE_INVISIBLE not in child.states:
+				counter += 1
+			if counter == num:
+				stop = True
+		return child.columnNumber if child else self.childCount+1
 
 	def getHeaderParent(self):
 		# faster than previous self.simpleParent.children[-1]
@@ -1136,9 +1145,11 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 		# to avoid crash in Win10 task manager
 		if obj.role == ct.ROLE_LISTITEM and getattr(obj.appModule, "appName", None) == "taskmgr" and getattr(obj, "UIAElement", None):
 			return
-		if announceEmptyList and SysLV32List in clsList:
+		if announceEmptyList and SysLV32List in clsList and obj.childCount <= 1:
 			clsList.insert(0, EmptyList)
 			return
+#			elif obj.parent.windowClassName == "ListBox" and obj.role == ct.ROLE_UNKNOWN and not obj.name:
+#				obj.name = NVDALocale("%s items")%0
 		if obj.windowClassName == "MozillaWindowClass" and obj.role in (ct.ROLE_TABLEROW, ct.ROLE_TREEVIEWITEM):
 			clsList.insert(0, MozillaTable)
 		elif obj.role == ct.ROLE_LISTITEM:
