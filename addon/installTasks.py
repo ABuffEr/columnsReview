@@ -1,6 +1,4 @@
 import addonHandler
-import gui
-import wx
 import os
 import sys
 py3 = sys.version.startswith("3")
@@ -8,6 +6,8 @@ py3 = sys.version.startswith("3")
 addonHandler.initTranslation()
 
 def onInstall():
+	import gui
+	import wx
 	for addon in addonHandler.getAvailableAddons():
 		if addon.name == "columnsReview":
 			addonPath = addon.path if py3 else addon.path.encode("mbcs")
