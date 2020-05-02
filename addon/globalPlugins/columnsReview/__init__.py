@@ -1068,40 +1068,32 @@ class HeaderDialog(wx.Dialog):
 		self.headerList = headerList
 		actions = ButtonHelper(wx.VERTICAL)
 		leftClickAction = actions.addButton(self, label=_("Left click"))
-		leftClickAction.Bind(wx.EVT_BUTTON, self.onLeftClick)
+		leftClickAction.Bind(wx.EVT_BUTTON, lambda event: self.onButtonClick(event, "LEFT"))
 		rightClickAction = actions.addButton(self, label=_("Right click"))
-		rightClickAction.Bind(wx.EVT_BUTTON, self.onRightClick)
+		rightClickAction.Bind(wx.EVT_BUTTON, lambda event: self.onButtonClick(event, "RIGHT"))
 		helperSizer.addItem(actions)
 		mainSizer = wx.BoxSizer(wx.VERTICAL)
 		mainSizer.Add(helperSizer.sizer, border=10, flag=wx.ALL)
 		mainSizer.Fit(self)
+		self.Bind(wx.EVT_CHAR_HOOK, self.onEscape)
 		self.SetSizer(mainSizer)
-		for item in [self.list, leftClickAction, rightClickAction]:
-			item.Bind(wx.EVT_KEY_UP, self.onEscape)
 
-	def onLeftClick(self, event):
+	def onButtonClick(self, event, mouseButton):
 		index = self.list.GetSelection()
 		headerObj = self.headerList[index]
-		self.Destroy()
-		api.setNavigatorObject(headerObj)
-		commands.script_moveMouseToNavigatorObject(None)
-		winUser.mouse_event(winUser.MOUSEEVENTF_LEFTDOWN,0,0,None,None)
-		winUser.mouse_event(winUser.MOUSEEVENTF_LEFTUP,0,0,None,None)
+		self.Close()
+		(left, top, width, height) = headerObj.location
+		winUser.setCursorPos(left+(width//2), top+(height//2))
+		winUser.mouse_event(getattr(winUser, "MOUSEEVENTF_{}DOWN".format(mouseButton)),0,0,None,None)
+		winUser.mouse_event(getattr(winUser, "MOUSEEVENTF_{}UP".format(mouseButton)),0,0,None,None)
 		ui.message(_("%s header clicked")%headerObj.name)
-
-	def onRightClick(self, event):
-		index = self.list.GetSelection()
-		headerObj = self.headerList[index]
 		self.Destroy()
-		api.setNavigatorObject(headerObj)
-		commands.script_moveMouseToNavigatorObject(None)
-		winUser.mouse_event(winUser.MOUSEEVENTF_RIGHTDOWN,0,0,None,None)
-		winUser.mouse_event(winUser.MOUSEEVENTF_RIGHTUP,0,0,None,None)
-		ui.message(_("%s header clicked")%headerObj.name)
 
 	def onEscape(self, event):
 		if event.GetKeyCode() == wx.WXK_ESCAPE:
 			self.Destroy()
+		else:
+			event.Skip()
 
 class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 
