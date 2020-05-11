@@ -1062,10 +1062,11 @@ class HeaderDialog(wx.Dialog):
 		title = ' - '.join([_("Headers manager"), appName])
 		super(HeaderDialog, self).__init__(parent, title=title)
 		helperSizer = BoxSizerHelper(self, wx.HORIZONTAL)
-		choices = [x.name if x.name else _("Unnamed header") for x in headerList]
+		visibleHeaders = [x for x in headerList if ct.STATE_INVISIBLE not in x.states]
+		choices = [x.name if x.name else _("Unnamed header") for x in visibleHeaders]
 		self.list = helperSizer.addLabeledControl(_("Headers:"), wx.ListBox, choices=choices)
 		self.list.SetSelection(0)
-		self.headerList = headerList
+		self.headerList = visibleHeaders
 		actions = ButtonHelper(wx.VERTICAL)
 		leftClickAction = actions.addButton(self, label=_("Left click"))
 		leftClickAction.Bind(wx.EVT_BUTTON, lambda event: self.onButtonClick(event, "LEFT"))
