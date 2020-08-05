@@ -790,6 +790,28 @@ class ColumnsReview64(ColumnsReview):
 	# window shell variable
 	curWindow = None
 
+
+	# Versions of NVDA between 2019.3 and 2020.3 have broken implementation of `_get_childCount` for UIA
+	# This causes crashes with recursion error in Windows 10 task manager and other places.
+	# For affected versions provide our own implementation.
+
+	def _get_childCount(self):
+		if not py3 or "childCount" in UIA.__dict__:  # Can't use getattr because it also checks in superclasses
+			return super(ColumnsReview64, self).childCount
+		import UIAHandler
+		from comtypes import COMError
+		childrenCacheRequest = UIAHandler.handler.baseCacheRequest.clone()
+		childrenCacheRequest.TreeScope = UIAHandler.TreeScope_Children
+		try:
+			cachedChildren = self.UIAElement.buildUpdatedCache(childrenCacheRequest).getCachedChildren()
+			if not cachedChildren:
+				# GetCachedChildren returns null if there are no children.
+				return 0
+			return cachedChildren.length
+		except COMError:
+			from NVDAObjects.window import Window
+			return len(Window(self).children)
+
 	def script_readColumn(self,gesture):
 		num = self.getIndex(gesture.mainKeyName.rsplit('+', 1)[-1])
 		# num is passed as is, excluding the first position (0) of the children list
@@ -1135,9 +1157,6 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 
 	def chooseNVDAObjectOverlayClasses(self, obj, clsList):
 		loadConfig()
-		# to avoid crash in Win10 task manager
-		if obj.role == ct.ROLE_LISTITEM and getattr(obj.appModule, "appName", None) == "taskmgr" and getattr(obj, "UIAElement", None):
-			return
 		if announceEmptyList and SysLV32List in clsList and obj.childCount <= 1:
 			clsList.insert(0, EmptyList)
 			return
