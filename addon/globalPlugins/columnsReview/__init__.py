@@ -859,9 +859,12 @@ class ColumnsReview64(ColumnsReview):
 		shell = CreateObject("shell.application")
 		fg = api.getForegroundObject()
 		for window in shell.Windows():
-			if window.hwnd == fg.windowHandle:
-				self.curWindow = window
-				break
+			try:
+				if window.hwnd and window.hwnd == fg.windowHandle:
+					self.curWindow = window
+					break
+			except:
+				pass
 		if not self.curWindow:
 			ui.message(NVDALocale("Not supported in this document"))
 			return False
