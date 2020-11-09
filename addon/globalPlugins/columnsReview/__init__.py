@@ -20,16 +20,13 @@ from NVDAObjects.IAccessible.sysListView32 import * #List, ListItem, LVM_GETHEAD
 from NVDAObjects.UIA import UIA # For UIA implementations only, chiefly 64-bit.
 from NVDAObjects.behaviors import RowWithFakeNavigation
 from appModules.explorer import GridTileElement, GridListTileElement # Specific for Start Screen tiles.
+import sayAllHandler
 import sys
 py3 = sys.version.startswith("3")
 if py3:
 	from io import StringIO
-	from sayAllHandler import _activeSayAll, _ObjectsReader
-	import weakref
-	sayAllSuperclass = _ObjectsReader
 else:
 	from cStringIO import StringIO
-	sayAllSuperclass = object
 from comtypes.client import CreateObject
 from comtypes.gen.IAccessible2Lib import IAccessible2
 from configobj import *
@@ -315,10 +312,10 @@ class ColumnsReview(RowWithFakeNavigation):
 		for gesture in getScriptGestures(commands.script_reportCurrentSelection):
 			self.bindGesture(gesture, "reportCurrentSelection")
 		# for say all
-		# (available only after Py3 speech refactoring)
-		if py3:
+		# (available only after Py3 speech refactor)
+		if hasattr(sayAllHandler, "_ObjectsReader"):
 			for gesture in getScriptGestures(commands.script_sayAll):
-				self.bindGesture(gesture, "sayAll")
+				self.bindGesture(gesture, "readListItems")
 
 	def script_readColumn(self,gesture):
 		raise NotImplementedError
@@ -526,11 +523,12 @@ class ColumnsReview(RowWithFakeNavigation):
 	# Translators: documentation for script to manage headers
 	script_findPrevious.__doc__ = _("Goes to previous result of current search")
 
-	def script_sayAll(self,gesture):
-		readRows(self)
+	def script_readListItems(self, gesture):
+		_RowsReader.readRows(self)
 
-	# Translators: documentation for script to manage headers
-	script_sayAll.__doc__ = _("Launches say all for next list items")
+	# Translators: documentation for script to read all list items starting from the focused one.
+	script_readListItems.__doc__ = _("Starts reading all list items beginning at the item with focus")
+
 
 class FindDialog(cursorManager.FindDialog):
 	"""a class extending traditional find dialog."""
@@ -556,11 +554,9 @@ class FindDialog(cursorManager.FindDialog):
 			useMultipleSelection = self.multipleSelectionCheckBox.GetValue()
 		super(FindDialog, self).onOk(evt)
 
-def readRows(obj):
-	global _activeSayAll
-	reader = _RowsReader(obj)
-	_activeSayAll = weakref.ref(reader)
-	reader.next()
+
+sayAllSuperclass = getattr(sayAllHandler, "_ObjectsReader", object)
+
 
 class _RowsReader(sayAllSuperclass):
 
@@ -570,6 +566,14 @@ class _RowsReader(sayAllSuperclass):
 		while nextObj:
 			yield nextObj
 			nextObj = nextObj.next
+
+	@classmethod
+	def readRows(cls, obj):
+		import weakref
+		reader = cls(obj)
+		sayAllHandler._activeSayAll = weakref.ref(reader)
+		reader.next()
+
 
 class ColumnsReview32(ColumnsReview):
 # for SysListView32 or WindowsForms10.SysListView32.app.0.*
