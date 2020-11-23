@@ -19,7 +19,7 @@ from NVDAObjects.IAccessible import getNVDAObjectFromEvent
 from NVDAObjects.IAccessible.sysListView32 import * #List, ListItem, LVM_GETHEADER
 from NVDAObjects.UIA import UIA # For UIA implementations only, chiefly 64-bit.
 from NVDAObjects.behaviors import RowWithFakeNavigation
-from appModules.explorer import GridTileElement, GridListTileElement # Specific for Start Screen tiles.
+from nvdaBuiltin.appModules.explorer import GridTileElement, GridListTileElement # Specific for Start Screen tiles.
 import sayAllHandler
 import sys
 py3 = sys.version.startswith("3")
@@ -423,11 +423,11 @@ class ColumnsReview(RowWithFakeNavigation):
 	# Translators: documentation for script to know current selected items
 	script_reportCurrentSelection.__doc__ = _("Reports current selected list items")
 
-	def script_find(self, gesture):
+	def script_find(self, gesture, reverse=False):
 		if hasattr(cursorManager, "SEARCH_HISTORY_MOST_RECENT_INDEX"):
-			d = FindDialog(gui.mainFrame, self, self._lastCaseSensitivity, self._searchEntries)
+			d = FindDialog(gui.mainFrame, self, self._lastCaseSensitivity, self._searchEntries, reverse)
 		else:
-			d = FindDialog(gui.mainFrame, self, self._lastFindText, self._lastCaseSensitivity)
+			d = FindDialog(gui.mainFrame, self, self._lastFindText, self._lastCaseSensitivity, reverse)
 		gui.mainFrame.prePopup()
 		d.Show()
 		gui.mainFrame.postPopup()
@@ -516,7 +516,7 @@ class ColumnsReview(RowWithFakeNavigation):
 
 	def script_findPrevious(self,gesture):
 		if not self._lastFindText:
-			self.script_find(gesture)
+			self.script_find(gesture, reverse=True)
 			return
 		self.doFindText(self._lastFindText, reverse=True, caseSensitive = self._lastCaseSensitivity)
 
@@ -554,9 +554,7 @@ class FindDialog(cursorManager.FindDialog):
 			useMultipleSelection = self.multipleSelectionCheckBox.GetValue()
 		super(FindDialog, self).onOk(evt)
 
-
 sayAllSuperclass = getattr(sayAllHandler, "_ObjectsReader", object)
-
 
 class _RowsReader(sayAllSuperclass):
 
@@ -573,7 +571,6 @@ class _RowsReader(sayAllSuperclass):
 		reader = cls(obj)
 		sayAllHandler._activeSayAll = weakref.ref(reader)
 		reader.next()
-
 
 class ColumnsReview32(ColumnsReview):
 # for SysListView32 or WindowsForms10.SysListView32.app.0.*
@@ -794,11 +791,9 @@ class ColumnsReview64(ColumnsReview):
 	# window shell variable
 	curWindow = None
 
-
 	# Versions of NVDA between 2019.3 and 2020.3 have broken implementation of `_get_childCount` for UIA
 	# This causes crashes with recursion error in Windows 10 task manager and other places.
 	# For affected versions provide our own implementation.
-
 	def _get_childCount(self):
 		if not py3 or "childCount" in UIA.__dict__:  # Can't use getattr because it also checks in superclasses
 			return super(ColumnsReview64, self).childCount
@@ -1167,8 +1162,6 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 		if announceEmptyList and SysLV32List in clsList and obj.childCount <= 1:
 			clsList.insert(0, EmptyList)
 			return
-#			elif obj.parent.windowClassName == "ListBox" and obj.role == ct.ROLE_UNKNOWN and not obj.name:
-#				obj.name = NVDALocale("%s items")%0
 		if obj.windowClassName == "MozillaWindowClass" and obj.role in (ct.ROLE_TABLEROW, ct.ROLE_TREEVIEWITEM):
 			clsList.insert(0, MozillaTable)
 		elif obj.role == ct.ROLE_LISTITEM:
