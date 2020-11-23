@@ -8,36 +8,24 @@
 # Many thanks to Robert Hänggi and Abdelkrim Bensaïd
 # for shell code suggestions,
 # to Noelia Ruiz Martínez
-# for original selected items feature, 
+# for original selected items feature,
 # to Cyrille Bougot
 # for suggestions and sysListView32 threading support,
 # and to other users of NVDA mailing lists
 # for feedback and comments
 
-from .msg import message as NVDALocale
 from NVDAObjects.IAccessible import getNVDAObjectFromEvent
 from NVDAObjects.IAccessible.sysListView32 import * #List, ListItem, LVM_GETHEADER
 from NVDAObjects.UIA import UIA # For UIA implementations only, chiefly 64-bit.
 from NVDAObjects.behaviors import RowWithFakeNavigation
-from nvdaBuiltin.appModules.explorer import GridTileElement, GridListTileElement # Specific for Start Screen tiles.
 import sayAllHandler
 import sys
-py3 = sys.version.startswith("3")
-if py3:
-	from io import StringIO
-else:
-	from cStringIO import StringIO
 from comtypes.client import CreateObject
 from comtypes.gen.IAccessible2Lib import IAccessible2
-from configobj import *
-from configobj import ConfigObj
 from ctypes.wintypes import LPARAM as LParam
-#from cursorManager import CursorManager
 from globalCommands import commands
-from gui.guiHelper import *
-from logHandler import log
 from oleacc import STATE_SYSTEM_MULTISELECTABLE, SELFLAG_TAKEFOCUS, SELFLAG_TAKESELECTION, SELFLAG_ADDSELECTION
-from scriptHandler import isScriptWaiting, getLastScriptRepeatCount
+from scriptHandler import getLastScriptRepeatCount
 from threading import Thread, Event
 from time import sleep
 from tones import beep
@@ -59,18 +47,20 @@ import ui
 import watchdog
 import winUser
 import wx
-try:
-	from six.moves import range as rangeFunc
-except ImportError:
-	rangeFunc = xrange
-except NameError:
-	rangeFunc = range
 from versionInfo import version_year, version_major
+
+from .actions import ACTIONS, actionFromName, configuredActions, getActionIndexFromName
+from .commonFunc import NVDALocale, rangeFunc
+from . import configSpec
+from .Exceptions import columnAtIndexNotVisible, noColumnAtIndex
+
 # useful to simulate profile switch handling
 nvdaVersion = '.'.join([str(version_year), str(version_major)])
 # rename for code clarity
 SysLV32List = List
 SysLV32Item = ListItem
+py3 = sys.version.startswith("3")
+config.conf.spec["columnsReview"] = configSpec.confspec
 
 addonDir = os.path.join(os.path.dirname(__file__), "..", "..")
 if isinstance(addonDir, bytes):
@@ -143,25 +133,6 @@ def isEmptyList(lstObj):
 # useful in ColumnsReview64 to calculate file size
 getBytePerSector = ctypes.windll.kernel32.GetDiskFreeSpaceW
 
-# init config
-configSpecString = ("""
-[general]
-	readHeader = boolean(default=True)
-	copyHeader = boolean(default=True)
-	announceEmptyList = boolean(default=True)
-[keyboard]
-	useNumpadKeys = boolean(default=False)
-	switchChar = string(default="-")
-[gestures]
-	NVDA = boolean(default=True)
-	control = boolean(default=True)
-	alt = boolean(default=False)
-	shift = boolean(default=False)
-	windows = boolean(default=False)
-""")
-confspec = ConfigObj(StringIO(configSpecString), list_values=False, encoding="UTF-8")
-confspec.newlines = "\r\n"
-config.conf.spec["columnsReview"] = confspec
 
 # (re)load config
 def loadConfig():
@@ -277,6 +248,10 @@ class ColumnsReview(RowWithFakeNavigation):
 		_searchEntries = []
 	else:
 		_lastFindText = ""
+	# Should next presses of the command to read column be executed?
+	shouldExecuteNextPresses = True
+	# Keeps track of how many times the given command has been pressed
+	repeatCount = 0
 
 	def initOverlayClass(self):
 		"""maps the correct gestures"""
@@ -317,11 +292,56 @@ class ColumnsReview(RowWithFakeNavigation):
 			for gesture in getScriptGestures(commands.script_sayAll):
 				self.bindGesture(gesture, "readListItems")
 
-	def script_readColumn(self,gesture):
+	def getColumnData(self, colNumber):
+		"""Returs informations about the column at the index given as  parameter.
+		Raises exceptions if the column at the given index does not exist, or is not visible.
+		On success returns dictionary containing columnContent and columnHeader as keys,
+		and the actual info as values.
+		"""
 		raise NotImplementedError
 
-	# Translators: documentation of script to read columns
-	script_readColumn.__doc__ = _("Returns the header and the content of the list column at the index corresponding to the number pressed")
+	def script_readColumn(self, gesture):
+		# ask for index
+		num = self.getIndex(gesture.mainKeyName.rsplit('+', 1)[-1])
+		repeatCount = getLastScriptRepeatCount()
+		if not repeatCount:
+			self.repeatCount = 0
+			self.lastColumn = num
+			self.shouldExecuteNextPresses = True
+		if not self.shouldExecuteNextPresses:
+			return
+		if num != self.lastColumn:
+			self.lastColumn = num
+			self.repeatCount = 1
+		else:
+			self.repeatCount += 1
+		actionToExecute = configuredActions().get(
+			self.repeatCount,
+			ACTIONS[0].name  # Default dummy action
+		)
+		actionToExecute = actionFromName(actionToExecute)
+		if not actionToExecute.performsAction:
+			return
+		self.shouldExecuteNextPresses = actionToExecute.showLaterActions
+		try:
+			columnData = self.getColumnData(num)
+		except noColumnAtIndex:
+			# Translators: message when digit pressed exceed the columns number
+			ui.message(_("No more columns available"))
+			return
+		except columnAtIndexNotVisible:
+			# Translators: Announced when the column at the requested index is not visible.
+			ui.message(_("No more visible columns available"))
+			return
+		columnContent = columnData["columnContent"]
+		columnHeader = columnData["columnHeader"]
+		if columnContent is None and columnHeader is None:
+			return
+		actionToExecute(columnContent, columnHeader)
+	script_readColumn.__doc__ = _(
+		# Translators: documentation of script to read columns
+		"Returns the header and the content of the list column at the index corresponding to the number pressed"
+	)
 
 	def getIndex(self, key):
 		"""get index from key pressed"""
@@ -388,13 +408,8 @@ class ColumnsReview(RowWithFakeNavigation):
 	script_itemInfo.__doc__ = _("Announces list item position information")
 
 	def script_manageHeaders(self, gesture):
-		def run():
-			gui.mainFrame.prePopup()
-			d = HeaderDialog(None, self.appModule.appName, self.getHeaderParent().children)
-			if d:
-				d.Show()
-			gui.mainFrame.postPopup()
-		wx.CallAfter(run)
+		from .dialogs import HeaderDialog
+		wx.CallAfter(HeaderDialog.Run, title=self.appModule.appName, headerList=self.getHeaderParent().children)
 
 	# Translators: documentation for script to manage headers
 	script_manageHeaders.__doc__ = _("Provides a dialog for interactions with list column headers")
@@ -578,44 +593,28 @@ class ColumnsReview32(ColumnsReview):
 	# flag to guarantee thread support
 	THREAD_SUPPORTED = True
 
-	def script_readColumn(self, gesture):
-		# ask for index
-		num = self.getIndex(gesture.mainKeyName.rsplit('+', 1)[-1])
-		if num > self.childCount:
-			# Translators: message when digit pressed exceed the columns number
-			ui.message(_("No more columns available"))
-			return
+	def getColumnData(self, colNumber):
+		if colNumber > self.childCount:
+			raise noColumnAtIndex
 		# for invisible column case
-		num = self.getFixedNum(num)
+		num = self.getFixedNum(colNumber)
 		# getChild is zero-based
-		obj = self.getChild(num-1)
+		obj = self.getChild(num - 1)
 		# None obj should be generated
 		# only in invisible column case
 		if not obj:
-			# Translators: message when digit pressed not match a visible column
-			ui.message(_("No more visible columns available"))
-			return
+			raise columnAtIndexNotVisible
 		# generally, an empty name is a None object,
 		# in Mozilla, instead, it's a unicode object with length 0
 		if obj.name and len(obj.name):
 			# obj.name is the column content
-			content = ''.join([obj.name, ";"])
+			content = obj.name
 		else:
-			# Translators: message when cell in specified column is empty
-			content = _("Not available;")
-		global readHeader, copyHeader
-		if getLastScriptRepeatCount() and self.lastColumn == num:
-			header = ''.join([obj.columnHeaderText, ": "]) if copyHeader else ""
-			if api.copyToClip(header+content):
-				# Translators: message announcing what was copied
-				ui.message(_("Copied in clipboard: %s")%(header+content))
-		else:
-			header = ''.join([obj.columnHeaderText, ": "]) if readHeader else ""
-			self.lastColumn = num
-			ui.message(header+content)
-
-	# Translators: documentation of script to read columns
-	script_readColumn.__doc__ = _("Returns the header and the content of the list column at the index corresponding to the number pressed")
+			content = None
+		header = obj.columnHeaderText
+		if not header or len(header) == 0:
+			header = None
+		return {"columnContent": content, "columnHeader": header}
 
 	def getFixedNum(self, num):
 		child = self.simpleFirstChild
@@ -811,37 +810,25 @@ class ColumnsReview64(ColumnsReview):
 			from NVDAObjects.window import Window
 			return len(Window(self).children)
 
-	def script_readColumn(self,gesture):
-		num = self.getIndex(gesture.mainKeyName.rsplit('+', 1)[-1])
-		# num is passed as is, excluding the first position (0) of the children list
+	def getColumnData(self, colNumber):
+		# colNumber is passed as is, excluding the first position (0) of the children list
 		# containing an icon, so this check in this way
-		if num > self.childCount-1:
-			# Translators: message when digit pressed exceed the columns number
-			ui.message(_("No more columns available"))
-			return
-		obj = self.getChild(num)
+		if colNumber > self.childCount - 1:
+			raise noColumnAtIndex
+		obj = self.getChild(colNumber)
 		# in Windows 7, an empty value is a None object,
 		# in Windows 8, instead, it's a unicode object with length 0
 		if obj and obj.value and len(obj.value):
 			# obj.value is the column content
-			content = ''.join([obj.value, ";"])
+			content = obj.value
 		else:
-			# Translators: message when cell in specified column is empty
-			content = _("Not available;")
-		global readHeader, copyHeader
-		if getLastScriptRepeatCount() and self.lastColumn == num:
-			# obj.name is the column header
-			header = ''.join([self.getChild(num).name, ": "]) if copyHeader else ""
-			if api.copyToClip(header+content):
-				# Translators: message announcing what was copied
-				ui.message(_("Copied in clipboard: %s")%(header+content))
+			content = None
+		# obj.name is the column header
+		if obj and obj.name and len(obj.name):
+			header = obj.name
 		else:
-			header = ''.join([self.getChild(num).name, ": "]) if readHeader else ""
-			self.lastColumn = num
-			ui.message(header+content)
-
-	# Translators: documentation of script to read columns
-	script_readColumn.__doc__ = _("Returns the header and the content of the list column at the index corresponding to the number pressed")
+			header = None
+		return {"columnContent": content, "columnHeader": header}
 
 	def getHeaderParent(self):
 		# for imperscrutable reasons, this path gives the header container object
@@ -1004,15 +991,28 @@ class ColumnsReviewSettingsDialog(superDialogClass):
 
 	# common to dialog and panel
 	def makeSettings(self, settingsSizer):
-		global readHeader, copyHeader, useNumpadKeys, switchChar, announceEmptyList
-		# Translators: label for read-header checkbox in settings
-		self._readHeader = wx.CheckBox(self, label = _("Read the column header"))
-		self._readHeader.SetValue(readHeader)
-		settingsSizer.Add(self._readHeader)
-		# Translators: label for copy-header checkbox in settings
-		self._copyHeader = wx.CheckBox(self, label = _("Copy the column header"))
-		self._copyHeader.SetValue(copyHeader)
-		settingsSizer.Add(self._copyHeader)
+		from .dialogs import configureActionPanel
+		global useNumpadKeys, switchChar, announceEmptyList
+		self.copyCheckboxEnabled = self.readCheckboxEnabled = self.hideNextPanels = False
+		self.panels = []
+		panelsSizer = wx.StaticBoxSizer(
+			wx.StaticBox(
+				self,
+				# Translators: Help message for group of comboboxes allowing to assign action to a keypress.
+				label=_("When pressing combination to read column:")
+			),
+			wx.VERTICAL
+		)
+		for pressNumber, actionName in configuredActions().items():
+			actionIndex = getActionIndexFromName(actionName)
+			panel = configureActionPanel(self, pressNumber, actionIndex)
+			panelsSizer.Add(panel)
+			self.panels.append(panel)
+			if self.hideNextPanels:
+				panel.Disable()
+			if panel.HIDE_NEXT_PANELS_AFTER is not None and actionIndex == panel.HIDE_NEXT_PANELS_AFTER:
+				self.hideNextPanels = True
+		settingsSizer.Add(panelsSizer)
 		keysSizer = wx.StaticBoxSizer(wx.StaticBox(self,
 			# Translators: Help message for sub-sizer of keys choices
 			label=_("Choose the keys you want to use with numbers:")), wx.VERTICAL)
@@ -1046,13 +1046,28 @@ class ColumnsReviewSettingsDialog(superDialogClass):
 
 	# for dialog only
 	def postInit(self):
-		self._readHeader.SetFocus()
+		for panel in self.panels:
+			if panel.IsEnabled():
+				panel.chooseActionCombo.SetFocus()
+				break
 
 	# shared between onOk and onSave
 	def saveConfig(self):
 		# Update Configuration
-		myConf["general"]["readHeader"] = self._readHeader.IsChecked()
-		myConf["general"]["copyHeader"] = self._copyHeader.IsChecked()
+		copyChkFound = readChkFound = False
+		actionsSection = config.conf["columnsReview"]["actions"]
+		for panel in self.panels:
+			if panel.IsEnabled():
+				selectedActionName = ACTIONS[panel.chooseActionCombo.GetSelection()].name
+				actionsSection["press{}".format(panel.panelNumber)] = selectedActionName
+				if not readChkFound and panel.readHeader.IsEnabled():
+					readChkFound = True
+					config.conf["columnsReview"]["general"]["readHeader"] = panel.readHeader.IsChecked()
+				if not copyChkFound and panel.copyHeader.IsEnabled():
+					copyChkFound = True
+					config.conf["columnsReview"]["general"]["copyHeader"] = panel.copyHeader.IsChecked()
+			else:
+				continue
 		myConf["general"]["announceEmptyList"] = self._announceEmptyList.IsChecked()
 		for item in self.keysChks:
 			myConf["gestures"][item[0]] = item[1].IsChecked()
@@ -1079,46 +1094,6 @@ class ColumnsReviewSettingsDialog(superDialogClass):
 			self.settingsSizer.Show(self._switchChar)
 		self.Fit()
 
-class HeaderDialog(wx.Dialog):
-	"""define dialog for column headers management."""
-
-	def __init__(self, parent, appName, headerList):
-		title = ' - '.join([_("Headers manager"), appName])
-		super(HeaderDialog, self).__init__(parent, title=title)
-		helperSizer = BoxSizerHelper(self, wx.HORIZONTAL)
-		visibleHeaders = [x for x in headerList if ct.STATE_INVISIBLE not in x.states]
-		choices = [x.name if x.name else _("Unnamed header") for x in visibleHeaders]
-		self.list = helperSizer.addLabeledControl(_("Headers:"), wx.ListBox, choices=choices)
-		self.list.SetSelection(0)
-		self.headerList = visibleHeaders
-		actions = ButtonHelper(wx.VERTICAL)
-		leftClickAction = actions.addButton(self, label=_("Left click"))
-		leftClickAction.Bind(wx.EVT_BUTTON, lambda event: self.onButtonClick(event, "LEFT"))
-		rightClickAction = actions.addButton(self, label=_("Right click"))
-		rightClickAction.Bind(wx.EVT_BUTTON, lambda event: self.onButtonClick(event, "RIGHT"))
-		helperSizer.addItem(actions)
-		mainSizer = wx.BoxSizer(wx.VERTICAL)
-		mainSizer.Add(helperSizer.sizer, border=10, flag=wx.ALL)
-		mainSizer.Fit(self)
-		self.Bind(wx.EVT_CHAR_HOOK, self.onEscape)
-		self.SetSizer(mainSizer)
-
-	def onButtonClick(self, event, mouseButton):
-		index = self.list.GetSelection()
-		headerObj = self.headerList[index]
-		self.Close()
-		(left, top, width, height) = headerObj.location
-		winUser.setCursorPos(left+(width//2), top+(height//2))
-		winUser.mouse_event(getattr(winUser, "MOUSEEVENTF_{}DOWN".format(mouseButton)),0,0,None,None)
-		winUser.mouse_event(getattr(winUser, "MOUSEEVENTF_{}UP".format(mouseButton)),0,0,None,None)
-		ui.message(_("%s header clicked")%headerObj.name)
-		self.Destroy()
-
-	def onEscape(self, event):
-		if event.GetKeyCode() == wx.WXK_ESCAPE:
-			self.Destroy()
-		else:
-			event.Skip()
 
 class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 
