@@ -4,11 +4,8 @@ try:
 	from cStringIO import StringIO
 except ModuleNotFoundError:  # Python 3
 	from io import StringIO
-
 from configobj import ConfigObj
-
 from . actions import ACTIONS
-
 
 configSpecString = ("""
 [general]

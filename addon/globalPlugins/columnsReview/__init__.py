@@ -48,11 +48,10 @@ import watchdog
 import winUser
 import wx
 from versionInfo import version_year, version_major
-
 from .actions import ACTIONS, actionFromName, configuredActions, getActionIndexFromName
 from .commonFunc import NVDALocale, rangeFunc
 from . import configSpec
-from .Exceptions import columnAtIndexNotVisible, noColumnAtIndex
+from .exceptions import columnAtIndexNotVisible, noColumnAtIndex
 
 # useful to simulate profile switch handling
 nvdaVersion = '.'.join([str(version_year), str(version_major)])
@@ -132,7 +131,6 @@ def isEmptyList(lstObj):
 
 # useful in ColumnsReview64 to calculate file size
 getBytePerSector = ctypes.windll.kernel32.GetDiskFreeSpaceW
-
 
 # (re)load config
 def loadConfig():
@@ -543,7 +541,6 @@ class ColumnsReview(RowWithFakeNavigation):
 
 	# Translators: documentation for script to read all list items starting from the focused one.
 	script_readListItems.__doc__ = _("Starts reading all list items beginning at the item with focus")
-
 
 class FindDialog(cursorManager.FindDialog):
 	"""a class extending traditional find dialog."""
@@ -1093,7 +1090,6 @@ class ColumnsReviewSettingsDialog(superDialogClass):
 			self.settingsSizer.Show(self._switchCharLabel)
 			self.settingsSizer.Show(self._switchChar)
 		self.Fit()
-
 
 class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 

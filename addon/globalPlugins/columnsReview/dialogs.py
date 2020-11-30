@@ -1,7 +1,6 @@
 # GUI dialogs for the Columns Review add-on
 
 import wx
-
 import addonHandler
 import config
 import controlTypes as ct
@@ -9,11 +8,8 @@ import gui
 from gui.guiHelper import BoxSizerHelper, ButtonHelper
 import ui
 import winUser
-
 from .actions import ACTIONS, getActionIndexFromName
-
 addonHandler.initTranslation()
-
 
 class configureActionPanel(wx.Panel):
 
@@ -95,7 +91,6 @@ class configureActionPanel(wx.Panel):
 			self.copyHeader.Enable()
 		else:
 			self.copyHeader.Disable()
-
 
 class HeaderDialog(wx.Dialog):
 	"""define dialog for column headers management."""
