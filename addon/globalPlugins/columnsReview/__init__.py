@@ -446,7 +446,7 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 			if SysLV32List in clsList:
 				clsList.insert(0, CRList32)
 			# Windows 8/8.1/10 Start Screen tiles should not expose column info.
-			elif UIA in clsList and obj.UIAElement.cachedClassName not in ("GridTileElement", "GridListTileElement"):
+			elif UIA in clsList and obj.UIAElement.cachedClassName == "UIItemsView":
 				clsList.insert(0, CRList64)
 
 
