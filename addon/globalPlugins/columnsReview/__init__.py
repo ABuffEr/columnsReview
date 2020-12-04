@@ -477,14 +477,14 @@ class CRList(object):
 	# Keeps track of how many times the given command has been pressed
 	repeatCount = 0
 
+	def hasNoColumn(self):
+		if self.columnCount <= 0:
+			return True
+
 	def initOverlayClass(self):
 		"""maps the correct gestures"""
 		# obviously, empty lists are not handled
-		try:
-			curItem = api.getFocusObject()
-			if self.columnCount+curItem.childCount <= 0:
-				return
-		except:
+		if self.hasNoColumn():
 			return
 		global useNumpadKeys, switchChar, baseKeys
 		# a string useful for defining gestures
@@ -1126,6 +1126,11 @@ class MozillaTable(Mozilla, CRList32):
 	"""Class to manage column headers in Mozilla list"""
 
 	THREAD_SUPPORTED = False
+
+	def hasNoColumn(self):
+		# the only child is header list obj
+		if self.childCount <= 1:
+			return True
 
 	def _getColumnHeader(self, index):
 		"""Returns the column header in Mozilla applications"""
