@@ -477,15 +477,8 @@ class CRList(object):
 	# Keeps track of how many times the given command has been pressed
 	repeatCount = 0
 
-	def hasNoColumn(self):
-		if self.columnCount <= 0:
-			return True
-
 	def initOverlayClass(self):
 		"""maps the correct gestures"""
-		# obviously, empty lists are not handled
-		if self.hasNoColumn():
-			return
 		global useNumpadKeys, switchChar, baseKeys
 		# a string useful for defining gestures
 		nk = "numpad" if useNumpadKeys else ""
@@ -797,12 +790,17 @@ class CRList32(SysLV32List, CRList):
 
 	def getColumnData(self, colNumber):
 		curItem = api.getFocusObject()
-		if colNumber > curItem.childCount:
+		# even with no column, we consider
+		# list item as placed in first column
+		if (1 != colNumber > curItem.childCount) or (curItem.role == self.role):
 			raise noColumnAtIndex
-		# for invisible column case
-		num = self.getFixedNum(colNumber)
-		# getChild is zero-based
-		obj = curItem.getChild(num-1)
+		if curItem.childCount:
+			# for invisible column case
+			num = self.getFixedNum(colNumber)
+			# getChild is zero-based
+			obj = curItem.getChild(num-1)
+		else:
+			obj = curItem
 		# None obj should be generated
 		# only in invisible column case
 		if not obj:
@@ -1127,11 +1125,6 @@ class MozillaTable(Mozilla, CRList32):
 
 	THREAD_SUPPORTED = False
 
-	def hasNoColumn(self):
-		# the only child is header list obj
-		if self.childCount <= 1:
-			return True
-
 	def _getColumnHeader(self, index):
 		"""Returns the column header in Mozilla applications"""
 		# get the list with headers, excluding these
@@ -1174,12 +1167,3 @@ class MozillaTable(Mozilla, CRList32):
 
 	def isMultipleSelectionSupported(self):
 		return True
-
-	"""
-	# old non-multiselection method, for reference
-	def successSearchAction(self, res):
-		speech.cancelSpeech()
-		table = self.parent.IAccessibleTable2Object
-		resIndex = res.positionInfo["indexInGroup"]-1
-		table.selectRow(resIndex)
-	"""
