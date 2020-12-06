@@ -17,13 +17,13 @@
 from NVDAObjects.IAccessible import getNVDAObjectFromEvent
 from NVDAObjects.IAccessible.sysListView32 import * #List, ListItem, LVM_GETHEADER
 from NVDAObjects.UIA import UIA # For UIA implementations only, chiefly 64-bit.
-from NVDAObjects.IAccessible.mozilla import Mozilla
+#from NVDAObjects.IAccessible.mozilla import Mozilla
 import sayAllHandler
 import sys
+import weakref
 from _ctypes import COMError
 from comtypes.client import CreateObject
 from comtypes.gen.IAccessible2Lib import IAccessible2
-from ctypes.wintypes import LPARAM as LParam
 from globalCommands import commands
 from oleacc import STATE_SYSTEM_MULTISELECTABLE, SELFLAG_TAKEFOCUS, SELFLAG_TAKESELECTION, SELFLAG_ADDSELECTION
 from scriptHandler import getLastScriptRepeatCount
@@ -50,7 +50,7 @@ import winUser
 import wx
 from versionInfo import version_year, version_major
 from .actions import ACTIONS, actionFromName, configuredActions, getActionIndexFromName
-from .commonFunc import NVDALocale, rangeFunc
+from .commonFunc import NVDALocale, rangeFunc, findAllDescendantWindows, getScriptGestures, isEmptyList
 from . import configSpec
 from .exceptions import columnAtIndexNotVisible, noColumnAtIndex
 
@@ -58,7 +58,6 @@ from .exceptions import columnAtIndexNotVisible, noColumnAtIndex
 nvdaVersion = '.'.join([str(version_year), str(version_major)])
 # rename for code clarity
 SysLV32List = List
-SysLV32Item = ListItem
 py3 = sys.version.startswith("3")
 config.conf.spec["columnsReview"] = configSpec.confspec
 
@@ -69,66 +68,6 @@ curAddon = addonHandler.Addon(addonDir)
 addonSummary = curAddon.manifest['summary']
 
 addonHandler.initTranslation()
-
-WNDENUMPROC = ctypes.WINFUNCTYPE(ctypes.wintypes.BOOL, ctypes.wintypes.HWND, ctypes.wintypes.LPARAM)
-def findAllDescendantWindows(parent, visible=None, controlID=None, className=None):
-	"""See windowUtils.findDescendantWindow for parameters documentation."""
-	results = []
-	@WNDENUMPROC
-	def callback(window, data):
-		if (
-			(visible is None or winUser.isWindowVisible(window) == visible)
-			and (not controlID or winUser.getControlID(window) == controlID)
-			and (not className or winUser.getClassName(window) == className)
-		):
-			results.append(window)
-		return True
-	# call previous func until it returns True,
-	# thus always, getting all windows
-	ctypes.windll.user32.EnumChildWindows(parent, callback, 0)
-	# return all results
-	return results
-
-# to avoid code copying to exclude ui.message
-def runSilently(func, *args, **kwargs):
-	configBackup = {"voice": speech.speechMode, "braille": config.conf["braille"]["messageTimeout"]}
-	speech.speechMode = speech.speechMode_off
-	config.conf["braille"]._cacheLeaf("messageTimeout", None, 0)
-	try:
-		func(*args, **kwargs)
-	finally:
-		speech.speechMode = configBackup["voice"]
-		config.conf["braille"]._cacheLeaf("messageTimeout", None, configBackup["braille"])
-
-# to get NVDA script gestures, regardless its user remap
-def getScriptGestures(scriptFunc):
-	from inputCore import manager
-	scriptGestures = []
-	try:
-		scriptCategory = scriptFunc.category if hasattr(scriptFunc, "category") else scriptFunc.__self__.__class__.scriptCategory
-		scriptDoc = scriptFunc.__doc__
-		scriptGestures = manager.getAllGestureMappings()[scriptCategory][scriptDoc].gestures
-	except:
-		pass
-	return scriptGestures
-
-def isEmptyList(lstObj):
-	try:
-		if (
-				# simple and fast check
-				(not lstObj.rowCount)
-				or
-				# usual condition for SysListView32
-				# (the unique child should be the header list, that usually follows items)
-				(lstObj.firstChild.role != ct.ROLE_LISTITEM and lstObj.firstChild == lstObj.lastChild)
-				or
-				# condition for possible strange cases
-				(lstObj.childCount <= 1)
-			):
-				return True
-		return False
-	except:
-		pass
 
 # useful in ColumnsReview64 to calculate file size
 getBytePerSector = ctypes.windll.kernel32.GetDiskFreeSpaceW
@@ -268,7 +207,6 @@ class _RowsReader(sayAllSuperclass):
 
 	@classmethod
 	def readRows(cls, obj):
-		import weakref
 		reader = cls(obj)
 		sayAllHandler._activeSayAll = weakref.ref(reader)
 		reader.next()
@@ -672,7 +610,11 @@ class CRList(object):
 		if hasattr(cursorManager, "SEARCH_HISTORY_MOST_RECENT_INDEX"):
 			d = FindDialog(gui.mainFrame, self, self._lastCaseSensitivity, self._searchEntries, reverse)
 		else:
-			d = FindDialog(gui.mainFrame, self, self._lastFindText, self._lastCaseSensitivity, reverse)
+			try:
+				d = FindDialog(gui.mainFrame, self, self._lastFindText, self._lastCaseSensitivity, reverse)
+			except:
+				# until NVDA 2020.3
+				d = FindDialog(gui.mainFrame, self, self._lastFindText, self._lastCaseSensitivity)
 		gui.mainFrame.prePopup()
 		d.Show()
 		gui.mainFrame.postPopup()
@@ -745,11 +687,7 @@ class CRList(object):
 		raise NotImplementedError
 
 	def successSearchAction(self, res):
-		# generic method
-		# (actually not used by any subclass)
-		speech.cancelSpeech()
-		api.setNavigatorObject(res)
-		runSilently(commands.script_navigatorObject_moveFocus, res)
+		raise NotImplementedError
 
 	def script_findNext(self, gesture):
 		if not self._lastFindText:
@@ -782,7 +720,7 @@ class CRList(object):
 	script_readListItems.__doc__ = _("Starts reading all list items beginning at the item with focus")
 
 
-class CRList32(SysLV32List, CRList):
+class CRList32(CRList):
 # for SysListView32 or WindowsForms10.SysListView32.app.0.*
 
 	# flag to guarantee thread support
@@ -918,7 +856,7 @@ class CRList32(SysLV32List, CRList):
 			_("selected items"), spokenItems))
 	script_reportCurrentSelection.canPropagate = True
 
-class CRList64(UIA, CRList):
+class CRList64(CRList):
 	"""for 64-bit systems (DirectUIHWND window class)
 	see CRList32 class for more comments"""
 
@@ -980,7 +918,7 @@ class CRList64(UIA, CRList):
 		else:
 			return headerParent.next
 
-	def preCheck(self):
+	def preCheck(self, *args):
 		# check to ensure shell32 method will work
 		# (not available in all context, as open dialog)
 		shell = CreateObject("shell.application")
@@ -1120,7 +1058,7 @@ class CRList64(UIA, CRList):
 				self.curWindow.Document.SelectItem(res, 29)
 
 
-class MozillaTable(Mozilla, CRList32):
+class MozillaTable(CRList32):
 	"""Class to manage column headers in Mozilla list"""
 
 	THREAD_SUPPORTED = False

@@ -11,6 +11,7 @@ import winUser
 from .actions import ACTIONS, getActionIndexFromName
 addonHandler.initTranslation()
 
+
 class configureActionPanel(wx.Panel):
 
 	COPY_ACTION_INDEX = getActionIndexFromName("copy")
@@ -91,6 +92,7 @@ class configureActionPanel(wx.Panel):
 			self.copyHeader.Enable()
 		else:
 			self.copyHeader.Disable()
+
 
 class HeaderDialog(wx.Dialog):
 	"""define dialog for column headers management."""
