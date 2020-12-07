@@ -66,6 +66,10 @@ if isinstance(addonDir, bytes):
 	addonDir = addonDir.decode("mbcs")
 curAddon = addonHandler.Addon(addonDir)
 addonSummary = curAddon.manifest['summary']
+libPath = os.path.join(addonDir, "lib")
+sys.path.append(libPath)
+import pythoncom
+del sys.path[-1]
 
 addonHandler.initTranslation()
 
@@ -162,11 +166,14 @@ class Finder(Thread):
 		return self._stopEvent.is_set()
 
 	def run(self):
+		if isinstance(self.orig, CRList64):
+			pythoncom.CoInitialize()
 		self.status = Finder.STATUS_RUNNING
 		self.res = self.orig.findInList(self.text, self.reverse, self.caseSensitive, self.stopped)
 		if self.status == Finder.STATUS_RUNNING:
 			self.status = Finder.STATUS_COMPLETE
-
+		if isinstance(self.orig, CRList64):
+			pythoncom.CoUninitialize()
 
 class FindDialog(cursorManager.FindDialog):
 	"""a class extending traditional find dialog."""
@@ -860,7 +867,7 @@ class CRList64(CRList):
 	"""for 64-bit systems (DirectUIHWND window class)
 	see CRList32 class for more comments"""
 
-	THREAD_SUPPORTED = False
+	THREAD_SUPPORTED = True
 
 	# window shell variable
 	curWindow = None
@@ -967,6 +974,8 @@ class CRList64(CRList):
 
 	def findInList(self, text, reverse, caseSensitive, stopCheck=lambda:False):
 		"""performs search in item list, via shell32 object."""
+		# reacquire curWindow for current thread
+		self.preCheck()
 		curFolder = self.curWindow.Document.Folder
 		curItem = self.searchFromItem
 		# names of children objects of current list item,
@@ -1012,11 +1021,11 @@ class CRList64(CRList):
 			item = items.Item(index)
 			# detail value list
 			tempItemInfo = []
-			for index in detailIndexes:
+			for detailIndex in detailIndexes:
 				# getDetailsOf(item, 1) returns file size in KB, MB, etc,
 				# item.size returns  as file size in bytes
 				# but explorer shows file size on disk, in kilobytes...
-				if (index == 1) and not item.IsFolder:
+				if (detailIndex == 1) and not item.IsFolder:
 				# formula below is an optimization of ((item.size-1)/bytePerSector.value+1)*bytePerSector.value
 					diskSizeB = ((item.size-1)&~(bytePerSector.value-1))+bytePerSector.value if item.size>512 else 1024
 					diskSizeKB = int(round(diskSizeB/1024.0))
@@ -1026,7 +1035,7 @@ class CRList64(CRList):
 					explorerSize = ' '.join([formattedSize, "KB"])
 					tempItemInfo.append(explorerSize)
 				else:
-					tempItemInfo.append(curFolder.GetDetailsOf(item, index))
+					tempItemInfo.append(curFolder.GetDetailsOf(item, detailIndex))
 			# our reconstruction of item as shown in explorer
 			itemInfo = '; '.join(tempItemInfo)
 			# finally, the search if
@@ -1035,27 +1044,31 @@ class CRList64(CRList):
 				or
 				(caseSensitive and text in itemInfo)
 			):
-				res = item
+				resIndex = index
 				if not reverse:
 					# we can stop; if reverse
 					# we must scroll everything
 					break
-		return res
+		return resIndex
 
 	def isMultipleSelectionSupported(self):
 		return True
 
 	def successSearchAction(self, res):
-			speech.cancelSpeech()
-			# according to MS:
-			# https://docs.microsoft.com/en-us/windows/desktop/shell/shellfolderview-selectitem
-			# 17 should set focus and add item to selection,
-			# 29 should set focus and exclusive selection
-			global useMultipleSelection
-			if useMultipleSelection:
-				self.curWindow.Document.SelectItem(res, 17)
-			else:
-				self.curWindow.Document.SelectItem(res, 29)
+		speech.cancelSpeech()
+		# according to MS:
+		# https://docs.microsoft.com/en-us/windows/desktop/shell/shellfolderview-selectitem
+		# 17 should set focus and add item to selection,
+		# 29 should set focus and exclusive selection
+		global useMultipleSelection
+		# reacquire curWindow for current thread
+		self.preCheck()
+		if useMultipleSelection:
+			item = self.curWindow.Document.Folder.Items().Item(res)
+			self.curWindow.Document.SelectItem(item, 17)
+		else:
+			item = self.curWindow.Document.Folder.Items().Item(res)
+			self.curWindow.Document.SelectItem(item, 29)
 
 
 class MozillaTable(CRList32):
