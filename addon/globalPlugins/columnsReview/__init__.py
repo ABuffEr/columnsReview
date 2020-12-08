@@ -50,7 +50,7 @@ import winUser
 import wx
 from versionInfo import version_year, version_major
 from .actions import ACTIONS, actionFromName, configuredActions, getActionIndexFromName
-from .commonFunc import NVDALocale, rangeFunc, findAllDescendantWindows, getScriptGestures, isEmptyList
+from .commonFunc import NVDALocale, rangeFunc, findAllDescendantWindows, getScriptGestures
 from . import configSpec
 from .exceptions import columnAtIndexNotVisible, noColumnAtIndex
 
@@ -94,7 +94,7 @@ class EmptyList(SysLV32List):
 	"""Class to announce empty list."""
 
 	def event_gainFocus(self):
-		if not isEmptyList(self):
+		if not self.isEmptyList():
 			self.clearGestureBindings()
 			super(EmptyList, self).event_gainFocus()
 			return
@@ -125,6 +125,22 @@ class EmptyList(SysLV32List):
 
 	def script_alert(self, gesture):
 		self.event_gainFocus()
+
+	def isEmptyList(self):
+		try:
+			if (
+				# simple and fast check
+				(not self.rowCount)
+				# usual condition for SysListView32
+				# (the unique child should be the header list, that usually follows items)
+				or (self.firstChild.role != ct.ROLE_LISTITEM and self.firstChild == self.lastChild)
+				# condition for possible strange cases
+				or (self.childCount <= 1)
+			):
+				return True
+			return False
+		except AttributeError:
+			pass
 
 
 # Global ref on current finder

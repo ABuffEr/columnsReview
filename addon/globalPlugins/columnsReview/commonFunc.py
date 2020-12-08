@@ -62,21 +62,3 @@ def getScriptGestures(scriptFunc):
 	except:
 		pass
 	return scriptGestures
-
-def isEmptyList(lstObj):
-	try:
-		if (
-				# simple and fast check
-				(not lstObj.rowCount)
-				or
-				# usual condition for SysListView32
-				# (the unique child should be the header list, that usually follows items)
-				(lstObj.firstChild.role != ct.ROLE_LISTITEM and lstObj.firstChild == lstObj.lastChild)
-				or
-				# condition for possible strange cases
-				(lstObj.childCount <= 1)
-			):
-				return True
-		return False
-	except:
-		pass
