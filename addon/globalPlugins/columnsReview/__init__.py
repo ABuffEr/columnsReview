@@ -65,10 +65,6 @@ if isinstance(addonDir, bytes):
 	addonDir = addonDir.decode("mbcs")
 curAddon = addonHandler.Addon(addonDir)
 addonSummary = curAddon.manifest['summary']
-libPath = os.path.join(addonDir, "lib")
-sys.path.append(libPath)
-import pythoncom
-del sys.path[-1]
 
 addonHandler.initTranslation()
 
@@ -181,14 +177,13 @@ class Finder(Thread):
 		return self._stopEvent.is_set()
 
 	def run(self):
-		if isinstance(self.orig, CRList64):
-			pythoncom.CoInitialize()
+		self.orig.prepareForThreatedSearch()
 		self.status = Finder.STATUS_RUNNING
 		self.res = self.orig.findInList(self.text, self.reverse, self.caseSensitive, self.stopped)
 		if self.status == Finder.STATUS_RUNNING:
 			self.status = Finder.STATUS_COMPLETE
-		if isinstance(self.orig, CRList64):
-			pythoncom.CoUninitialize()
+		self.orig.threatedSearchDone()
+
 
 class FindDialog(cursorManager.FindDialog):
 	"""a class extending traditional find dialog."""
@@ -741,6 +736,18 @@ class CRList(object):
 	# Translators: documentation for script to read all list items starting from the focused one.
 	script_readListItems.__doc__ = _("Starts reading all list items beginning at the item with focus")
 
+	@staticmethod
+	def prepareForThreatedSearch():
+		"""This method is executed before search is started in a separate thread.
+		Base implementation does nothing.
+		"""
+		pass
+
+	@staticmethod
+	def threatedSearchDone():
+		"""Exetcuted when searching in a separate thread has been finished"""
+		pass
+
 
 class CRList32(CRList):
 # for SysListView32 or WindowsForms10.SysListView32.app.0.*
@@ -1094,6 +1101,14 @@ class CRList64(CRList):
 		else:
 			item = self.curWindow.Document.Folder.Items().Item(res)
 			self.curWindow.Document.SelectItem(item, 29)
+
+	@staticmethod
+	def prepareForThreatedSearch():
+		ctypes.windll.Ole32.CoInitialize(None)
+
+	@staticmethod
+	def threatedSearchDone():
+		ctypes.windll.Ole32.CoUninitialize()
 
 
 class MozillaTable(CRList32):
