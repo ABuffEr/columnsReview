@@ -3,8 +3,7 @@
 from ctypes.wintypes import LPARAM as LParam
 import ctypes
 import winUser
-import speech
-import config
+
 
 # We need to store original NVDA gettext function,
 # to be able to take advantage of messages translated in NVDA core.
@@ -39,9 +38,13 @@ def findAllDescendantWindows(parent, visible=None, controlID=None, className=Non
 	# return all results
 	return results
 
-# to avoid code copying to exclude ui.message
-# (kept for documentation only)
+
+"""
+to avoid code copying to exclude ui.message
+This method is not used anywhere in the code - kept just for historical purposes.
 def runSilently(func, *args, **kwargs):
+	import speech
+	import config
 	configBackup = {"voice": speech.speechMode, "braille": config.conf["braille"]["messageTimeout"]}
 	speech.speechMode = speech.speechMode_off
 	config.conf["braille"]._cacheLeaf("messageTimeout", None, 0)
@@ -50,6 +53,8 @@ def runSilently(func, *args, **kwargs):
 	finally:
 		speech.speechMode = configBackup["voice"]
 		config.conf["braille"]._cacheLeaf("messageTimeout", None, configBackup["braille"])
+"""
+
 
 # to get NVDA script gestures, regardless its user remap
 def getScriptGestures(scriptFunc):
