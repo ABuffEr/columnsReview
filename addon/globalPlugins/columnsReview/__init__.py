@@ -15,9 +15,8 @@
 # for feedback and comments
 
 from NVDAObjects.IAccessible import getNVDAObjectFromEvent
-from NVDAObjects.IAccessible.sysListView32 import * #List, ListItem, LVM_GETHEADER
+from NVDAObjects.IAccessible import sysListView32
 from NVDAObjects.UIA import UIA # For UIA implementations only, chiefly 64-bit.
-#from NVDAObjects.IAccessible.mozilla import Mozilla
 import sayAllHandler
 import sys
 import weakref
@@ -50,14 +49,14 @@ import winUser
 import wx
 from versionInfo import version_year, version_major
 from .actions import ACTIONS, actionFromName, configuredActions, getActionIndexFromName
-from .commonFunc import NVDALocale, rangeFunc, findAllDescendantWindows, getScriptGestures, isEmptyList
+from .commonFunc import NVDALocale, rangeFunc, findAllDescendantWindows, getScriptGestures
 from . import configSpec
 from .exceptions import columnAtIndexNotVisible, noColumnAtIndex
 
 # useful to simulate profile switch handling
 nvdaVersion = '.'.join([str(version_year), str(version_major)])
 # rename for code clarity
-SysLV32List = List
+SysLV32List = sysListView32.List
 py3 = sys.version.startswith("3")
 config.conf.spec["columnsReview"] = configSpec.confspec
 
@@ -66,10 +65,6 @@ if isinstance(addonDir, bytes):
 	addonDir = addonDir.decode("mbcs")
 curAddon = addonHandler.Addon(addonDir)
 addonSummary = curAddon.manifest['summary']
-libPath = os.path.join(addonDir, "lib")
-sys.path.append(libPath)
-import pythoncom
-del sys.path[-1]
 
 addonHandler.initTranslation()
 
@@ -94,7 +89,7 @@ class EmptyList(SysLV32List):
 	"""Class to announce empty list."""
 
 	def event_gainFocus(self):
-		if not isEmptyList(self):
+		if not self.isEmptyList():
 			self.clearGestureBindings()
 			super(EmptyList, self).event_gainFocus()
 			return
@@ -125,6 +120,22 @@ class EmptyList(SysLV32List):
 
 	def script_alert(self, gesture):
 		self.event_gainFocus()
+
+	def isEmptyList(self):
+		try:
+			if (
+				# simple and fast check
+				(not self.rowCount)
+				# usual condition for SysListView32
+				# (the unique child should be the header list, that usually follows items)
+				or (self.firstChild.role != ct.ROLE_LISTITEM and self.firstChild == self.lastChild)
+				# condition for possible strange cases
+				or (self.childCount <= 1)
+			):
+				return True
+			return False
+		except AttributeError:
+			pass
 
 
 # Global ref on current finder
@@ -166,14 +177,13 @@ class Finder(Thread):
 		return self._stopEvent.is_set()
 
 	def run(self):
-		if isinstance(self.orig, CRList64):
-			pythoncom.CoInitialize()
+		self.orig.prepareForThreatedSearch()
 		self.status = Finder.STATUS_RUNNING
 		self.res = self.orig.findInList(self.text, self.reverse, self.caseSensitive, self.stopped)
 		if self.status == Finder.STATUS_RUNNING:
 			self.status = Finder.STATUS_COMPLETE
-		if isinstance(self.orig, CRList64):
-			pythoncom.CoUninitialize()
+		self.orig.threatedSearchDone()
+
 
 class FindDialog(cursorManager.FindDialog):
 	"""a class extending traditional find dialog."""
@@ -726,6 +736,18 @@ class CRList(object):
 	# Translators: documentation for script to read all list items starting from the focused one.
 	script_readListItems.__doc__ = _("Starts reading all list items beginning at the item with focus")
 
+	@staticmethod
+	def prepareForThreatedSearch():
+		"""This method is executed before search is started in a separate thread.
+		Base implementation does nothing.
+		"""
+		pass
+
+	@staticmethod
+	def threatedSearchDone():
+		"""Exetcuted when searching in a separate thread has been finished"""
+		pass
+
 
 class CRList32(CRList):
 # for SysListView32 or WindowsForms10.SysListView32.app.0.*
@@ -782,7 +804,7 @@ class CRList32(CRList):
 
 	def getHeaderParent(self):
 		# faster than previous self.simpleParent.children[-1]
-		headerHandle = watchdog.cancellableSendMessage(self.windowHandle, LVM_GETHEADER, 0, 0)
+		headerHandle = watchdog.cancellableSendMessage(self.windowHandle, sysListView32.LVM_GETHEADER, 0, 0)
 		headerParent = getNVDAObjectFromEvent(headerHandle, winUser.OBJID_CLIENT, 0)
 		return headerParent
 
@@ -846,8 +868,13 @@ class CRList32(CRList):
 		# index of first selected item
 		# use -1 to query first list item too
 		# with index 0L
-		selItemIndex = watchdog.cancellableSendMessage(parentHandle, LVM_GETNEXTITEM, -1, LParam(LVNI_SELECTED))
-		listLen = watchdog.cancellableSendMessage(parentHandle, LVM_GETITEMCOUNT, 0, 0)
+		selItemIndex = watchdog.cancellableSendMessage(
+			parentHandle,
+			sysListView32.LVM_GETNEXTITEM,
+			-1,
+			ctypes.wintypes.LPARAM(sysListView32.LVNI_SELECTED)
+		)
+		listLen = watchdog.cancellableSendMessage(parentHandle, sysListView32.LVM_GETITEMCOUNT, 0, 0)
 		items = []
 		while (0 <= selItemIndex < listLen):
 			item = getNVDAObjectFromEvent(parentHandle, winUser.OBJID_CLIENT, selItemIndex+1)
@@ -856,7 +883,12 @@ class CRList32(CRList):
 			if itemName:
 				items.append(itemName)
 			# index of next selected item
-			selItemIndex = watchdog.cancellableSendMessage(parentHandle, LVM_GETNEXTITEM, selItemIndex, LParam(LVNI_SELECTED))
+			selItemIndex = watchdog.cancellableSendMessage(
+				parentHandle,
+				sysListView32.LVM_GETNEXTITEM,
+				selItemIndex,
+				ctypes.wintypes.LPARAM(sysListView32.LVNI_SELECTED)
+			)
 		spokenItems = ', '.join(items)
 		ui.message("%d %s: %s"%(len(items),
 			# translators: message presented when get selected item count and names
@@ -871,28 +903,6 @@ class CRList64(CRList):
 
 	# window shell variable
 	curWindow = None
-
-	"""# to propagate, if necessary
-	# Versions of NVDA between 2019.3 and 2020.3 have broken implementation of `_get_childCount` for UIA
-	# This causes crashes with recursion error in Windows 10 task manager and other places.
-	# For affected versions provide our own implementation.
-	def _get_childCount(self):
-		if not py3 or "childCount" in UIA.__dict__:  # Can't use getattr because it also checks in superclasses
-			return super(CRList64, self).childCount
-		import UIAHandler
-		from comtypes import COMError
-		childrenCacheRequest = UIAHandler.handler.baseCacheRequest.clone()
-		childrenCacheRequest.TreeScope = UIAHandler.TreeScope_Children
-		try:
-			cachedChildren = self.UIAElement.buildUpdatedCache(childrenCacheRequest).getCachedChildren()
-			if not cachedChildren:
-				# GetCachedChildren returns null if there are no children.
-				return 0
-			return cachedChildren.length
-		except COMError:
-			from NVDAObjects.window import Window
-			return len(Window(self).children)
-	"""
 
 	def getColumnData(self, colNumber):
 		# colNumber is passed as is, excluding the first position (0) of the children list
@@ -1069,6 +1079,14 @@ class CRList64(CRList):
 		else:
 			item = self.curWindow.Document.Folder.Items().Item(res)
 			self.curWindow.Document.SelectItem(item, 29)
+
+	@staticmethod
+	def prepareForThreatedSearch():
+		ctypes.windll.Ole32.CoInitialize(None)
+
+	@staticmethod
+	def threatedSearchDone():
+		ctypes.windll.Ole32.CoUninitialize()
 
 
 class MozillaTable(CRList32):
