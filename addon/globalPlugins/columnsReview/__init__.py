@@ -1007,7 +1007,7 @@ class CRList64(CRList):
 		curIndex = curItem.positionInfo["indexInGroup"]
 		# pointer to item list
 		items = curFolder.Items()
-		res = None
+		resIndex = None
 		if reverse:
 #			indexes = rangeFunc(curIndex-2,-1,-1)
 			# unfortunately, list pointer seems to change
