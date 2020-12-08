@@ -1,6 +1,5 @@
 # Utility functions for the Columns Review add-on
 
-from ctypes.wintypes import LPARAM as LParam
 import ctypes
 import winUser
 

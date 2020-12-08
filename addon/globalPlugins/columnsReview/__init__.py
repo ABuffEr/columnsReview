@@ -15,9 +15,8 @@
 # for feedback and comments
 
 from NVDAObjects.IAccessible import getNVDAObjectFromEvent
-from NVDAObjects.IAccessible.sysListView32 import * #List, ListItem, LVM_GETHEADER
+from NVDAObjects.IAccessible import sysListView32
 from NVDAObjects.UIA import UIA # For UIA implementations only, chiefly 64-bit.
-#from NVDAObjects.IAccessible.mozilla import Mozilla
 import sayAllHandler
 import sys
 import weakref
@@ -57,7 +56,7 @@ from .exceptions import columnAtIndexNotVisible, noColumnAtIndex
 # useful to simulate profile switch handling
 nvdaVersion = '.'.join([str(version_year), str(version_major)])
 # rename for code clarity
-SysLV32List = List
+SysLV32List = sysListView32.List
 py3 = sys.version.startswith("3")
 config.conf.spec["columnsReview"] = configSpec.confspec
 
@@ -798,7 +797,7 @@ class CRList32(CRList):
 
 	def getHeaderParent(self):
 		# faster than previous self.simpleParent.children[-1]
-		headerHandle = watchdog.cancellableSendMessage(self.windowHandle, LVM_GETHEADER, 0, 0)
+		headerHandle = watchdog.cancellableSendMessage(self.windowHandle, sysListView32.LVM_GETHEADER, 0, 0)
 		headerParent = getNVDAObjectFromEvent(headerHandle, winUser.OBJID_CLIENT, 0)
 		return headerParent
 
@@ -862,8 +861,13 @@ class CRList32(CRList):
 		# index of first selected item
 		# use -1 to query first list item too
 		# with index 0L
-		selItemIndex = watchdog.cancellableSendMessage(parentHandle, LVM_GETNEXTITEM, -1, LParam(LVNI_SELECTED))
-		listLen = watchdog.cancellableSendMessage(parentHandle, LVM_GETITEMCOUNT, 0, 0)
+		selItemIndex = watchdog.cancellableSendMessage(
+			parentHandle,
+			sysListView32.LVM_GETNEXTITEM,
+			-1,
+			ctypes.wintypes.LPARAM(sysListView32.LVNI_SELECTED)
+		)
+		listLen = watchdog.cancellableSendMessage(parentHandle, sysListView32.LVM_GETITEMCOUNT, 0, 0)
 		items = []
 		while (0 <= selItemIndex < listLen):
 			item = getNVDAObjectFromEvent(parentHandle, winUser.OBJID_CLIENT, selItemIndex+1)
@@ -872,7 +876,12 @@ class CRList32(CRList):
 			if itemName:
 				items.append(itemName)
 			# index of next selected item
-			selItemIndex = watchdog.cancellableSendMessage(parentHandle, LVM_GETNEXTITEM, selItemIndex, LParam(LVNI_SELECTED))
+			selItemIndex = watchdog.cancellableSendMessage(
+				parentHandle,
+				sysListView32.LVM_GETNEXTITEM,
+				selItemIndex,
+				ctypes.wintypes.LPARAM(sysListView32.LVNI_SELECTED)
+			)
 		spokenItems = ', '.join(items)
 		ui.message("%d %s: %s"%(len(items),
 			# translators: message presented when get selected item count and names
