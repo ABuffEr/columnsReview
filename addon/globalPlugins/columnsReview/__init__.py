@@ -645,7 +645,8 @@ class CRList(object):
 		if not text:
 			return
 		speech.cancelSpeech()
-		ui.message(_("Searching..."))
+		msgArgs = (_("Searching..."), speech.Spri.NOW,) if py3 else (_("Searching..."),)
+		ui.message(*msgArgs)
 		if self.THREAD_SUPPORTED:
 			# Call launchFinder asynchronously, i.e. without expecting it to return
 			Thread(target=self.launchFinder, args=(text, reverse, caseSensitive) ).start()
