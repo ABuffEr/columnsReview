@@ -20,7 +20,6 @@ from NVDAObjects.UIA import UIA # For UIA implementations only, chiefly 64-bit.
 import sayAllHandler
 import sys
 import weakref
-from _ctypes import COMError
 from comtypes.client import CreateObject
 from comtypes.gen.IAccessible2Lib import IAccessible2
 from globalCommands import commands
@@ -52,6 +51,7 @@ from .actions import ACTIONS, actionFromName, configuredActions, getActionIndexF
 from .commonFunc import NVDALocale, rangeFunc, findAllDescendantWindows, getScriptGestures
 from . import configSpec
 from .exceptions import columnAtIndexNotVisible, noColumnAtIndex
+#from logHandler import log
 
 # useful to simulate profile switch handling
 nvdaVersion = '.'.join([str(version_year), str(version_major)])
@@ -718,7 +718,7 @@ class CRList(object):
 	# Translators: documentation for script to manage headers
 	script_findNext.__doc__ = _("Goes to next result of current search")
 
-	def script_findPrevious(self,gesture):
+	def script_findPrevious(self, gesture):
 		if not self._lastFindText:
 			self.script_find(gesture, reverse=True)
 			return
@@ -813,12 +813,12 @@ class CRList32(CRList):
 		"""performs search in item list, via object handles."""
 		# specific implementation
 		fg = api.getForegroundObject()
-		curItem = self.searchFromItem
 		listHandles = findAllDescendantWindows(fg.windowHandle, controlID=self.windowControlID)
 		# if handle approach fails, use generic method
 		if not listHandles:
 			res = super(CRList32, self).findInList(text, reverse, caseSensitive)
 			return res
+		curItem = self.searchFromItem
 		listLen = curItem.positionInfo["similarItemsInGroup"]
 		# 1-based index
 		curIndex = curItem.positionInfo["indexInGroup"]
@@ -847,22 +847,15 @@ class CRList32(CRList):
 			pass
 
 	def successSearchAction(self, res):
-		speech.cancelSpeech()
-		# for some reasons, in Thunderbird xor of flagsSelect is not supported
-		# so execute same actions but splitting calls
 		global useMultipleSelection
-		try:
-			if useMultipleSelection:
-				res.IAccessibleObject.accSelect(SELFLAG_ADDSELECTION, res.IAccessibleChildID)
-				res.IAccessibleObject.accSelect(SELFLAG_TAKEFOCUS, res.IAccessibleChildID)
-			else:
-			 res.IAccessibleObject.accSelect(SELFLAG_TAKESELECTION, res.IAccessibleChildID)
-			 res.IAccessibleObject.accSelect(SELFLAG_TAKEFOCUS, res.IAccessibleChildID)
-		except COMError:
-			# reacquire res for this thread
-			index = res.positionInfo["indexInGroup"]
-			res = getNVDAObjectFromEvent(self.windowHandle, winUser.OBJID_CLIENT, index)
-			self.successSearchAction(res)
+		speech.cancelSpeech()
+		# reacquire res for this thread
+		index = res.positionInfo["indexInGroup"]
+		res = getNVDAObjectFromEvent(self.windowHandle, winUser.OBJID_CLIENT, index)
+		if useMultipleSelection:
+			res.IAccessibleObject.accSelect(SELFLAG_ADDSELECTION | SELFLAG_TAKEFOCUS, res.IAccessibleChildID)
+		else:
+		 res.IAccessibleObject.accSelect(SELFLAG_TAKESELECTION | SELFLAG_TAKEFOCUS, res.IAccessibleChildID)
 
 	def script_reportCurrentSelection(self, gesture):
 		parentHandle = self.windowHandle
@@ -1065,21 +1058,21 @@ class CRList64(CRList):
 	def isMultipleSelectionSupported(self):
 		return True
 
-	def successSearchAction(self, res):
+	def successSearchAction(self, resIndex):
+		global useMultipleSelection
 		speech.cancelSpeech()
+		# reacquire curWindow for current thread
+		self.preCheck()
 		# according to MS:
 		# https://docs.microsoft.com/en-us/windows/desktop/shell/shellfolderview-selectitem
 		# 17 should set focus and add item to selection,
 		# 29 should set focus and exclusive selection
-		global useMultipleSelection
-		# reacquire curWindow for current thread
-		self.preCheck()
 		if useMultipleSelection:
-			item = self.curWindow.Document.Folder.Items().Item(res)
-			self.curWindow.Document.SelectItem(item, 17)
+			resItem = self.curWindow.Document.Folder.Items().Item(resIndex)
+			self.curWindow.Document.SelectItem(resItem, 17)
 		else:
-			item = self.curWindow.Document.Folder.Items().Item(res)
-			self.curWindow.Document.SelectItem(item, 29)
+			resItem = self.curWindow.Document.Folder.Items().Item(resIndex)
+			self.curWindow.Document.SelectItem(resItem, 29)
 
 	@staticmethod
 	def prepareForThreatedSearch():
@@ -1093,7 +1086,7 @@ class CRList64(CRList):
 class MozillaTable(CRList32):
 	"""Class to manage column headers in Mozilla list"""
 
-	THREAD_SUPPORTED = False
+	THREAD_SUPPORTED = True
 
 	def _getColumnHeader(self, index):
 		"""Returns the column header in Mozilla applications"""
@@ -1110,6 +1103,9 @@ class MozillaTable(CRList32):
 
 	def getHeaderParent(self):
 		return self.simpleFirstChild
+
+	def isMultipleSelectionSupported(self):
+		return True
 
 	def script_reportCurrentSelection(self, gesture):
 		# specific implementation, see:
@@ -1135,5 +1131,48 @@ class MozillaTable(CRList32):
 			_("selected items"), spokenItems))
 	script_reportCurrentSelection.canPropagate = True
 
-	def isMultipleSelectionSupported(self):
-		return True
+	def script_find(self, gesture, reverse=False):
+		self.curPos = api.getFocusObject().IAccessibleObject.uniqueID
+		super(MozillaTable, self).script_find(gesture, reverse)
+	script_find.canPropagate = True
+
+	def script_findNext(self, gesture):
+		self.curPos = api.getFocusObject().IAccessibleObject.uniqueID
+		super(MozillaTable, self).script_findNext(gesture)
+	script_findNext.canPropagate = True
+
+	def script_findPrevious(self, gesture):
+		self.curPos = api.getFocusObject().IAccessibleObject.uniqueID
+		super(MozillaTable, self).script_findPrevious(gesture)
+	script_findPrevious.canPropagate = True
+
+	def findInList(self, text, reverse, caseSensitive, stopCheck=lambda:False):
+		"""performs the search in item list, via NVDA object navigation (MozillaTable specific)."""
+		index = self.curPos
+		curItem = getNVDAObjectFromEvent(self.windowHandle, winUser.OBJID_CLIENT, index)
+		item = curItem.previous if reverse else curItem.next
+		while (item and item.role == curItem.role):
+			if (
+				(not caseSensitive and text.lower() in item.name.lower())
+				or
+				(caseSensitive and text in item.name)
+			):
+				resIndex = item.IAccessibleObject.uniqueID
+				return resIndex
+			item = item.previous if reverse else item.next
+			if stopCheck():
+				break
+
+	def successSearchAction(self, resIndex):
+		global useMultipleSelection
+		speech.cancelSpeech()
+		# reacquire res for this thread
+		res = getNVDAObjectFromEvent(self.windowHandle, winUser.OBJID_CLIENT, resIndex)
+		# for some reasons, in Thunderbird xor of flagsSelect is not supported
+		# so execute same actions but splitting calls
+		if useMultipleSelection:
+			res.IAccessibleObject.accSelect(SELFLAG_ADDSELECTION, res.IAccessibleChildID)
+			res.IAccessibleObject.accSelect(SELFLAG_TAKEFOCUS, res.IAccessibleChildID)
+		else:
+		 res.IAccessibleObject.accSelect(SELFLAG_TAKESELECTION, res.IAccessibleChildID)
+		 res.IAccessibleObject.accSelect(SELFLAG_TAKEFOCUS, res.IAccessibleChildID)
