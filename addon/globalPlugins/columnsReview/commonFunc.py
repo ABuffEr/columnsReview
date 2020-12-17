@@ -58,11 +58,13 @@ def runSilently(func, *args, **kwargs):
 # to get NVDA script gestures, regardless its user remap
 def getScriptGestures(scriptFunc):
 	from inputCore import manager
+	allGestures = manager.getAllGestureMappings()
 	scriptGestures = []
 	try:
 		scriptCategory = scriptFunc.category if hasattr(scriptFunc, "category") else scriptFunc.__self__.__class__.scriptCategory
 		scriptDoc = scriptFunc.__doc__
-		scriptGestures = manager.getAllGestureMappings()[scriptCategory][scriptDoc].gestures
+		script = allGestures[scriptCategory][scriptDoc]
+		scriptGestures = script.gestures
 	except:
 		pass
 	return scriptGestures
