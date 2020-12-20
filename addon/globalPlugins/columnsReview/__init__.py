@@ -51,6 +51,7 @@ from .actions import ACTIONS, actionFromName, configuredActions, getActionIndexF
 from .commonFunc import NVDALocale, rangeFunc, findAllDescendantWindows, getScriptGestures
 from . import configSpec
 from .exceptions import columnAtIndexNotVisible, noColumnAtIndex
+from inspect import *
 #from logHandler import log
 
 # useful to simulate profile switch handling
@@ -394,7 +395,7 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 		if announceEmptyList and SysLV32List in clsList and obj.childCount <= 1:
 			clsList.insert(0, EmptyList)
 			return
-		if obj.windowClassName == "MozillaWindowClass" and obj.role in (ct.ROLE_TABLE, ct.ROLE_TREEVIEW):
+		if obj.windowClassName == "MozillaWindowClass" and obj.role in (ct.ROLE_TABLE, ct.ROLE_TREEVIEW) and not obj.treeInterceptor:
 			clsList.insert(0, MozillaTable)
 			return
 		if obj.role == ct.ROLE_LIST:
