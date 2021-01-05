@@ -6,7 +6,7 @@ import config
 import speech
 import ui
 
-from .commonFunc import rangeFunc
+from .commonFunc import rangeFunc, NVDALocale
 
 addonHandler.initTranslation()
 
@@ -74,7 +74,7 @@ class CopyAction(Action):
 		res = u"{0}{1}".format(columnHeader, columnContent)
 		if api.copyToClip(res):
 			# Translators: message announcing what was copied
-			ui.message(u"{} copied.".format(res))
+			ui.message(NVDALocale("Copied to clipboard: {text}").format(text=res))
 
 
 class SpellAction(Action):
