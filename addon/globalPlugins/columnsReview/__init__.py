@@ -44,9 +44,10 @@ import watchdog
 import winUser
 import wx
 from versionInfo import version_year, version_major
-from .actions import ACTIONS, actionFromName, configuredActions, getActionIndexFromName
+from .actions import ACTIONS, actionFromName, configuredActions
 from .commonFunc import NVDALocale, rangeFunc, findAllDescendantWindows, getScriptGestures
 from . import configSpec
+from . import dialogs
 from .exceptions import columnAtIndexNotVisible, noColumnAtIndex
 from . import utils
 
@@ -114,16 +115,24 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 	def createMenu(self):
 		# Dialog or the panel.
 		if hasattr(gui.settingsDialogs, "SettingsPanel"):
-			gui.settingsDialogs.NVDASettingsDialog.categoryClasses.append(ColumnsReviewSettingsDialog)
+			gui.settingsDialogs.NVDASettingsDialog.categoryClasses.append(
+				dialogs.ColumnsReviewSettingsDialog
+			)
 		else:
 			self.prefsMenu = gui.mainFrame.sysTrayIcon.menu.GetMenuItems()[0].GetSubMenu()
 			# Translators: menu item in preferences
 			self.ColumnsReviewItem = self.prefsMenu.Append(wx.ID_ANY, _("Columns Review Settings..."), "")
-			gui.mainFrame.sysTrayIcon.Bind(wx.EVT_MENU, lambda e: gui.mainFrame._popupSettingsDialog(ColumnsReviewSettingsDialog), self.ColumnsReviewItem)
+			gui.mainFrame.sysTrayIcon.Bind(
+				wx.EVT_MENU,
+				lambda e: gui.mainFrame._popupSettingsDialog(dialogs.ColumnsReviewSettingsDialog),
+				self.ColumnsReviewItem
+			)
 
 	def terminate(self):
 		if hasattr(gui.settingsDialogs, "SettingsPanel"):
-			gui.settingsDialogs.NVDASettingsDialog.categoryClasses.remove(ColumnsReviewSettingsDialog)
+			gui.settingsDialogs.NVDASettingsDialog.categoryClasses.remove(
+				dialogs.ColumnsReviewSettingsDialog
+			)
 		else:
 			try:
 				self.prefsMenu.RemoveItem(self.ColumnsReviewItem)
@@ -382,8 +391,11 @@ class CRList(object):
 	)
 
 	def script_manageHeaders(self, gesture):
-		from .dialogs import HeaderDialog
-		wx.CallAfter(HeaderDialog.Run, title=self.appModule.appName, headerList=self.getHeaderParent().children)
+		wx.CallAfter(
+			dialogs.HeaderDialog.Run,
+			title=self.appModule.appName,
+			headerList=self.getHeaderParent().children
+		)
 
 	script_manageHeaders.canPropagate = True
 	script_manageHeaders.__doc__ = _(
@@ -1179,126 +1191,3 @@ class FindDialog(cursorManager.FindDialog):
 		else:
 			useMultipleSelection = self.multipleSelectionCheckBox.GetValue()
 		super(FindDialog, self).onOk(evt)
-
-
-# for settings presentation compatibility
-if hasattr(gui.settingsDialogs, "SettingsPanel"):
-	superDialogClass = gui.settingsDialogs.SettingsPanel
-else:
-	superDialogClass = gui.SettingsDialog
-
-
-class ColumnsReviewSettingsDialog(superDialogClass):
-	"""Class to define settings dialog."""
-
-	if hasattr(gui.settingsDialogs, "SettingsPanel"):
-		# Translators: title of settings dialog
-		title = _("Columns Review")
-	else:
-		# Translators: title of settings dialog
-		title = _("Columns Review Settings")
-
-	# common to dialog and panel
-	def makeSettings(self, settingsSizer):
-		from .dialogs import configureActionPanel
-		global useNumpadKeys, switchChar, announceEmptyList
-		self.copyCheckboxEnabled = self.readCheckboxEnabled = self.hideNextPanels = False
-		self.panels = []
-		panelsSizer = wx.StaticBoxSizer(
-			wx.StaticBox(
-				self,
-				# Translators: Help message for group of comboboxes allowing to assign action to a keypress.
-				label=_("When pressing combination to read column:")
-			),
-			wx.VERTICAL
-		)
-		for pressNumber, actionName in configuredActions().items():
-			actionIndex = getActionIndexFromName(actionName)
-			panel = configureActionPanel(self, pressNumber, actionIndex)
-			panelsSizer.Add(panel)
-			self.panels.append(panel)
-			if self.hideNextPanels:
-				panel.Disable()
-			if panel.HIDE_NEXT_PANELS_AFTER is not None and actionIndex == panel.HIDE_NEXT_PANELS_AFTER:
-				self.hideNextPanels = True
-		settingsSizer.Add(panelsSizer)
-		keysSizer = wx.StaticBoxSizer(wx.StaticBox(self,
-			# Translators: Help message for sub-sizer of keys choices
-			label=_("Choose the keys you want to use with numbers:")), wx.VERTICAL)
-		self.keysChks = []
-		configGestures = myConf["gestures"].items() if py3 else myConf["gestures"].iteritems()
-		for keyName,keyEnabled in configGestures:
-			chk = wx.CheckBox(self, label = NVDALocale(keyName))
-			chk.SetValue(keyEnabled)
-			keysSizer.Add(chk)
-			self.keysChks.append((keyName, chk))
-		settingsSizer.Add(keysSizer)
-		# Translators: label for numpad keys checkbox in settings
-		self._useNumpadKeys = wx.CheckBox(self, label = _("Use numpad keys to navigate through the columns"))
-		self._useNumpadKeys.Bind(wx.EVT_CHECKBOX, self.onCheck)
-		self._useNumpadKeys.SetValue(useNumpadKeys)
-		settingsSizer.Add(self._useNumpadKeys)
-		# Translators: label for edit field in settings, visible if previous checkbox is disabled
-		self._switchCharLabel = wx.StaticText(self, label = _("Insert the char after \"0\" in your keyboard layout, or another char as you like:"))
-		settingsSizer.Add(self._switchCharLabel)
-		self._switchChar = wx.TextCtrl(self, name = "switchCharTextCtrl")
-		self._switchChar.SetMaxLength(1)
-		self._switchChar.SetValue(switchChar)
-		settingsSizer.Add(self._switchChar)
-		if self._useNumpadKeys.IsChecked():
-			settingsSizer.Hide(self._switchCharLabel)
-			settingsSizer.Hide(self._switchChar)
-		# Translators: label for announce-empty-list checkbox in settings
-		self._announceEmptyList = wx.CheckBox(self, label = _("Announce empty list (not working in Win8/10 folders)"))
-		self._announceEmptyList.SetValue(announceEmptyList)
-		settingsSizer.Add(self._announceEmptyList)
-
-	# for dialog only
-	def postInit(self):
-		for panel in self.panels:
-			if panel.IsEnabled():
-				panel.chooseActionCombo.SetFocus()
-				break
-
-	# shared between onOk and onSave
-	def saveConfig(self):
-		# Update Configuration
-		copyChkFound = readChkFound = False
-		actionsSection = config.conf["columnsReview"]["actions"]
-		for panel in self.panels:
-			if panel.IsEnabled():
-				selectedActionName = ACTIONS[panel.chooseActionCombo.GetSelection()].name
-				actionsSection["press{}".format(panel.panelNumber)] = selectedActionName
-				if not readChkFound and panel.readHeader.IsEnabled():
-					readChkFound = True
-					config.conf["columnsReview"]["general"]["readHeader"] = panel.readHeader.IsChecked()
-				if not copyChkFound and panel.copyHeader.IsEnabled():
-					copyChkFound = True
-					config.conf["columnsReview"]["general"]["copyHeader"] = panel.copyHeader.IsChecked()
-			else:
-				continue
-		myConf["general"]["announceEmptyList"] = self._announceEmptyList.IsChecked()
-		for item in self.keysChks:
-			myConf["gestures"][item[0]] = item[1].IsChecked()
-		myConf["keyboard"]["useNumpadKeys"] = self._useNumpadKeys.IsChecked()
-		myConf["keyboard"]["switchChar"] = self._switchChar.GetValue()
-		# update global variables
-		loadConfig()
-
-	# for dialog only
-	def onOk(self, evt):
-		self.saveConfig()
-		super(ColumnsReviewSettingsDialog, self).onOk(evt)
-
-	# for panel only
-	def onSave(self):
-		self.saveConfig()
-
-	def onCheck(self, evt):
-		if self._useNumpadKeys.IsChecked():
-			self.settingsSizer.Hide(self._switchCharLabel)
-			self.settingsSizer.Hide(self._switchChar)
-		else:
-			self.settingsSizer.Show(self._switchCharLabel)
-			self.settingsSizer.Show(self._switchChar)
-		self.Fit()
