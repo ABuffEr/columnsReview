@@ -86,15 +86,70 @@ def loadConfig():
 	baseKeys = '+'.join(chosenKeys)
 
 
-class EmptyList(SysLV32List):
+class GlobalPlugin(globalPluginHandler.GlobalPlugin):
+
+	def __init__(self, *args, **kwargs):
+		super(GlobalPlugin, self).__init__(*args, **kwargs)
+		if globalVars.appArgs.secure:
+			return
+		self.createMenu()
+		if hasattr(config, "post_configProfileSwitch"):
+			config.post_configProfileSwitch.register(self.handleConfigProfileSwitch)
+
+	def chooseNVDAObjectOverlayClasses(self, obj, clsList):
+		loadConfig()
+		if announceEmptyList and SysLV32List in clsList and obj.childCount <= 1:
+			clsList.insert(0, EmptyList)
+			return
+		if obj.windowClassName == "MozillaWindowClass" and obj.role in (ct.ROLE_TABLE, ct.ROLE_TREEVIEW) and not obj.treeInterceptor:
+			clsList.insert(0, MozillaTable)
+			return
+		# found in RSSOwlnix, but may be in other software
+		if obj.role == ct.ROLE_TREEVIEW and obj.simplePrevious and obj.simplePrevious.windowClassName == "SysHeader32":
+			clsList.insert(0, CRTreeview)
+			return
+		if obj.role == ct.ROLE_LIST:
+			if SysLV32List in clsList:
+				clsList.insert(0, CRList32)
+			# Windows 8/8.1/10 Start Screen tiles should not expose column info.
+			elif UIA in clsList and obj.UIAElement.cachedClassName == "UIItemsView":
+				clsList.insert(0, CRList64)
+
+	def createMenu(self):
+		# Dialog or the panel.
+		if hasattr(gui.settingsDialogs, "SettingsPanel"):
+			gui.settingsDialogs.NVDASettingsDialog.categoryClasses.append(ColumnsReviewSettingsDialog)
+		else:
+			self.prefsMenu = gui.mainFrame.sysTrayIcon.menu.GetMenuItems()[0].GetSubMenu()
+			# Translators: menu item in preferences
+			self.ColumnsReviewItem = self.prefsMenu.Append(wx.ID_ANY, _("Columns Review Settings..."), "")
+			gui.mainFrame.sysTrayIcon.Bind(wx.EVT_MENU, lambda e: gui.mainFrame._popupSettingsDialog(ColumnsReviewSettingsDialog), self.ColumnsReviewItem)
+
+	def terminate(self):
+		if hasattr(gui.settingsDialogs, "SettingsPanel"):
+			gui.settingsDialogs.NVDASettingsDialog.categoryClasses.remove(ColumnsReviewSettingsDialog)
+		else:
+			try:
+				self.prefsMenu.RemoveItem(self.ColumnsReviewItem)
+			except wx.PyDeadObjectError:
+				pass
+
+	def handleConfigProfileSwitch(self):
+		loadConfig()
+
+	def event_foreground(self, obj, nextHandler):
+		if nvdaVersion < '2018.3':
+			self.handleConfigProfileSwitch()
+		nextHandler()
+
+
+class EmptyList(object):
 	"""Class to announce empty list."""
 
 	def event_gainFocus(self):
 		if not self.isEmptyList():
 			self.clearGestureBindings()
-			super(EmptyList, self).event_gainFocus()
 			return
-		super(EmptyList, self).event_gainFocus()
 		# brailled and spoken the "0 elements" message
 		text = ' '.join(["0", NVDALocale("Elements").lower()])
 		speech.speakMessage(text)
@@ -137,273 +192,6 @@ class EmptyList(SysLV32List):
 			return False
 		except AttributeError:
 			pass
-
-
-# Global ref on current finder
-gFinder = None
-# pref in find dialog
-useMultipleSelection = False
-
-
-class Finder(Thread):
-
-	STATUS_NOT_STARTED = 1
-	STATUS_RUNNING = 2
-	STATUS_COMPLETE = 3
-	STATUS_ABORTED = 4
-
-	def __init__(self, orig, text, reverse, caseSensitive, *args, **kwargs):
-		super(Finder, self).__init__(*args, **kwargs)
-		# renamed from _stop to _stopEvent, to avoid Py3 conflicts
-		self._stopEvent = Event()
-		self.orig = orig
-		self.text = text
-		self.reverse = reverse
-		self.caseSensitive = caseSensitive
-		self.res = None
-		self.status = Finder.STATUS_NOT_STARTED
-
-	def isAlive(self):
-		if py3:
-			# isAlive() is present, but deprecated
-			return super(Finder, self).is_alive()
-		else:
-			return super(Finder, self).isAlive()
-
-	def stop(self):
-		self._stopEvent.set()
-		self.status = Finder.STATUS_ABORTED
-
-	def stopped(self):
-		return self._stopEvent.is_set()
-
-	def run(self):
-		self.orig.prepareForThreatedSearch()
-		self.status = Finder.STATUS_RUNNING
-		self.res = self.orig.findInList(self.text, self.reverse, self.caseSensitive, self.stopped)
-		if self.status == Finder.STATUS_RUNNING:
-			self.status = Finder.STATUS_COMPLETE
-		self.orig.threatedSearchDone()
-
-
-class FindDialog(cursorManager.FindDialog):
-	"""a class extending traditional find dialog."""
-
-	def __init__(self, parent, cursorManager, *args):
-		super(FindDialog, self).__init__(parent, cursorManager, *args)
-		mainSizer = self.GetSizer()
-		if not self.activeCursorManager.isMultipleSelectionSupported():
-			return
-		self.multipleSelectionCheckBox = wx.CheckBox(self, wx.ID_ANY, label=_("Use multiple selection"))
-		global useMultipleSelection
-		self.multipleSelectionCheckBox.SetValue(useMultipleSelection)
-		self.multipleSelectionCheckBox.MoveAfterInTabOrder(self.caseSensitiveCheckBox)
-		self.Layout()
-		mainSizer.Fit(self)
-		self.CentreOnScreen()
-
-	def onOk(self, evt):
-		global useMultipleSelection
-		if not self.activeCursorManager.isMultipleSelectionSupported():
-			useMultipleSelection = False
-		else:
-			useMultipleSelection = self.multipleSelectionCheckBox.GetValue()
-		super(FindDialog, self).onOk(evt)
-
-
-sayAllSuperclass = getattr(sayAllHandler, "_ObjectsReader", object)
-
-
-class _RowsReader(sayAllSuperclass):
-
-	def walk(self, obj):
-		yield obj
-		nextObj = obj.next
-		while nextObj:
-			yield nextObj
-			nextObj = nextObj.next
-
-	@classmethod
-	def readRows(cls, obj):
-		reader = cls(obj)
-		sayAllHandler._activeSayAll = weakref.ref(reader)
-		reader.next()
-
-
-# for settings presentation compatibility
-if hasattr(gui.settingsDialogs, "SettingsPanel"):
-	superDialogClass = gui.settingsDialogs.SettingsPanel
-else:
-	superDialogClass = gui.SettingsDialog
-
-
-class ColumnsReviewSettingsDialog(superDialogClass):
-	"""Class to define settings dialog."""
-
-	if hasattr(gui.settingsDialogs, "SettingsPanel"):
-		# Translators: title of settings dialog
-		title = _("Columns Review")
-	else:
-		# Translators: title of settings dialog
-		title = _("Columns Review Settings")
-
-	# common to dialog and panel
-	def makeSettings(self, settingsSizer):
-		from .dialogs import configureActionPanel
-		global useNumpadKeys, switchChar, announceEmptyList
-		self.copyCheckboxEnabled = self.readCheckboxEnabled = self.hideNextPanels = False
-		self.panels = []
-		panelsSizer = wx.StaticBoxSizer(
-			wx.StaticBox(
-				self,
-				# Translators: Help message for group of comboboxes allowing to assign action to a keypress.
-				label=_("When pressing combination to read column:")
-			),
-			wx.VERTICAL
-		)
-		for pressNumber, actionName in configuredActions().items():
-			actionIndex = getActionIndexFromName(actionName)
-			panel = configureActionPanel(self, pressNumber, actionIndex)
-			panelsSizer.Add(panel)
-			self.panels.append(panel)
-			if self.hideNextPanels:
-				panel.Disable()
-			if panel.HIDE_NEXT_PANELS_AFTER is not None and actionIndex == panel.HIDE_NEXT_PANELS_AFTER:
-				self.hideNextPanels = True
-		settingsSizer.Add(panelsSizer)
-		keysSizer = wx.StaticBoxSizer(wx.StaticBox(self,
-			# Translators: Help message for sub-sizer of keys choices
-			label=_("Choose the keys you want to use with numbers:")), wx.VERTICAL)
-		self.keysChks = []
-		configGestures = myConf["gestures"].items() if py3 else myConf["gestures"].iteritems()
-		for keyName,keyEnabled in configGestures:
-			chk = wx.CheckBox(self, label = NVDALocale(keyName))
-			chk.SetValue(keyEnabled)
-			keysSizer.Add(chk)
-			self.keysChks.append((keyName, chk))
-		settingsSizer.Add(keysSizer)
-		# Translators: label for numpad keys checkbox in settings
-		self._useNumpadKeys = wx.CheckBox(self, label = _("Use numpad keys to navigate through the columns"))
-		self._useNumpadKeys.Bind(wx.EVT_CHECKBOX, self.onCheck)
-		self._useNumpadKeys.SetValue(useNumpadKeys)
-		settingsSizer.Add(self._useNumpadKeys)
-		# Translators: label for edit field in settings, visible if previous checkbox is disabled
-		self._switchCharLabel = wx.StaticText(self, label = _("Insert the char after \"0\" in your keyboard layout, or another char as you like:"))
-		settingsSizer.Add(self._switchCharLabel)
-		self._switchChar = wx.TextCtrl(self, name = "switchCharTextCtrl")
-		self._switchChar.SetMaxLength(1)
-		self._switchChar.SetValue(switchChar)
-		settingsSizer.Add(self._switchChar)
-		if self._useNumpadKeys.IsChecked():
-			settingsSizer.Hide(self._switchCharLabel)
-			settingsSizer.Hide(self._switchChar)
-		# Translators: label for announce-empty-list checkbox in settings
-		self._announceEmptyList = wx.CheckBox(self, label = _("Announce empty list"))
-		self._announceEmptyList.SetValue(announceEmptyList)
-		settingsSizer.Add(self._announceEmptyList)
-
-	# for dialog only
-	def postInit(self):
-		for panel in self.panels:
-			if panel.IsEnabled():
-				panel.chooseActionCombo.SetFocus()
-				break
-
-	# shared between onOk and onSave
-	def saveConfig(self):
-		# Update Configuration
-		copyChkFound = readChkFound = False
-		actionsSection = config.conf["columnsReview"]["actions"]
-		for panel in self.panels:
-			if panel.IsEnabled():
-				selectedActionName = ACTIONS[panel.chooseActionCombo.GetSelection()].name
-				actionsSection["press{}".format(panel.panelNumber)] = selectedActionName
-				if not readChkFound and panel.readHeader.IsEnabled():
-					readChkFound = True
-					config.conf["columnsReview"]["general"]["readHeader"] = panel.readHeader.IsChecked()
-				if not copyChkFound and panel.copyHeader.IsEnabled():
-					copyChkFound = True
-					config.conf["columnsReview"]["general"]["copyHeader"] = panel.copyHeader.IsChecked()
-			else:
-				continue
-		myConf["general"]["announceEmptyList"] = self._announceEmptyList.IsChecked()
-		for item in self.keysChks:
-			myConf["gestures"][item[0]] = item[1].IsChecked()
-		myConf["keyboard"]["useNumpadKeys"] = self._useNumpadKeys.IsChecked()
-		myConf["keyboard"]["switchChar"] = self._switchChar.GetValue()
-		# update global variables
-		loadConfig()
-
-	# for dialog only
-	def onOk(self, evt):
-		self.saveConfig()
-		super(ColumnsReviewSettingsDialog, self).onOk(evt)
-
-	# for panel only
-	def onSave(self):
-		self.saveConfig()
-
-	def onCheck(self, evt):
-		if self._useNumpadKeys.IsChecked():
-			self.settingsSizer.Hide(self._switchCharLabel)
-			self.settingsSizer.Hide(self._switchChar)
-		else:
-			self.settingsSizer.Show(self._switchCharLabel)
-			self.settingsSizer.Show(self._switchChar)
-		self.Fit()
-
-
-class GlobalPlugin(globalPluginHandler.GlobalPlugin):
-
-	def __init__(self, *args, **kwargs):
-		super(GlobalPlugin, self).__init__(*args, **kwargs)
-		if globalVars.appArgs.secure:
-			return
-		self.createMenu()
-		if hasattr(config, "post_configProfileSwitch"):
-			config.post_configProfileSwitch.register(self.handleConfigProfileSwitch)
-
-	def createMenu(self):
-		# Dialog or the panel.
-		if hasattr(gui.settingsDialogs, "SettingsPanel"):
-			gui.settingsDialogs.NVDASettingsDialog.categoryClasses.append(ColumnsReviewSettingsDialog)
-		else:
-			self.prefsMenu = gui.mainFrame.sysTrayIcon.menu.GetMenuItems()[0].GetSubMenu()
-			# Translators: menu item in preferences
-			self.ColumnsReviewItem = self.prefsMenu.Append(wx.ID_ANY, _("Columns Review Settings..."), "")
-			gui.mainFrame.sysTrayIcon.Bind(wx.EVT_MENU, lambda e: gui.mainFrame._popupSettingsDialog(ColumnsReviewSettingsDialog), self.ColumnsReviewItem)
-
-	def terminate(self):
-		if hasattr(gui.settingsDialogs, "SettingsPanel"):
-			gui.settingsDialogs.NVDASettingsDialog.categoryClasses.remove(ColumnsReviewSettingsDialog)
-		else:
-			try:
-				self.prefsMenu.RemoveItem(self.ColumnsReviewItem)
-			except wx.PyDeadObjectError:
-				pass
-
-	def handleConfigProfileSwitch(self):
-		loadConfig()
-
-	def event_foreground(self, obj, nextHandler):
-		if nvdaVersion < '2018.3':
-			self.handleConfigProfileSwitch()
-		nextHandler()
-
-	def chooseNVDAObjectOverlayClasses(self, obj, clsList):
-		loadConfig()
-		if announceEmptyList and SysLV32List in clsList and obj.childCount <= 1:
-			clsList.insert(0, EmptyList)
-			return
-		if obj.windowClassName == "MozillaWindowClass" and obj.role in (ct.ROLE_TABLE, ct.ROLE_TREEVIEW) and not obj.treeInterceptor:
-			clsList.insert(0, MozillaTable)
-			return
-		if obj.role == ct.ROLE_LIST:
-			if SysLV32List in clsList:
-				clsList.insert(0, CRList32)
-			# Windows 8/8.1/10 Start Screen tiles should not expose column info.
-			elif UIA in clsList and obj.UIAElement.cachedClassName == "UIItemsView":
-				clsList.insert(0, CRList64)
 
 
 class CRList(object):
@@ -512,7 +300,8 @@ class CRList(object):
 			return
 		columnContent = columnData["columnContent"]
 		columnHeader = columnData["columnHeader"]
-		if columnContent is None and columnHeader is None:
+		if not columnContent and not columnHeader:
+			ui.message(_("Empty column"))
 			return
 		actionToExecute(columnContent, columnHeader)
 	script_readColumn.canPropagate = True
@@ -1177,3 +966,323 @@ class MozillaTable(CRList32):
 		else:
 		 res.IAccessibleObject.accSelect(SELFLAG_TAKESELECTION, res.IAccessibleChildID)
 		 res.IAccessibleObject.accSelect(SELFLAG_TAKEFOCUS, res.IAccessibleChildID)
+
+
+# Global ref on current finder
+gFinder = None
+# pref in find dialog
+useMultipleSelection = False
+
+
+class CRTreeview(CRList32):
+
+	# flag to guarantee thread support
+	THREAD_SUPPORTED = False
+
+	def getColumnData(self, colNumber):
+		curItem = api.getFocusObject()
+		# header list to consider during handling
+		headers = self.getHeaderParent().children
+		# even with no column, we consider
+		# list item as placed in first column
+		if (1 != colNumber > len(headers)) or (curItem.role == self.role):
+			raise noColumnAtIndex
+		try:
+			header = headers[colNumber-1].name
+		except:
+			header = None
+		# too few cases, it's all a big try...
+		try:
+			if colNumber == 1:
+				content = curItem.name
+			else:
+				if colNumber == len(headers):
+					nextHeader = ""
+				else:
+					nextHeader = headers[colNumber].name
+				content = curItem.description.split("%s: "%header, 1)[1].split(", %s: "%nextHeader, 1)[0]
+		except:
+			content = None
+		return {"columnContent": content, "columnHeader": header}
+
+	def getHeaderParent(self):
+		return self.simplePrevious
+
+	def findInList(self, text, reverse, caseSensitive, stopCheck=lambda:False):
+		"""performs search in item list, via object handles."""
+		# specific implementation
+		fg = api.getForegroundObject()
+		listHandles = findAllDescendantWindows(fg.windowHandle, controlID=self.windowControlID)
+		# if handle approach fails, use generic method
+		if not listHandles:
+			# case not tested
+			res = self.genericFindInList(text, reverse, caseSensitive)
+			return res
+		curItem = self.searchFromItem
+		listLen = curItem.positionInfo["similarItemsInGroup"]
+		# 1-based index
+		curIndex = curItem.positionInfo["indexInGroup"]
+		if reverse:
+			indexes = rangeFunc(curIndex-1,0,-1)
+		else:
+			indexes = rangeFunc(curIndex+1,listLen+1)
+		for index in indexes:
+			item = getNVDAObjectFromEvent(self.windowHandle, winUser.OBJID_CLIENT, index)
+			if (
+				(not caseSensitive and text.lower() in item.name.lower())
+				or
+				(not caseSensitive and text.lower() in item.description.lower())
+				or
+				(caseSensitive and text in item.name)
+				or
+				(caseSensitive and text in item.description)
+			):
+				return item
+			if stopCheck():
+				break
+
+	def genericFindInList(self, text, reverse, caseSensitive, stopCheck=lambda:False):
+		"""performs the search in treeview, via NVDA object navigation."""
+		# generic implementation
+		curItem = self.searchFromItem
+		item = curItem.previous if reverse else curItem.next
+		while (item and item.role == curItem.role):
+			if (
+				(not caseSensitive and text.lower() in item.name.lower())
+				or
+				(not caseSensitive and text.lower() in item.description.lower())
+				or
+				(caseSensitive and text in item.name)
+				or
+				(caseSensitive and text in item.description)
+			):
+				return item
+			item = item.previous if reverse else item.next
+			if stopCheck():
+				break
+
+	def script_reportCurrentSelection(self, gesture):
+		# generic (slow) implementation
+		curItem = api.getFocusObject()
+		items = []
+		item = self.firstChild
+		while (item and item.role == curItem.role):
+			if ct.STATE_SELECTED in item.states:
+				itemName = ' '.join([item.name, item.description])
+				if itemName:
+					items.append(itemName)
+			item = item.next
+		spokenItems = ', '.join(items)
+		ui.message("%d %s: %s"%(len(items),
+			# translators: message presented when get selected item count and names
+			_("selected items"), spokenItems))
+	script_reportCurrentSelection.canPropagate = True
+
+
+class Finder(Thread):
+
+	STATUS_NOT_STARTED = 1
+	STATUS_RUNNING = 2
+	STATUS_COMPLETE = 3
+	STATUS_ABORTED = 4
+
+	def __init__(self, orig, text, reverse, caseSensitive, *args, **kwargs):
+		super(Finder, self).__init__(*args, **kwargs)
+		# renamed from _stop to _stopEvent, to avoid Py3 conflicts
+		self._stopEvent = Event()
+		self.orig = orig
+		self.text = text
+		self.reverse = reverse
+		self.caseSensitive = caseSensitive
+		self.res = None
+		self.status = Finder.STATUS_NOT_STARTED
+
+	def isAlive(self):
+		if py3:
+			# isAlive() is present, but deprecated
+			return super(Finder, self).is_alive()
+		else:
+			return super(Finder, self).isAlive()
+
+	def stop(self):
+		self._stopEvent.set()
+		self.status = Finder.STATUS_ABORTED
+
+	def stopped(self):
+		return self._stopEvent.is_set()
+
+	def run(self):
+		self.orig.prepareForThreatedSearch()
+		self.status = Finder.STATUS_RUNNING
+		self.res = self.orig.findInList(self.text, self.reverse, self.caseSensitive, self.stopped)
+		if self.status == Finder.STATUS_RUNNING:
+			self.status = Finder.STATUS_COMPLETE
+		self.orig.threatedSearchDone()
+
+
+class FindDialog(cursorManager.FindDialog):
+	"""a class extending traditional find dialog."""
+
+	def __init__(self, parent, cursorManager, *args):
+		super(FindDialog, self).__init__(parent, cursorManager, *args)
+		mainSizer = self.GetSizer()
+		if not self.activeCursorManager.isMultipleSelectionSupported():
+			return
+		self.multipleSelectionCheckBox = wx.CheckBox(self, wx.ID_ANY, label=_("Use multiple selection"))
+		global useMultipleSelection
+		self.multipleSelectionCheckBox.SetValue(useMultipleSelection)
+		self.multipleSelectionCheckBox.MoveAfterInTabOrder(self.caseSensitiveCheckBox)
+		self.Layout()
+		mainSizer.Fit(self)
+		self.CentreOnScreen()
+
+	def onOk(self, evt):
+		global useMultipleSelection
+		if not self.activeCursorManager.isMultipleSelectionSupported():
+			useMultipleSelection = False
+		else:
+			useMultipleSelection = self.multipleSelectionCheckBox.GetValue()
+		super(FindDialog, self).onOk(evt)
+
+
+sayAllSuperclass = getattr(sayAllHandler, "_ObjectsReader", object)
+
+
+class _RowsReader(sayAllSuperclass):
+
+	def walk(self, obj):
+		yield obj
+		nextObj = obj.next
+		while nextObj:
+			yield nextObj
+			nextObj = nextObj.next
+
+	@classmethod
+	def readRows(cls, obj):
+		reader = cls(obj)
+		sayAllHandler._activeSayAll = weakref.ref(reader)
+		reader.next()
+
+
+# for settings presentation compatibility
+if hasattr(gui.settingsDialogs, "SettingsPanel"):
+	superDialogClass = gui.settingsDialogs.SettingsPanel
+else:
+	superDialogClass = gui.SettingsDialog
+
+
+class ColumnsReviewSettingsDialog(superDialogClass):
+	"""Class to define settings dialog."""
+
+	if hasattr(gui.settingsDialogs, "SettingsPanel"):
+		# Translators: title of settings dialog
+		title = _("Columns Review")
+	else:
+		# Translators: title of settings dialog
+		title = _("Columns Review Settings")
+
+	# common to dialog and panel
+	def makeSettings(self, settingsSizer):
+		from .dialogs import configureActionPanel
+		global useNumpadKeys, switchChar, announceEmptyList
+		self.copyCheckboxEnabled = self.readCheckboxEnabled = self.hideNextPanels = False
+		self.panels = []
+		panelsSizer = wx.StaticBoxSizer(
+			wx.StaticBox(
+				self,
+				# Translators: Help message for group of comboboxes allowing to assign action to a keypress.
+				label=_("When pressing combination to read column:")
+			),
+			wx.VERTICAL
+		)
+		for pressNumber, actionName in configuredActions().items():
+			actionIndex = getActionIndexFromName(actionName)
+			panel = configureActionPanel(self, pressNumber, actionIndex)
+			panelsSizer.Add(panel)
+			self.panels.append(panel)
+			if self.hideNextPanels:
+				panel.Disable()
+			if panel.HIDE_NEXT_PANELS_AFTER is not None and actionIndex == panel.HIDE_NEXT_PANELS_AFTER:
+				self.hideNextPanels = True
+		settingsSizer.Add(panelsSizer)
+		keysSizer = wx.StaticBoxSizer(wx.StaticBox(self,
+			# Translators: Help message for sub-sizer of keys choices
+			label=_("Choose the keys you want to use with numbers:")), wx.VERTICAL)
+		self.keysChks = []
+		configGestures = myConf["gestures"].items() if py3 else myConf["gestures"].iteritems()
+		for keyName,keyEnabled in configGestures:
+			chk = wx.CheckBox(self, label = NVDALocale(keyName))
+			chk.SetValue(keyEnabled)
+			keysSizer.Add(chk)
+			self.keysChks.append((keyName, chk))
+		settingsSizer.Add(keysSizer)
+		# Translators: label for numpad keys checkbox in settings
+		self._useNumpadKeys = wx.CheckBox(self, label = _("Use numpad keys to navigate through the columns"))
+		self._useNumpadKeys.Bind(wx.EVT_CHECKBOX, self.onCheck)
+		self._useNumpadKeys.SetValue(useNumpadKeys)
+		settingsSizer.Add(self._useNumpadKeys)
+		# Translators: label for edit field in settings, visible if previous checkbox is disabled
+		self._switchCharLabel = wx.StaticText(self, label = _("Insert the char after \"0\" in your keyboard layout, or another char as you like:"))
+		settingsSizer.Add(self._switchCharLabel)
+		self._switchChar = wx.TextCtrl(self, name = "switchCharTextCtrl")
+		self._switchChar.SetMaxLength(1)
+		self._switchChar.SetValue(switchChar)
+		settingsSizer.Add(self._switchChar)
+		if self._useNumpadKeys.IsChecked():
+			settingsSizer.Hide(self._switchCharLabel)
+			settingsSizer.Hide(self._switchChar)
+		# Translators: label for announce-empty-list checkbox in settings
+		self._announceEmptyList = wx.CheckBox(self, label = _("Announce empty list"))
+		self._announceEmptyList.SetValue(announceEmptyList)
+		settingsSizer.Add(self._announceEmptyList)
+
+	# for dialog only
+	def postInit(self):
+		for panel in self.panels:
+			if panel.IsEnabled():
+				panel.chooseActionCombo.SetFocus()
+				break
+
+	# shared between onOk and onSave
+	def saveConfig(self):
+		# Update Configuration
+		copyChkFound = readChkFound = False
+		actionsSection = config.conf["columnsReview"]["actions"]
+		for panel in self.panels:
+			if panel.IsEnabled():
+				selectedActionName = ACTIONS[panel.chooseActionCombo.GetSelection()].name
+				actionsSection["press{}".format(panel.panelNumber)] = selectedActionName
+				if not readChkFound and panel.readHeader.IsEnabled():
+					readChkFound = True
+					config.conf["columnsReview"]["general"]["readHeader"] = panel.readHeader.IsChecked()
+				if not copyChkFound and panel.copyHeader.IsEnabled():
+					copyChkFound = True
+					config.conf["columnsReview"]["general"]["copyHeader"] = panel.copyHeader.IsChecked()
+			else:
+				continue
+		myConf["general"]["announceEmptyList"] = self._announceEmptyList.IsChecked()
+		for item in self.keysChks:
+			myConf["gestures"][item[0]] = item[1].IsChecked()
+		myConf["keyboard"]["useNumpadKeys"] = self._useNumpadKeys.IsChecked()
+		myConf["keyboard"]["switchChar"] = self._switchChar.GetValue()
+		# update global variables
+		loadConfig()
+
+	# for dialog only
+	def onOk(self, evt):
+		self.saveConfig()
+		super(ColumnsReviewSettingsDialog, self).onOk(evt)
+
+	# for panel only
+	def onSave(self):
+		self.saveConfig()
+
+	def onCheck(self, evt):
+		if self._useNumpadKeys.IsChecked():
+			self.settingsSizer.Hide(self._switchCharLabel)
+			self.settingsSizer.Hide(self._switchChar)
+		else:
+			self.settingsSizer.Show(self._switchCharLabel)
+			self.settingsSizer.Show(self._switchChar)
+		self.Fit()
+
