@@ -105,7 +105,12 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 			clsList.insert(0, MozillaTable)
 			return
 		# found in RSSOwlnix, but may be in other software
-		if obj.role == ct.ROLE_TREEVIEW and obj.simplePrevious and obj.simplePrevious.windowClassName == "SysHeader32":
+		if (
+			obj.role == ct.ROLE_TREEVIEW
+			and obj.parent
+			and obj.parent.previous
+			and obj.parent.previous.windowClassName == "SysHeader32"
+		):
 			clsList.insert(0, CRTreeview)
 			return
 		if obj.role == ct.ROLE_LIST:
