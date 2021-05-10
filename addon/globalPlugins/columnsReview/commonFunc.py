@@ -38,23 +38,6 @@ def findAllDescendantWindows(parent, visible=None, controlID=None, className=Non
 	return results
 
 
-"""
-to avoid code copying to exclude ui.message
-This method is not used anywhere in the code - kept just for historical purposes.
-def runSilently(func, *args, **kwargs):
-	import speech
-	import config
-	configBackup = {"voice": speech.speechMode, "braille": config.conf["braille"]["messageTimeout"]}
-	speech.speechMode = speech.speechMode_off
-	config.conf["braille"]._cacheLeaf("messageTimeout", None, 0)
-	try:
-		func(*args, **kwargs)
-	finally:
-		speech.speechMode = configBackup["voice"]
-		config.conf["braille"]._cacheLeaf("messageTimeout", None, configBackup["braille"])
-"""
-
-
 # to get NVDA script gestures, regardless its user remap
 def getScriptGestures(scriptFunc):
 	from inputCore import manager
