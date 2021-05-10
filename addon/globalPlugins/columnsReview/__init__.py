@@ -436,7 +436,13 @@ class CRList(object):
 		if not text:
 			return
 		speech.cancelSpeech()
-		msgArgs = (_("Searching..."), speech.Spri.NOW,) if py3 else (_("Searching..."),)
+		# Translators: Message presented when search is in progress.
+		msgArgs = [_("Searching...")]
+		try:
+			from speech.priorities import SpeechPriority
+			msgArgs.append(SpeechPriority.NOW)
+		except ImportError:  # NVDA 2019.2.1 or earlier - no priorites in speechh.
+			pass
 		ui.message(*msgArgs)
 		if self.THREAD_SUPPORTED:
 			# Call launchFinder asynchronously, i.e. without expecting it to return
