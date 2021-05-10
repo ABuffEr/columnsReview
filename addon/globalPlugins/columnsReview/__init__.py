@@ -441,7 +441,7 @@ class CRList(object):
 		try:
 			from speech.priorities import SpeechPriority
 			msgArgs.append(SpeechPriority.NOW)
-		except ImportError:  # NVDA 2019.2.1 or earlier - no priorites in speechh.
+		except ImportError:  # NVDA 2019.2.1 or earlier - no priorities in speech.
 			pass
 		ui.message(*msgArgs)
 		if self.THREAD_SUPPORTED:
