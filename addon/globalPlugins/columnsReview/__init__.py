@@ -82,6 +82,8 @@ def loadConfig():
 	chosenKeys = [g[0] for g in configGestures if g[1]]
 	baseKeys = '+'.join(chosenKeys)
 
+loadConfig()
+
 
 class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 
@@ -94,9 +96,15 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 			config.post_configProfileSwitch.register(self.handleConfigProfileSwitch)
 
 	def chooseNVDAObjectOverlayClasses(self, obj, clsList):
-		loadConfig()
 		if announceEmptyList and SysLV32List in clsList and obj.childCount <= 1:
 			clsList.insert(0, EmptyList)
+			return
+		if obj.role == ct.ROLE_LIST:
+			if SysLV32List in clsList:
+				clsList.insert(0, CRList32)
+			# Windows 8/8.1/10 Start Screen tiles should not expose column info.
+			elif UIA in clsList and obj.UIAElement.cachedClassName == "UIItemsView":
+				clsList.insert(0, CRList64)
 			return
 		if obj.windowClassName == "MozillaWindowClass" and obj.role in (ct.ROLE_TABLE, ct.ROLE_TREEVIEW) and not obj.treeInterceptor:
 			clsList.insert(0, MozillaTable)
@@ -109,13 +117,6 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 			and obj.parent.previous.windowClassName == "SysHeader32"
 		):
 			clsList.insert(0, CRTreeview)
-			return
-		if obj.role == ct.ROLE_LIST:
-			if SysLV32List in clsList:
-				clsList.insert(0, CRList32)
-			# Windows 8/8.1/10 Start Screen tiles should not expose column info.
-			elif UIA in clsList and obj.UIAElement.cachedClassName == "UIItemsView":
-				clsList.insert(0, CRList64)
 
 	def createMenu(self):
 		# Dialog or the panel.
