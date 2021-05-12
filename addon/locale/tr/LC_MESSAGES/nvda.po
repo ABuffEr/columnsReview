@@ -2,8 +2,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: ColumnsReview 1.0\n"
 "Report-Msgid-Bugs-To: 'nvda-translations@freelists.org'\n"
-"POT-Creation-Date: 2020-11-10 15:21+0300\n"
-"PO-Revision-Date: 2020-11-10 15:22+0300\n"
+"POT-Creation-Date: 2021-03-10 14:44+0300\n"
+"PO-Revision-Date: 2021-03-10 14:47+0300\n"
 "Last-Translator: Alberto Buffolino <a.buffolino@gmail.com>\n"
 "Language-Team: cagrid@hotmail.com\n"
 "Language: tr\n"
@@ -13,17 +13,36 @@ msgstr ""
 "X-Poedit-KeywordsList: _;gettext;gettext_noop\n"
 "X-Poedit-Basepath: .\n"
 "X-Poedit-SourceCharset: UTF-8\n"
-"X-Generator: Poedit 2.4\n"
+"X-Generator: Poedit 2.4.2\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Poedit-SearchPath-0: ../../../globalPlugins\n"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:263
+#: ../../../globalPlugins/columnsReview/__init__.py:130
+msgid "Columns Review Settings..."
+msgstr "Sütun İnceleme Ayarları ..."
+
+#: ../../../globalPlugins/columnsReview/__init__.py:207
 msgid "(DO NOT EDIT!)"
 msgstr "(DEĞİŞTİRME!)"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:324
-#: ../../../globalPlugins/columnsReview/__init__.py:621
-#: ../../../globalPlugins/columnsReview/__init__.py:849
+#: ../../../globalPlugins/columnsReview/__init__.py:300
+#: ../../../globalPlugins/columnsReview/__init__.py:341
+msgid "No more columns available"
+msgstr "Başka sütun yok"
+
+#: ../../../globalPlugins/columnsReview/__init__.py:304
+msgid "No more visible columns available"
+msgstr "Artık görünür sütun yok"
+
+#: ../../../globalPlugins/columnsReview/__init__.py:309
+#: ../../../globalPlugins/columnsReview/actions.py:50
+#: ../../../globalPlugins/columnsReview/actions.py:69
+#: ../../../globalPlugins/columnsReview/actions.py:91
+#: ../../../globalPlugins/columnsReview/actions.py:108
+msgid "Empty column"
+msgstr "Boş sütun"
+
+#: ../../../globalPlugins/columnsReview/__init__.py:315
 msgid ""
 "Returns the header and the content of the list column at the index "
 "corresponding to the number pressed"
@@ -31,41 +50,36 @@ msgstr ""
 "Basılan numaraya karşılık gelen dizindeki liste sütununun başlığını ve "
 "içeriğini bildirir"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:348
-#: ../../../globalPlugins/columnsReview/__init__.py:589
-#: ../../../globalPlugins/columnsReview/__init__.py:825
-msgid "No more columns available"
-msgstr "Başka sütun yok"
-
-#: ../../../globalPlugins/columnsReview/__init__.py:366
+#: ../../../globalPlugins/columnsReview/__init__.py:359
 #, python-brace-format
 msgid "From {start} to {end}"
 msgstr "{start} - {end}"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:369
+#: ../../../globalPlugins/columnsReview/__init__.py:363
 msgid "Cycles between a variable number of intervals of ten columns"
 msgstr "On sütunun değişken aralık sayısı arasında döner"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:382
+#: ../../../globalPlugins/columnsReview/__init__.py:377
 msgid "No information available"
 msgstr "Bilgi bulunamadı"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:388
+#: ../../../globalPlugins/columnsReview/__init__.py:384
 msgid "Announces list item position information"
 msgstr "Liste öğesi konum bilgisini duyurur"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:400
+#: ../../../globalPlugins/columnsReview/__init__.py:392
 msgid "Provides a dialog for interactions with list column headers"
 msgstr "Liste sütun başlıklarıyla etkileşim için bir iletişim kutusu gösterir"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:421
-#: ../../../globalPlugins/columnsReview/__init__.py:719
-#: ../../../globalPlugins/columnsReview/__init__.py:774
-#: ../../../globalPlugins/columnsReview/__init__.py:889
+#: ../../../globalPlugins/columnsReview/__init__.py:414
+#: ../../../globalPlugins/columnsReview/__init__.py:684
+#: ../../../globalPlugins/columnsReview/__init__.py:756
+#: ../../../globalPlugins/columnsReview/__init__.py:926
+#: ../../../globalPlugins/columnsReview/__init__.py:1083
 msgid "selected items"
 msgstr "seçilen öğeler"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:424
+#: ../../../globalPlugins/columnsReview/__init__.py:418
 msgid "Reports current selected list items"
 msgstr "Geçerli seçili liste öğelerini bildirir"
 
@@ -77,66 +91,47 @@ msgstr "Öğe listesinde arama yapmak için bir iletişim kutusu gösterir"
 msgid "Searching..."
 msgstr "Aranıyor..."
 
-#: ../../../globalPlugins/columnsReview/__init__.py:515
+#: ../../../globalPlugins/columnsReview/__init__.py:514
 msgid "Goes to next result of current search"
 msgstr "Geçerli aramanın sonraki sonucuna gider"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:524
+#: ../../../globalPlugins/columnsReview/__init__.py:525
 msgid "Goes to previous result of current search"
 msgstr "Geçerli aramanın önceki sonucuna gider"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:530
+#: ../../../globalPlugins/columnsReview/__init__.py:533
 msgid "Starts reading all list items beginning at the item with focus"
 msgstr "Odaklanılan öğeden başlayarak tüm liste öğelerini okumaya başlar"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:541
-msgid "Use multiple selection"
-msgstr "Çoklu seçim kullan"
-
-#: ../../../globalPlugins/columnsReview/__init__.py:599
-msgid "No more visible columns available"
-msgstr "Artık görünür sütun yok"
-
-#: ../../../globalPlugins/columnsReview/__init__.py:608
-#: ../../../globalPlugins/columnsReview/__init__.py:835
-msgid "Not available;"
-msgstr "Mevcut değil;"
-
-#: ../../../globalPlugins/columnsReview/__init__.py:614
-#: ../../../globalPlugins/columnsReview/__init__.py:842
-#, python-format
-msgid "Copied in clipboard: %s"
-msgstr "Panoya kopyalandı: %s"
-
-#: ../../../globalPlugins/columnsReview/__init__.py:879
+#: ../../../globalPlugins/columnsReview/__init__.py:746
 msgid "Current selection info not available"
 msgstr "Geçerli seçim bilgisi mevcut değil"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:1005
+#: ../../../globalPlugins/columnsReview/__init__.py:1136
+msgid "Use multiple selection"
+msgstr "Çoklu seçim kullan"
+
+#: ../../../globalPlugins/columnsReview/__init__.py:1184
 msgid "Columns Review"
 msgstr "Sütun İncelemesi"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:1008
+#: ../../../globalPlugins/columnsReview/__init__.py:1187
 msgid "Columns Review Settings"
 msgstr "Sütun İnceleme Ayarları"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:1014
-msgid "Read the column header"
-msgstr "Sütun başlığını oku"
+#: ../../../globalPlugins/columnsReview/__init__.py:1199
+msgid "When pressing combination to read column:"
+msgstr "Sütunu okumak için ilgili kombinasyona basıldığında:"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:1018
-msgid "Copy the column header"
-msgstr "Sütun başlığını kopyala"
-
-#: ../../../globalPlugins/columnsReview/__init__.py:1023
+#: ../../../globalPlugins/columnsReview/__init__.py:1215
 msgid "Choose the keys you want to use with numbers:"
 msgstr "Numaralarla kullanmak istediğiniz tuşları seçin:"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:1033
+#: ../../../globalPlugins/columnsReview/__init__.py:1225
 msgid "Use numpad keys to navigate through the columns"
 msgstr "Sütunlar arasında gezinmek için sayısal tuş takımındaki tuşları kullan"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:1038
+#: ../../../globalPlugins/columnsReview/__init__.py:1230
 msgid ""
 "Insert the char after \"0\" in your keyboard layout, or another char as you "
 "like:"
@@ -144,38 +139,86 @@ msgstr ""
 "Klavye düzeninizde \"0\" dan sonraki karakteri veya seçtiğiniz başka bir "
 "karakteri girin"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:1048
+#: ../../../globalPlugins/columnsReview/__init__.py:1240
 msgid "Announce empty list"
 msgstr "Boş listeyi bildir"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:1091
+#: ../../../globalPlugins/columnsReview/actions.py:36
+msgid "Do nothing"
+msgstr "Hiçbir şey yapma"
+
+#: ../../../globalPlugins/columnsReview/actions.py:44
+msgid "Read column"
+msgstr "Sütunu oku"
+
+#: ../../../globalPlugins/columnsReview/actions.py:63
+#| msgid "Copy the column header"
+msgid "Copy column"
+msgstr "Sütunu kopyala"
+
+#: ../../../globalPlugins/columnsReview/actions.py:85
+msgid "Spell column"
+msgstr "Sütunu kodlayarak seslendir"
+
+#: ../../../globalPlugins/columnsReview/actions.py:101
+msgid "Show column content in browse mode"
+msgstr "Sütun içeriğini tarama kipinde göster"
+
+#: ../../../globalPlugins/columnsReview/dialogs.py:28
+msgid "On first press:"
+msgstr "İlk basışta:"
+
+#: ../../../globalPlugins/columnsReview/dialogs.py:30
+msgid "On second press:"
+msgstr "İkinci basışta:"
+
+#: ../../../globalPlugins/columnsReview/dialogs.py:32
+msgid "On third press:"
+msgstr "Üçüncü basışta:"
+
+#: ../../../globalPlugins/columnsReview/dialogs.py:34
+msgid "On fourth press:"
+msgstr "Dördüncü basışta:"
+
+#: ../../../globalPlugins/columnsReview/dialogs.py:51
+msgid "Read the column header"
+msgstr "Sütun başlığını oku"
+
+#: ../../../globalPlugins/columnsReview/dialogs.py:55
+msgid "Copy the column header"
+msgstr "Sütun başlığını kopyala"
+
+#: ../../../globalPlugins/columnsReview/dialogs.py:101
 msgid "Headers manager"
 msgstr "Üstbilgi yöneticisi"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:1095
+#: ../../../globalPlugins/columnsReview/dialogs.py:104
 msgid "Unnamed header"
 msgstr "Adsız başlık"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:1096
+#: ../../../globalPlugins/columnsReview/dialogs.py:105
 msgid "Headers:"
 msgstr "Başlıklar:"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:1100
+#: ../../../globalPlugins/columnsReview/dialogs.py:109
 msgid "Left click"
 msgstr "Sol tık"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:1102
+#: ../../../globalPlugins/columnsReview/dialogs.py:111
 msgid "Right click"
 msgstr "Sağ tık"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:1119
+#: ../../../globalPlugins/columnsReview/dialogs.py:128
 #, python-format
 msgid "%s header clicked"
 msgstr "%s başlık tıklandı"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:1145
-msgid "Columns Review Settings..."
-msgstr "Sütun İnceleme Ayarları ..."
+#~ msgid "Not available;"
+#~ msgstr "Mevcut değil;"
+
+#, python-format
+#~ msgid "Copied in clipboard: %s"
+#~ msgstr "Panoya kopyalandı: %s"
 
 #~ msgid "Launches say all for next list items"
 #~ msgstr "sonraki liste öğeleri için tümünü oku komutu verir"
