@@ -17,9 +17,7 @@
 from NVDAObjects.IAccessible import getNVDAObjectFromEvent
 from NVDAObjects.IAccessible import sysListView32
 from NVDAObjects.UIA import UIA # For UIA implementations only, chiefly 64-bit.
-import sayAllHandler
 import sys
-import weakref
 from comtypes.client import CreateObject
 from comtypes.gen.IAccessible2Lib import IAccessible2
 from globalCommands import commands
@@ -51,8 +49,7 @@ from .actions import ACTIONS, actionFromName, configuredActions, getActionIndexF
 from .commonFunc import NVDALocale, rangeFunc, findAllDescendantWindows, getScriptGestures
 from . import configSpec
 from .exceptions import columnAtIndexNotVisible, noColumnAtIndex
-from inspect import *
-#from logHandler import log
+from . import utils
 
 # useful to simulate profile switch handling
 nvdaVersion = '.'.join([str(version_year), str(version_major)])
@@ -256,9 +253,8 @@ class CRList(object):
 		# for current selection
 		for gesture in getScriptGestures(commands.script_reportCurrentSelection):
 			self.bindGesture(gesture, "reportCurrentSelection")
-		# for say all
-		# (available only after Py3 speech refactor)
-		if hasattr(sayAllHandler, "_ObjectsReader"):
+		# for say all - bind only if it is actually supported
+		if utils._RowsReader.isSupported():
 			for gesture in getScriptGestures(commands.script_sayAll):
 				self.bindGesture(gesture, "readListItems")
 
@@ -440,7 +436,13 @@ class CRList(object):
 		if not text:
 			return
 		speech.cancelSpeech()
-		msgArgs = (_("Searching..."), speech.Spri.NOW,) if py3 else (_("Searching..."),)
+		# Translators: Message presented when search is in progress.
+		msgArgs = [_("Searching...")]
+		try:
+			from speech.priorities import SpeechPriority
+			msgArgs.append(SpeechPriority.NOW)
+		except ImportError:  # NVDA 2019.2.1 or earlier - no priorities in speech.
+			pass
 		ui.message(*msgArgs)
 		if self.THREAD_SUPPORTED:
 			# Call launchFinder asynchronously, i.e. without expecting it to return
@@ -526,7 +528,7 @@ class CRList(object):
 
 	def script_readListItems(self, gesture):
 		curItem = api.getFocusObject()
-		_RowsReader.readRows(curItem)
+		utils._RowsReader.readRows(curItem)
 
 	script_readListItems.canPropagate = True
 	# Translators: documentation for script to read all list items starting from the focused one.
@@ -1150,25 +1152,6 @@ class FindDialog(cursorManager.FindDialog):
 		super(FindDialog, self).onOk(evt)
 
 
-sayAllSuperclass = getattr(sayAllHandler, "_ObjectsReader", object)
-
-
-class _RowsReader(sayAllSuperclass):
-
-	def walk(self, obj):
-		yield obj
-		nextObj = obj.next
-		while nextObj:
-			yield nextObj
-			nextObj = nextObj.next
-
-	@classmethod
-	def readRows(cls, obj):
-		reader = cls(obj)
-		sayAllHandler._activeSayAll = weakref.ref(reader)
-		reader.next()
-
-
 # for settings presentation compatibility
 if hasattr(gui.settingsDialogs, "SettingsPanel"):
 	superDialogClass = gui.settingsDialogs.SettingsPanel
@@ -1290,4 +1273,3 @@ class ColumnsReviewSettingsDialog(superDialogClass):
 			self.settingsSizer.Show(self._switchCharLabel)
 			self.settingsSizer.Show(self._switchChar)
 		self.Fit()
-
