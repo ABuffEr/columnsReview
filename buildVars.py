@@ -19,7 +19,7 @@ addon_info = {
 	# Translators: Long description to be shown for this add-on on add-on information from add-ons manager
 	"addon_description" : _("""Provides 10+1 gestures to read and copy the list columns header and content"""),
 	# version
-	"addon_version" : "3.0-20210512-dev",
+	"addon_version" : "3.0-20210513-dev",
 	# Author(s)
 	"addon_author" : u"Alberto Buffolino <a.buffolino@gmail.com>, Łukasz Golonka <lukasz.golonka@mailbox.org>",
 	# URL for the add-on documentation support
@@ -29,7 +29,7 @@ addon_info = {
 	# Minimum NVDA version supported (e.g. "2018.3")
 	"addon_minimumNVDAVersion" : "2017.3",
 	# Last NVDA version supported/tested (e.g. "2018.4", ideally more recent than minimum version)
-	"addon_lastTestedNVDAVersion" : "2020.4",
+	"addon_lastTestedNVDAVersion" : "2021.1",
 	# Add-on update channel (default is stable or None)
 	"addon_updateChannel" : "dev",
 }
