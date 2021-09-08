@@ -103,7 +103,7 @@ class HeaderDialog(wx.Dialog):
 		visibleHeaders = [x for x in headerList if ct.STATE_INVISIBLE not in x.states]
 		choices = [x.name if x.name else _("Unnamed header") for x in visibleHeaders]
 		self.list = helperSizer.addLabeledControl(_("Headers:"), wx.ListBox, choices=choices)
-		self.list.SetSelection(0)
+		self.list.SetSelection(0 if len(choices) else -1)
 		self.headerList = visibleHeaders
 		actions = ButtonHelper(wx.VERTICAL)
 		leftClickAction = actions.addButton(self, label=_("Left click"))
