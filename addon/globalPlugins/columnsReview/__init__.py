@@ -306,6 +306,7 @@ class CRList(object):
 			ui.message(_("Empty column"))
 			return
 		actionToExecute(columnContent, columnHeader)
+
 	script_readColumn.canPropagate = True
 	script_readColumn.__doc__ = _(
 		# Translators: documentation of script to read columns
@@ -356,8 +357,10 @@ class CRList(object):
 		ui.message(_("From {start} to {end}").format(start=start, end=end))
 
 	script_changeInterval.canPropagate = True
-	# Translators: documentation for script to change interval
-	script_changeInterval.__doc__ = _("Cycles between a variable number of intervals of ten columns")
+	script_changeInterval.__doc__ = _(
+		# Translators: documentation for script to change interval
+		"Cycles between a variable number of intervals of ten columns"
+	)
 
 	def script_itemInfo(self, gesture):
 		curItem = api.getFocusObject()
@@ -377,16 +380,20 @@ class CRList(object):
 			ui.message(info)
 
 	script_itemInfo.canPropagate = True
-	# Translators: documentation for script to announce list item info
-	script_itemInfo.__doc__ = _("Announces list item position information")
+	script_itemInfo.__doc__ = _(
+		# Translators: documentation for script to announce list item info
+		"Announces list item position information"
+	)
 
 	def script_manageHeaders(self, gesture):
 		from .dialogs import HeaderDialog
 		wx.CallAfter(HeaderDialog.Run, title=self.appModule.appName, headerList=self.getHeaderParent().children)
 
 	script_manageHeaders.canPropagate = True
-	# Translators: documentation for script to manage headers
-	script_manageHeaders.__doc__ = _("Provides a dialog for interactions with list column headers")
+	script_manageHeaders.__doc__ = _(
+		# Translators: documentation for script to manage headers
+		"Provides a dialog for interactions with list column headers"
+	)
 
 	def getHeaderParent(self):
 		"""return the navigator object with header objects as children."""
@@ -411,8 +418,10 @@ class CRList(object):
 			_("selected items"), spokenItems))
 
 	script_reportCurrentSelection.canPropagate = True
-	# Translators: documentation for script to know current selected items
-	script_reportCurrentSelection.__doc__ = _("Reports current selected list items")
+	script_reportCurrentSelection.__doc__ = _(
+		# Translators: documentation for script to know current selected items
+		"Reports current selected list items"
+	)
 
 	def script_find(self, gesture, reverse=False):
 		self.searchFromItem = api.getFocusObject()
@@ -429,8 +438,10 @@ class CRList(object):
 		gui.mainFrame.postPopup()
 
 	script_find.canPropagate = True
-	# Translators: documentation for script to find in list
-	script_find.__doc__ = _("Provides a dialog for searching in item list")
+	script_find.__doc__ = _(
+		# Translators: documentation for script to find in list
+		"Provides a dialog for searching in item list"
+	)
 
 	def doFindText(self, text, reverse=False, caseSensitive=False):
 		"""manages actions pre and post search."""
@@ -513,8 +524,10 @@ class CRList(object):
 		self.doFindText(self._lastFindText, caseSensitive = self._lastCaseSensitivity)
 
 	script_findNext.canPropagate = True
-	# Translators: documentation for script to manage headers
-	script_findNext.__doc__ = _("Goes to next result of current search")
+	script_findNext.__doc__ = _(
+		# Translators: documentation for script to manage headers
+		"Goes to next result of current search"
+	)
 
 	def script_findPrevious(self, gesture):
 		if not self._lastFindText:
@@ -524,16 +537,20 @@ class CRList(object):
 		self.doFindText(self._lastFindText, reverse=True, caseSensitive = self._lastCaseSensitivity)
 
 	script_findPrevious.canPropagate = True
-	# Translators: documentation for script to manage headers
-	script_findPrevious.__doc__ = _("Goes to previous result of current search")
+	script_findPrevious.__doc__ = _(
+		# Translators: documentation for script to manage headers
+		"Goes to previous result of current search"
+	)
 
 	def script_readListItems(self, gesture):
 		curItem = api.getFocusObject()
 		utils._RowsReader.readRows(curItem)
 
 	script_readListItems.canPropagate = True
-	# Translators: documentation for script to read all list items starting from the focused one.
-	script_readListItems.__doc__ = _("Starts reading all list items beginning at the item with focus")
+	script_readListItems.__doc__ = _(
+		# Translators: documentation for script to read all list items starting from the focused one.
+		"Starts reading all list items beginning at the item with focus"
+	)
 
 	@staticmethod
 	def prepareForThreatedSearch():
@@ -544,7 +561,7 @@ class CRList(object):
 
 	@staticmethod
 	def threatedSearchDone():
-		"""Exetcuted when searching in a separate thread has been finished"""
+		"""Executed when searching in a separate thread has been finished"""
 		pass
 
 
@@ -685,7 +702,10 @@ class CRList32(CRList):
 		ui.message("%d %s: %s"%(len(items),
 			# translators: message presented when get selected item count and names
 			_("selected items"), spokenItems))
+
 	script_reportCurrentSelection.canPropagate = True
+	script_reportCurrentSelection.__doc__ = CRList.script_reportCurrentSelection.__doc__
+
 
 class CRList64(CRList):
 	"""for 64-bit systems (DirectUIHWND window class)
@@ -757,22 +777,30 @@ class CRList64(CRList):
 		ui.message("%d %s: %s"%(len(items),
 			# translators: message presented when get selected item count and names
 			_("selected items"), spokenItems))
+
 	script_reportCurrentSelection.canPropagate = True
+	script_reportCurrentSelection.__doc__ = CRList.script_reportCurrentSelection.__doc__
 
 	def script_find(self, gesture, reverse=False):
 		if self.preCheck():
 			super(CRList64, self).script_find(gesture, reverse)
+
 	script_find.canPropagate = True
+	script_find.__doc__ = CRList.script_find.__doc__
 
 	def script_findNext(self, gesture):
 		if self.preCheck():
 			super(CRList64, self).script_findNext(gesture)
+
 	script_findNext.canPropagate = True
+	script_findNext.__doc__ = CRList.script_findNext.__doc__
 
 	def script_findPrevious(self, gesture):
 		if self.preCheck():
 			super(CRList64, self).script_findPrevious(gesture)
+
 	script_findPrevious.canPropagate = True
+	script_findPrevious.__doc__ = CRList.script_findPrevious.__doc__
 
 	def findInList(self, text, reverse, caseSensitive, stopCheck=lambda:False):
 		"""performs search in item list, via shell32 object."""
@@ -927,22 +955,30 @@ class MozillaTable(CRList32):
 		ui.message("%d %s: %s"%(len(items),
 			# translators: message presented when get selected item count and names
 			_("selected items"), spokenItems))
+
 	script_reportCurrentSelection.canPropagate = True
+	script_reportCurrentSelection.__doc__ = CRList.script_reportCurrentSelection.__doc__
 
 	def script_find(self, gesture, reverse=False):
 		self.curPos = api.getFocusObject().IAccessibleObject.uniqueID
 		super(MozillaTable, self).script_find(gesture, reverse)
+
 	script_find.canPropagate = True
+	script_find.__doc__ = CRList.script_find.__doc__
 
 	def script_findNext(self, gesture):
 		self.curPos = api.getFocusObject().IAccessibleObject.uniqueID
 		super(MozillaTable, self).script_findNext(gesture)
+
 	script_findNext.canPropagate = True
+	script_findNext.__doc__ = CRList.script_findNext.__doc__
 
 	def script_findPrevious(self, gesture):
 		self.curPos = api.getFocusObject().IAccessibleObject.uniqueID
 		super(MozillaTable, self).script_findPrevious(gesture)
+
 	script_findPrevious.canPropagate = True
+	script_findPrevious.__doc__ = CRList.script_findPrevious.__doc__
 
 	def findInList(self, text, reverse, caseSensitive, stopCheck=lambda:False):
 		"""performs the search in item list, via NVDA object navigation (MozillaTable specific)."""
@@ -1084,7 +1120,9 @@ class CRTreeview(CRList32):
 		ui.message("%d %s: %s"%(len(items),
 			# translators: message presented when get selected item count and names
 			_("selected items"), spokenItems))
+
 	script_reportCurrentSelection.canPropagate = True
+	script_reportCurrentSelection.__doc__ = CRList.script_reportCurrentSelection.__doc__
 
 
 class Finder(Thread):
@@ -1221,7 +1259,7 @@ class ColumnsReviewSettingsDialog(superDialogClass):
 			settingsSizer.Hide(self._switchCharLabel)
 			settingsSizer.Hide(self._switchChar)
 		# Translators: label for announce-empty-list checkbox in settings
-		self._announceEmptyList = wx.CheckBox(self, label = _("Announce empty list"))
+		self._announceEmptyList = wx.CheckBox(self, label = _("Announce empty list (not working in Win8/10 folders)"))
 		self._announceEmptyList.SetValue(announceEmptyList)
 		settingsSizer.Add(self._announceEmptyList)
 
