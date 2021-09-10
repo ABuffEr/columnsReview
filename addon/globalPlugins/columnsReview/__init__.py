@@ -153,8 +153,8 @@ class EmptyList(object):
 		if not self.isEmptyList():
 			self.clearGestureBindings()
 			return
-		# brailled and spoken the "0 elements" message
-		text = ' '.join(["0", NVDALocale("Elements").lower()])
+		# brailled and spoken the "0 items" message
+		text = NVDALocale("%s items")%0
 		speech.speakMessage(text)
 		region = braille.TextRegion(" "+text)
 		region.focusToHardLeft = True
