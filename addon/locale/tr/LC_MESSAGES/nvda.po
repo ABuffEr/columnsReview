@@ -1,9 +1,9 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: ColumnsReview 1.0\n"
-"Report-Msgid-Bugs-To: 'nvda-translations@freelists.org'\n"
-"POT-Creation-Date: 2021-03-10 14:44+0300\n"
-"PO-Revision-Date: 2021-03-10 14:47+0300\n"
+"Report-Msgid-Bugs-To: 'nvda-translations@groups.io'\n"
+"POT-Creation-Date: 2021-09-10 21:48+0200\n"
+"PO-Revision-Date: 2021-09-10 21:51+0200\n"
 "Last-Translator: Alberto Buffolino <a.buffolino@gmail.com>\n"
 "Language-Team: cagrid@hotmail.com\n"
 "Language: tr\n"
@@ -17,32 +17,37 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Poedit-SearchPath-0: ../../../globalPlugins\n"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:130
+#. Translators: menu item in preferences
+#: addon\globalPlugins\columnsReview\__init__.py:128
 msgid "Columns Review Settings..."
 msgstr "Sütun İnceleme Ayarları ..."
 
-#: ../../../globalPlugins/columnsReview/__init__.py:207
+#: addon\globalPlugins\columnsReview\__init__.py:205
 msgid "(DO NOT EDIT!)"
 msgstr "(DEĞİŞTİRME!)"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:300
-#: ../../../globalPlugins/columnsReview/__init__.py:341
+#. Translators: message when digit pressed exceed the columns number
+#: addon\globalPlugins\columnsReview\__init__.py:297
+#: addon\globalPlugins\columnsReview\__init__.py:339
 msgid "No more columns available"
 msgstr "Başka sütun yok"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:304
+#. Translators: Announced when the column at the requested index is not visible.
+#: addon\globalPlugins\columnsReview\__init__.py:301
 msgid "No more visible columns available"
 msgstr "Artık görünür sütun yok"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:309
-#: ../../../globalPlugins/columnsReview/actions.py:50
-#: ../../../globalPlugins/columnsReview/actions.py:69
-#: ../../../globalPlugins/columnsReview/actions.py:91
-#: ../../../globalPlugins/columnsReview/actions.py:108
+#. Translators: Presented for an empty column.
+#: addon\globalPlugins\columnsReview\__init__.py:306
+#: addon\globalPlugins\columnsReview\actions.py:50
+#: addon\globalPlugins\columnsReview\actions.py:69
+#: addon\globalPlugins\columnsReview\actions.py:91
+#: addon\globalPlugins\columnsReview\actions.py:108
 msgid "Empty column"
 msgstr "Boş sütun"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:315
+#. Translators: documentation of script to read columns
+#: addon\globalPlugins\columnsReview\__init__.py:313
 msgid ""
 "Returns the header and the content of the list column at the index "
 "corresponding to the number pressed"
@@ -50,88 +55,107 @@ msgstr ""
 "Basılan numaraya karşılık gelen dizindeki liste sütununun başlığını ve "
 "içeriğini bildirir"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:359
+#. Translators: message when you change interval in a list with more ten columns
+#: addon\globalPlugins\columnsReview\__init__.py:357
 #, python-brace-format
 msgid "From {start} to {end}"
 msgstr "{start} - {end}"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:363
+#. Translators: documentation for script to change interval
+#: addon\globalPlugins\columnsReview\__init__.py:362
 msgid "Cycles between a variable number of intervals of ten columns"
 msgstr "On sütunun değişken aralık sayısı arasında döner"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:377
+#: addon\globalPlugins\columnsReview\__init__.py:377
 msgid "No information available"
 msgstr "Bilgi bulunamadı"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:384
+#. Translators: documentation for script to announce list item info
+#: addon\globalPlugins\columnsReview\__init__.py:385
 msgid "Announces list item position information"
 msgstr "Liste öğesi konum bilgisini duyurur"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:392
+#. Translators: documentation for script to manage headers
+#: addon\globalPlugins\columnsReview\__init__.py:395
 msgid "Provides a dialog for interactions with list column headers"
 msgstr "Liste sütun başlıklarıyla etkileşim için bir iletişim kutusu gösterir"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:414
-#: ../../../globalPlugins/columnsReview/__init__.py:684
-#: ../../../globalPlugins/columnsReview/__init__.py:756
-#: ../../../globalPlugins/columnsReview/__init__.py:926
-#: ../../../globalPlugins/columnsReview/__init__.py:1083
+#. translators: message presented when get selected item count and names
+#: addon\globalPlugins\columnsReview\__init__.py:418
+#: addon\globalPlugins\columnsReview\__init__.py:704
+#: addon\globalPlugins\columnsReview\__init__.py:779
+#: addon\globalPlugins\columnsReview\__init__.py:957
+#: addon\globalPlugins\columnsReview\__init__.py:1122
 msgid "selected items"
 msgstr "seçilen öğeler"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:418
+#. Translators: documentation for script to know current selected items
+#: addon\globalPlugins\columnsReview\__init__.py:423
 msgid "Reports current selected list items"
 msgstr "Geçerli seçili liste öğelerini bildirir"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:436
+#. Translators: documentation for script to find in list
+#: addon\globalPlugins\columnsReview\__init__.py:443
 msgid "Provides a dialog for searching in item list"
 msgstr "Öğe listesinde arama yapmak için bir iletişim kutusu gösterir"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:443
+#. Translators: Message presented when search is in progress.
+#: addon\globalPlugins\columnsReview\__init__.py:452
 msgid "Searching..."
 msgstr "Aranıyor..."
 
-#: ../../../globalPlugins/columnsReview/__init__.py:514
+#. Translators: documentation for script to manage headers
+#: addon\globalPlugins\columnsReview\__init__.py:529
 msgid "Goes to next result of current search"
 msgstr "Geçerli aramanın sonraki sonucuna gider"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:525
+#. Translators: documentation for script to manage headers
+#: addon\globalPlugins\columnsReview\__init__.py:542
 msgid "Goes to previous result of current search"
 msgstr "Geçerli aramanın önceki sonucuna gider"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:533
+#. Translators: documentation for script to read all list items starting from the focused one.
+#: addon\globalPlugins\columnsReview\__init__.py:552
 msgid "Starts reading all list items beginning at the item with focus"
 msgstr "Odaklanılan öğeden başlayarak tüm liste öğelerini okumaya başlar"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:746
+#: addon\globalPlugins\columnsReview\__init__.py:769
 msgid "Current selection info not available"
 msgstr "Geçerli seçim bilgisi mevcut değil"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:1136
+#: addon\globalPlugins\columnsReview\__init__.py:1177
 msgid "Use multiple selection"
 msgstr "Çoklu seçim kullan"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:1184
+#. Translators: title of settings dialog
+#. Add-on summary, usually the user visible name of the addon.
+#. Translators: Summary for this add-on to be shown on installation and add-on information.
+#: addon\globalPlugins\columnsReview\__init__.py:1206 buildVars.py:17
 msgid "Columns Review"
 msgstr "Sütun İncelemesi"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:1187
+#. Translators: title of settings dialog
+#: addon\globalPlugins\columnsReview\__init__.py:1209
 msgid "Columns Review Settings"
 msgstr "Sütun İnceleme Ayarları"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:1199
+#. Translators: Help message for group of comboboxes allowing to assign action to a keypress.
+#: addon\globalPlugins\columnsReview\__init__.py:1221
 msgid "When pressing combination to read column:"
 msgstr "Sütunu okumak için ilgili kombinasyona basıldığında:"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:1215
+#. Translators: Help message for sub-sizer of keys choices
+#: addon\globalPlugins\columnsReview\__init__.py:1237
 msgid "Choose the keys you want to use with numbers:"
 msgstr "Numaralarla kullanmak istediğiniz tuşları seçin:"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:1225
+#. Translators: label for numpad keys checkbox in settings
+#: addon\globalPlugins\columnsReview\__init__.py:1247
 msgid "Use numpad keys to navigate through the columns"
 msgstr "Sütunlar arasında gezinmek için sayısal tuş takımındaki tuşları kullan"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:1230
+#. Translators: label for edit field in settings, visible if previous checkbox is disabled
+#: addon\globalPlugins\columnsReview\__init__.py:1252
 msgid ""
 "Insert the char after \"0\" in your keyboard layout, or another char as you "
 "like:"
@@ -139,79 +163,116 @@ msgstr ""
 "Klavye düzeninizde \"0\" dan sonraki karakteri veya seçtiğiniz başka bir "
 "karakteri girin"
 
-#: ../../../globalPlugins/columnsReview/__init__.py:1240
-msgid "Announce empty list"
-msgstr "Boş listeyi bildir"
+#. Translators: label for announce-empty-list checkbox in settings
+#: addon\globalPlugins\columnsReview\__init__.py:1262
+msgid "Announce empty list (not working in Win8/10 folders)"
+msgstr ""
 
-#: ../../../globalPlugins/columnsReview/actions.py:36
+#. Translators: Description of the action which simply ignores the pressed key
+#: addon\globalPlugins\columnsReview\actions.py:36
 msgid "Do nothing"
 msgstr "Hiçbir şey yapma"
 
-#: ../../../globalPlugins/columnsReview/actions.py:44
+#. Translators: Name of the action which reads given column.
+#: addon\globalPlugins\columnsReview\actions.py:44
 msgid "Read column"
 msgstr "Sütunu oku"
 
-#: ../../../globalPlugins/columnsReview/actions.py:63
-#| msgid "Copy the column header"
+#. Translators: Name of the action which copies given column.
+#: addon\globalPlugins\columnsReview\actions.py:63
 msgid "Copy column"
 msgstr "Sütunu kopyala"
 
-#: ../../../globalPlugins/columnsReview/actions.py:85
+#. Translators: Name of the action which spells given column.
+#: addon\globalPlugins\columnsReview\actions.py:85
 msgid "Spell column"
 msgstr "Sütunu kodlayarak seslendir"
 
-#: ../../../globalPlugins/columnsReview/actions.py:101
+#. Translators: Name of the action which displays content of the given column in the browseable message.
+#: addon\globalPlugins\columnsReview\actions.py:101
 msgid "Show column content in browse mode"
 msgstr "Sütun içeriğini tarama kipinde göster"
 
-#: ../../../globalPlugins/columnsReview/dialogs.py:28
+#. Translators: Label of a combobox in which action can be assigned to a first press of the shortcut.
+#: addon\globalPlugins\columnsReview\dialogs.py:28
 msgid "On first press:"
 msgstr "İlk basışta:"
 
-#: ../../../globalPlugins/columnsReview/dialogs.py:30
+#. Translators: Label of a combobox in which action can be assigned to a second press of the shortcut.
+#: addon\globalPlugins\columnsReview\dialogs.py:30
 msgid "On second press:"
 msgstr "İkinci basışta:"
 
-#: ../../../globalPlugins/columnsReview/dialogs.py:32
+#. Translators: Label of a combobox in which action can be assigned to a third press of the shortcut.
+#: addon\globalPlugins\columnsReview\dialogs.py:32
 msgid "On third press:"
 msgstr "Üçüncü basışta:"
 
-#: ../../../globalPlugins/columnsReview/dialogs.py:34
+#. Translators: Label of a combobox in which action can be assigned to a fourth press of the shortcut.
+#: addon\globalPlugins\columnsReview\dialogs.py:34
 msgid "On fourth press:"
 msgstr "Dördüncü basışta:"
 
-#: ../../../globalPlugins/columnsReview/dialogs.py:51
+#. Translators: label for read-header checkbox in settings
+#: addon\globalPlugins\columnsReview\dialogs.py:51
 msgid "Read the column header"
 msgstr "Sütun başlığını oku"
 
-#: ../../../globalPlugins/columnsReview/dialogs.py:55
+#. Translators: label for copy-header checkbox in settings
+#: addon\globalPlugins\columnsReview\dialogs.py:55
 msgid "Copy the column header"
 msgstr "Sütun başlığını kopyala"
 
-#: ../../../globalPlugins/columnsReview/dialogs.py:101
+#: addon\globalPlugins\columnsReview\dialogs.py:101
 msgid "Headers manager"
 msgstr "Üstbilgi yöneticisi"
 
-#: ../../../globalPlugins/columnsReview/dialogs.py:104
+#: addon\globalPlugins\columnsReview\dialogs.py:104
 msgid "Unnamed header"
 msgstr "Adsız başlık"
 
-#: ../../../globalPlugins/columnsReview/dialogs.py:105
+#: addon\globalPlugins\columnsReview\dialogs.py:105
 msgid "Headers:"
 msgstr "Başlıklar:"
 
-#: ../../../globalPlugins/columnsReview/dialogs.py:109
+#: addon\globalPlugins\columnsReview\dialogs.py:109
 msgid "Left click"
 msgstr "Sol tık"
 
-#: ../../../globalPlugins/columnsReview/dialogs.py:111
+#: addon\globalPlugins\columnsReview\dialogs.py:111
 msgid "Right click"
 msgstr "Sağ tık"
 
-#: ../../../globalPlugins/columnsReview/dialogs.py:128
+#: addon\globalPlugins\columnsReview\dialogs.py:128
 #, python-format
 msgid "%s header clicked"
 msgstr "%s başlık tıklandı"
+
+#. Translators: the label of a message box dialog.
+#: addon\installTasks.py:18
+msgid ""
+"Previous add-on settings will be lost. Please configure it again, from NVDA "
+"preferences."
+msgstr ""
+"Önceki eklenti ayarları kaybolacak. Lütfen NVDA tercihlerinden yeniden "
+"yapılandırın."
+
+#. Translators: the title of a message box dialog.
+#: addon\installTasks.py:20
+msgid "Add-on settings reset"
+msgstr "Eklenti ayarları sıfırlandı"
+
+#. Add-on description
+#. Translators: Long description to be shown for this add-on on add-on information from add-ons manager
+#: buildVars.py:20
+msgid ""
+"Provides 10+1 gestures to read and copy the list columns header and content"
+msgstr ""
+"Liste sütun başlığını ve içeriğini okumak ve kopyalamak için 10 + 1 hareket "
+"sağlar"
+
+#~ msgid "Announce empty list"
+#~ msgstr "Boş listeyi bildir"
 
 #~ msgid "Not available;"
 #~ msgstr "Mevcut değil;"
@@ -229,23 +290,6 @@ msgstr "%s başlık tıklandı"
 
 #~ msgid "Announces item amount."
 #~ msgstr "Öğe sayısını  bildirir."
-
-#~ msgid ""
-#~ "Previous add-on settings will be lost. Please configure it again, from "
-#~ "NVDA preferences."
-#~ msgstr ""
-#~ "Önceki eklenti ayarları kaybolacak. Lütfen NVDA tercihlerinden yeniden "
-#~ "yapılandırın."
-
-#~ msgid "Add-on settings reset"
-#~ msgstr "Eklenti ayarları sıfırlandı"
-
-#~ msgid ""
-#~ "Provides 10+1 gestures to read and copy the list columns header and "
-#~ "content"
-#~ msgstr ""
-#~ "Liste sütun başlığını ve içeriğini okumak ve kopyalamak için 10 + 1 "
-#~ "hareket sağlar"
 
 #, fuzzy
 #~ msgid "Copied in clipboard: %(header)s%(content)s"
