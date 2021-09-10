@@ -1,56 +1,56 @@
 # Columns Review
 
-* Author: Alberto Buffolino
+* Author: Alberto Buffolino, Łukasz Golonka, other contributors
 * Download [stable version][stable]
 * Download [development version][dev]
 * NVDA compatibility: 2017.3 and beyond
 
-Columns Review is an add-on to read and copy items in a list column by column. It supports lists with a potentially infinite number of columns, and you can navigate them using keyboard or numpad digits. The column headers can be read but not copied, or vice versa.
+Columns Review is an add-on to enhance NVDA experience with lists.
 
-Additionally, it provides list search, a way to interact with column headers, and can announce "0 elements" when a list is empty.
+Its features include:
 
-See below for more details about supported list.
+* customizable actions on column header and/or content (available actions are read, copy, spell and show in browse mode);
+* ability to cycle between columns in ten-by-ten intervals;
+* simplified header management (mouse clicks);
+* on-demand reading of relative current item position (i.e.: item 7 of 10);
+* customizable gestures with or without numpad;
+* "0 items" announcement when list is empty (not working in Win8/10 folders, unfortunately);
+* say all support;
+* report of selected items (amount and item names);
+* list search (with item multiselection, if checked/supported).
 
-## Key Commands ##
+## Gestures
 
-Default keys associated with numbers are NVDA and control, but you can customize them from add-on settings. See settings also for numpad/keyboard mode and layout.
+Default keys for columns, headers and position are NVDA+control, but you can customize them from add-on settings (not "Input gestures" dialog!).
 
-* NVDA+control+digits from 1 to 0 (keyboard mode) or from 1 to 9 (numpad mode): By default when pressed once, read the chosen column, pressed twice, copy it;
-If you want to customize what happens when this command is pressed please take a look at the section about customizing in settins dialog;
-* NVDA+control+numpadMinus (numpad mode): read or copy the 10th, 20th, etc column;
-* NVDA+control+- (default, EN-US layout, keyboard mode): in a list with 10+ columns, let you to change interval and read columns from 11 to 20, from 21 to 30, and so on; see settings to change last char according to your layout;
-* NVDA+control+numpadPlus (numpad mode): exactly as previous command;
-* NVDA+control+f: open find dialog;
-* NVDA+f3: find next occurrence of previously entered text;
-* NVDA+shift+f3: find previous occurrence;
-* NVDA+control+enter (numpadEnter in numpad mode): open column headers manager;
-* Arrows (in empty list): repeat "0 elements" message.
+Note that your keyboard could have problems processing some key combinations, so try all add-on gestures and adjust them for better results.
 
+See also add-on preferences for numpad mode, keyboard layout (without numpad), and the four available actions for columns.
 
-## Customize action performed on columns ##
+* NVDA+control+digits from 1 to 0 (keyboard mode) or from 1 to 9 (numpad mode): by default, read the chosen column if pressed once, copy it if pressed twice;
+* NVDA+control+numpadMinus (numpad mode): like NVDA+control+0 in keyboard mode, read or copy the 10th, 20th, etc column;
+* NVDA+control+- (keyboard mode, EN-US layout): in a list with 10+ columns, change interval and process columns from 11 to 20, from 21 to 30, and so on (change last char according to your layout, from settings);
+* NVDA+control+numpadPlus (numpad mode): like previous command;
+* NVDA+control+enter (numpadEnter in numpad mode): open header manager;
+* NVDA+control+delete (numpadDelete in numpad mode): read relative current item position (i.e.: item 7 of 10);
+* Arrows and NVDA+tab (in empty list): repeat "0 items" message;
+* NVDA+downArrow (desktop layout) or NVDA+a (laptop layout): start say all (this gesture depends on original one under "Input gestures"/"System caret");
+* NVDA+shift+upArrow (desktop layout) or NVDA+shift+s (laptop layout): report amount and names of current selected list items (like previous command for customization);
+* NVDA+control+f: open find dialog (not customizable);
+* NVDA+f3: find next occurrence of previously entered text (not customizable);
+* NVDA+shift+f3: find previous occurrence (not customizable).
 
-By default when pressing gesture to interact with a given column first press read its content and second copies it to the Windows clipboard.
-You can, however, customize this in the settings dialog to your liking.
+## Support
 
-The following operations are possible:
+This add-on provide a general support for more common lists (see below), and some specific applications. Main author (Alberto Buffolino) cannot guarantee compatibility/functionality for those applications he not uses, like Outlook and Windows Mail, but he'll be happy to collaborate with their users or accept a pull request for them.
 
-* Content of the column can be read its header is announced if the corresponding checkbox is checked.
-* Column content can be copied  along with its header if the corresponding checkbox is checked
-* Column content can be spelled out.
-* Column content can be shown in the browseable message header of the column is presented as the message title.
-
-## For developers and advanced users ##
-
-List types supported by search and numeric gestures are:
+Lists supported are:
 
 * SysListView32;
 * DirectUIHWND (present in 64-bit systems);
 * WindowsForms10.SysListView32.* (applications that use .NET);
+* multi-column treeview like as that presents in RSSOwlnix;
 * Mozilla table (tipically, Thunderbird message list, thread-grouping supported).
-
-All specific gestures are associated on and only on supported lists, when these are not empty.
-
-Any listview potentially supports empty announcement (so, not DirectUIHWND nor Mozilla table).
 
 
 [stable]: https://addons.nvda-project.org/files/get.php?file=cr
