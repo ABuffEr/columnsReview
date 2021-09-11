@@ -90,9 +90,6 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 			config.post_configProfileSwitch.register(self.handleConfigProfileSwitch)
 
 	def chooseNVDAObjectOverlayClasses(self, obj, clsList):
-		if announceEmptyList and SysLV32List in clsList and obj.childCount <= 1:
-			clsList.insert(0, EmptyList)
-			return
 		if obj.role == ct.ROLE_LIST:
 			if SysLV32List in clsList:
 				clsList.insert(0, CRList32)
@@ -148,57 +145,6 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 		nextHandler()
 
 
-class EmptyList(object):
-	"""Class to announce empty list."""
-
-	def event_gainFocus(self):
-		if not self.isEmptyList():
-			self.clearGestureBindings()
-			return
-		# brailled and spoken the "0 items" message
-		text = NVDALocale("%s items")%0
-		speech.speakMessage(text)
-		region = braille.TextRegion(" "+text)
-		region.focusToHardLeft = True
-		region.update()
-		braille.handler.buffer.regions.append(region)
-		braille.handler.buffer.focus(region)
-		braille.handler.buffer.update()
-		braille.handler.update()
-		# bind arrows to focus again (and repeat message)
-		for item in ["Up", "Down", "Left", "Right"]:
-			self.bindGesture("kb:%sArrow"%item, "alert")
-		# other useful gesture to remap
-		# script_reportCurrentFocus
-		for gesture in getScriptGestures(commands.script_reportCurrentFocus):
-			self.bindGesture(gesture, "alert")
-		# script_reportCurrentLine
-		for gesture in getScriptGestures(commands.script_reportCurrentLine):
-			self.bindGesture(gesture, "alert")
-		# script_reportCurrentSelection
-		for gesture in getScriptGestures(commands.script_reportCurrentSelection):
-			self.bindGesture(gesture, "alert")
-
-	def script_alert(self, gesture):
-		self.event_gainFocus()
-
-	def isEmptyList(self):
-		try:
-			if (
-				# simple and fast check
-				(not self.rowCount)
-				# usual condition for SysListView32
-				# (the unique child should be the header list, that usually follows items)
-				or (self.firstChild.role != ct.ROLE_LISTITEM and self.firstChild == self.lastChild)
-				# condition for possible strange cases
-				or (self.childCount <= 1)
-			):
-				return True
-			return False
-		except AttributeError:
-			pass
-
-
 class CRList(object):
 	"""The main abstract class that generates gestures and calculate index;
 	classes that define new list types must override it,
@@ -227,30 +173,13 @@ class CRList(object):
 	shouldExecuteNextPresses = True
 	# Keeps track of how many times the given command has been pressed
 	repeatCount = 0
+	# Set to `True` if the particular class should behave differently when the list is empty.
+	# Don't forget to implement `isEmptyList` for the class if this is set to `True`.
+	supportsEmptyListAnnouncements = False
 
-	def initOverlayClass(self):
-		"""maps the correct gestures"""
-		global useNumpadKeys, switchChar, baseKeys
-		# a string useful for defining gestures
-		nk = "numpad" if useNumpadKeys else ""
-		# bind gestures from 1 to 9
-		for n in rangeFunc(1,10):
-			self.bindGesture("kb:%s+%s%d"%(baseKeys, nk, n), "readColumn")
-		if useNumpadKeys:
-			# map numpadMinus for 10th column
-			self.bindGesture("kb:%s+numpadMinus"%baseKeys, "readColumn")
-			# ...numpadPlus to change interval
-			self.bindGesture("kb:%s+numpadPlus"%baseKeys, "changeInterval")
-			# delete for list item info
-			self.bindGesture("kb:%s+numpadDelete"%baseKeys, "itemInfo")
-			# ...and enter to headers manager
-			self.bindGesture("kb:%s+numpadEnter"%baseKeys, "manageHeaders")
-		else:
-			# do same things for no numpad case
-			self.bindGesture("kb:%s+0"%baseKeys, "readColumn")
-			self.bindGesture("kb:%s+%s"%(baseKeys, switchChar), "changeInterval")
-			self.bindGesture("kb:%s+delete"%baseKeys, "itemInfo")
-			self.bindGesture("kb:%s+enter"%baseKeys, "manageHeaders")
+	def bindCRGestures(self, reinitializeObj=False):
+		if reinitializeObj:
+			self.clearGestureBindings()
 		# find gestures
 		self.bindGesture("kb:NVDA+control+f", "find")
 		self.bindGesture("kb:NVDA+f3", "findNext")
@@ -262,6 +191,34 @@ class CRList(object):
 		if utils._RowsReader.isSupported():
 			for gesture in getScriptGestures(commands.script_sayAll):
 				self.bindGesture(gesture, "readListItems")
+		global useNumpadKeys, switchChar, baseKeys
+		# a string useful for defining gestures
+		nk = "numpad" if useNumpadKeys else ""
+		# bind gestures from 1 to 9
+		for n in rangeFunc(1, 10):
+			self.bindGesture("kb:{0}+{1}{2}".format(baseKeys, nk, n), "readColumn")
+		if useNumpadKeys:
+			# map numpadMinus for 10th column
+			self.bindGesture("kb:{0}+numpadMinus".format(baseKeys), "readColumn")
+			# ...numpadPlus to change interval
+			self.bindGesture("kb:{0}+numpadPlus".format(baseKeys), "changeInterval")
+			# delete for list item info
+			self.bindGesture("kb:{0}+numpadDelete".format(baseKeys), "itemInfo")
+			# ...and enter to headers manager
+			self.bindGesture("kb:{0}+numpadEnter".format(baseKeys), "manageHeaders")
+		else:
+			# do same things for no numpad case
+			self.bindGesture("kb:{0}+0".format(baseKeys), "readColumn")
+			self.bindGesture("kb:{0}+{1}".format(baseKeys, switchChar), "changeInterval")
+			self.bindGesture("kb:{0}+delete".format(baseKeys), "itemInfo")
+			self.bindGesture("kb:{0}+enter".format(baseKeys), "manageHeaders")
+
+	def initOverlayClass(self):
+		"""maps the correct gestures"""
+		if self.supportsEmptyListAnnouncements and self.isEmptyList():
+			self.handleEmpty()
+		else:
+			self.bindCRGestures()
 
 	def getColumnData(self, colNumber):
 		"""Returs information about the column at the index given as  parameter.
@@ -585,6 +542,7 @@ class CRList32(CRList):
 
 	# flag to guarantee thread support
 	THREAD_SUPPORTED = True
+	supportsEmptyListAnnouncements = True
 
 	def getColumnData(self, colNumber):
 		curItem = api.getFocusObject()
@@ -715,12 +673,69 @@ class CRList32(CRList):
 			)
 		return items
 
+	def isEmptyList(self):
+		try:
+			if (
+				# simple and fast check
+				(not self.rowCount)
+				# usual condition for SysListView32
+				# (the unique child should be the header list, that usually follows items)
+				or (self.firstChild.role != ct.ROLE_LISTITEM and self.firstChild == self.lastChild)
+				# condition for possible strange cases
+				or (self.childCount <= 1)
+			):
+				return True
+			return False
+		except AttributeError:
+			return False
+
+	def handleEmpty(self):
+		if announceEmptyList and self.isEmptyList():
+			self.bindGesturesForEmpty()
+			self.isEmpty = True
+
+	def reportEmpty(self):
+		# brailled and spoken the "0 items" message
+		text = NVDALocale("%s items") % 0
+		speech.speakMessage(text)
+		region = braille.TextRegion(" {0}".format(text))
+		region.focusToHardLeft = True
+		region.update()
+		braille.handler.buffer.regions.append(region)
+		braille.handler.buffer.focus(region)
+		braille.handler.buffer.update()
+		braille.handler.update()
+
+	def reportFocus(self):
+		super(CRList32, self).reportFocus()
+		if hasattr(self, "isEmpty") and self.isEmpty:
+			self.reportEmpty()
+
+	def script_reportEmpty(self, gesture):
+		self.reportEmpty()
+
+	def bindGesturesForEmpty(self):
+		# bind arrows to focus again (and report empty)
+		for item in ["Up", "Down", "Left", "Right"]:
+			self.bindGesture("kb:{0}Arrow".format(item), "reportEmpty")
+		# other useful gesture to remap
+		# script_reportCurrentFocus
+		for gesture in getScriptGestures(commands.script_reportCurrentFocus):
+			self.bindGesture(gesture, "reportEmpty")
+		# script_reportCurrentLine
+		for gesture in getScriptGestures(commands.script_reportCurrentLine):
+			self.bindGesture(gesture, "reportEmpty")
+		# script_reportCurrentSelection
+		for gesture in getScriptGestures(commands.script_reportCurrentSelection):
+			self.bindGesture(gesture, "reportEmpty")
+
 
 class CRList64(CRList):
 	"""for 64-bit systems (DirectUIHWND window class)
 	see CRList32 class for more comments"""
 
 	THREAD_SUPPORTED = True
+	supportsEmptyListAnnouncements = False
 
 	# window shell variable
 	curWindow = None
@@ -919,6 +934,7 @@ class MozillaTable(CRList32):
 	"""Class to manage column headers in Mozilla list"""
 
 	THREAD_SUPPORTED = True
+	supportsEmptyListAnnouncements = False
 
 	def _getColumnHeader(self, index):
 		"""Returns the column header in Mozilla applications"""
@@ -1028,6 +1044,7 @@ class CRTreeview(CRList32):
 
 	# flag to guarantee thread support
 	THREAD_SUPPORTED = False
+	supportsEmptyListAnnouncements = False
 
 	def getColumnData(self, colNumber):
 		curItem = api.getFocusObject()
