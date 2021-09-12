@@ -65,10 +65,8 @@ getBytePerSector = ctypes.windll.kernel32.GetDiskFreeSpaceW
 
 # (re)load config
 def loadConfig():
-	global myConf, readHeader, copyHeader, announceEmptyList, useNumpadKeys, switchChar, baseKeys
+	global myConf, announceEmptyList, useNumpadKeys, switchChar, baseKeys
 	myConf = config.conf["columnsReview"]
-	readHeader = myConf["general"]["readHeader"]
-	copyHeader = myConf["general"]["copyHeader"]
 	announceEmptyList = myConf["general"]["announceEmptyList"]
 	useNumpadKeys = myConf["keyboard"]["useNumpadKeys"]
 	switchChar = myConf["keyboard"]["switchChar"]
