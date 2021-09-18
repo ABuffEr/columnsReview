@@ -673,6 +673,8 @@ class CRList32(CRList):
 
 	def isEmptyList(self):
 		try:
+			if self.childCount > 1:
+				return False
 			if (
 				# simple and fast check
 				(not self.rowCount)
