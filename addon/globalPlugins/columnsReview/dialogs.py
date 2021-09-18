@@ -165,8 +165,8 @@ class ColumnsReviewSettingsDialog(getattr(gui.settingsDialogs, "SettingsPanel", 
 		if self._useNumpadKeys.IsChecked():
 			settingsSizer.Hide(self._switchCharLabel)
 			settingsSizer.Hide(self._switchChar)
-		# Translators: label for announce-empty-list checkbox in settings
 		self._announceEmptyList = wx.CheckBox(
+			# Translators: label for announce-empty-list checkbox in settings
 			self, label=_("Announce empty list (not working in Win8/10 folders")
 		)
 		self._announceEmptyList.SetValue(config.conf["columnsReview"]["general"]["announceEmptyList"])
