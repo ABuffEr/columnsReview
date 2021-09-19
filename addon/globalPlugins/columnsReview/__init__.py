@@ -368,12 +368,13 @@ class CRList(object):
 		try:
 			number = curItem.positionInfo["indexInGroup"]
 			total = curItem.positionInfo["similarItemsInGroup"]
-		except:
+		except (AttributeError, KeyError):
 			tempList = [i for i in self.children if i.role == ct.ROLE_LISTITEM]
 			if tempList:
 				number = tempList.index(curItem)
 				total = len(tempList)
 		if None in (number, total):
+			# Translators: Reported when information about position on a list cannot be retrieved.
 			ui.message(_("No information available"))
 		else:
 			info = ' '.join([NVDALocale("item"), NVDALocale("{number} of {total}").format(number=number, total=total)])
