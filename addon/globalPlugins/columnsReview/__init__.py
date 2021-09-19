@@ -767,6 +767,7 @@ class CRList64(CRList):
 
 	def script_reportCurrentSelection(self, gesture):
 		if not self.preCheck():
+			# Translators: Reported when it is impossible to report currently selected items.
 			ui.message(_("Current selection info not available"))
 			return
 		items = [i.name for i in self.curWindow.Document.SelectedItems()]
