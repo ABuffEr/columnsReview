@@ -58,12 +58,6 @@ SysLV32List = sysListView32.List
 py3 = sys.version.startswith("3")
 config.conf.spec["columnsReview"] = configSpec.confspec
 
-addonDir = os.path.join(os.path.dirname(__file__), "..", "..")
-if isinstance(addonDir, bytes):
-	addonDir = addonDir.decode("mbcs")
-curAddon = addonHandler.Addon(addonDir)
-addonSummary = curAddon.manifest['summary']
-
 addonHandler.initTranslation()
 
 # useful in ColumnsReview64 to calculate file size
@@ -202,7 +196,9 @@ class CRList(object):
 	classes that define new list types must override it,
 	defining (or eventually re-defining) methods of this class."""
 
-	scriptCategory = ' '.join([addonSummary, _("(DO NOT EDIT!)")])
+	# Translators: Name of the default category
+	# in the Input Gestures dialog where scripts of this add-on are placed.
+	scriptCategory = _('{name} (DO NOT EDIT!)').format(name=addonHandler.getCodeAddon().manifest['summary'])
 
 	# the variable representing tens
 	# of current interval (except the last column,
