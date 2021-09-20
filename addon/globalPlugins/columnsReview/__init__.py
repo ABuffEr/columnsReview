@@ -1162,6 +1162,8 @@ class FindDialog(cursorManager.FindDialog):
 		mainSizer = self.GetSizer()
 		if not self.activeCursorManager.isMultipleSelectionSupported():
 			return
+		# Translators: Label of the checkbox in the find dialog which, if checked, selects multiple
+		# items if they match the search query.
 		self.multipleSelectionCheckBox = wx.CheckBox(self, wx.ID_ANY, label=_("Use multiple selection"))
 		global useMultipleSelection
 		self.multipleSelectionCheckBox.SetValue(useMultipleSelection)
