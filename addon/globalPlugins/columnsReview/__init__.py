@@ -38,7 +38,6 @@ import globalPluginHandler
 import globalVars
 import gui
 import locale
-import os
 import speech
 import ui
 import watchdog
