@@ -748,7 +748,7 @@ class CRList64(CRList):
 		else:
 			return headerParent.next
 
-	def preCheck(self, *args):
+	def preCheck(self, onFailureMsg=None):
 		# check to ensure shell32 method will work
 		# (not available in all context, as open dialog)
 		shell = CreateObject("shell.application")
@@ -761,14 +761,14 @@ class CRList64(CRList):
 			except:
 				pass
 		if not self.curWindow:
-			ui.message(NVDALocale("Not supported in this document"))
+			if onFailureMsg:
+				ui.message(onFailureMsg)
 			return False
 		return True
 
 	def script_reportCurrentSelection(self, gesture):
-		if not self.preCheck():
-			# Translators: Reported when it is impossible to report currently selected items.
-			ui.message(_("Current selection info not available"))
+		# Translators: Reported when it is impossible to report currently selected items.
+		if not self.preCheck(_("Current selection info not available")):
 			return
 		items = [i.name for i in self.curWindow.Document.SelectedItems()]
 		if items:
@@ -784,21 +784,23 @@ class CRList64(CRList):
 	script_reportCurrentSelection.__doc__ = CRList.script_reportCurrentSelection.__doc__
 
 	def script_find(self, gesture, reverse=False):
-		if self.preCheck():
+		# Translators: Reported when current list does not support searching.
+		if self.preCheck(_("Cannot search here.")):
 			super(CRList64, self).script_find(gesture, reverse)
 
 	script_find.canPropagate = True
 	script_find.__doc__ = CRList.script_find.__doc__
 
 	def script_findNext(self, gesture):
-		if self.preCheck():
+		# Translators: Reported when current list does not support searching.
+		if self.preCheck(_("Cannot search here.")):
 			super(CRList64, self).script_findNext(gesture)
-
 	script_findNext.canPropagate = True
 	script_findNext.__doc__ = CRList.script_findNext.__doc__
 
 	def script_findPrevious(self, gesture):
-		if self.preCheck():
+		# Translators: Reported when current list does not support searching.
+		if self.preCheck(_("Cannot search here.")):
 			super(CRList64, self).script_findPrevious(gesture)
 
 	script_findPrevious.canPropagate = True
@@ -807,7 +809,7 @@ class CRList64(CRList):
 	def findInList(self, text, reverse, caseSensitive, stopCheck=lambda:False):
 		"""performs search in item list, via shell32 object."""
 		# reacquire curWindow for current thread
-		self.preCheck()
+		self.preCheck()  # No message on failure here as we cannot hit this code path if shell is not supported.
 		curFolder = self.curWindow.Document.Folder
 		curItem = self.searchFromItem
 		# names of children objects of current list item,
@@ -890,7 +892,7 @@ class CRList64(CRList):
 		global useMultipleSelection
 		speech.cancelSpeech()
 		# reacquire curWindow for current thread
-		self.preCheck()
+		self.preCheck()  # No message on failure here as we cannot hit this code path if shell is not supported.
 		# according to MS:
 		# https://docs.microsoft.com/en-us/windows/desktop/shell/shellfolderview-selectitem
 		# 17 should set focus and add item to selection,
