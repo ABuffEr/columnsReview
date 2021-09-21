@@ -98,16 +98,21 @@ class HeaderDialog(wx.Dialog):
 	"""define dialog for column headers management."""
 
 	def __init__(self, title, headerList):
+		# Translators: Title of the dialog which allows to perform actions on headers of the current list.
 		super(HeaderDialog, self).__init__(None, title=' - '.join([_("Headers manager"), title]))
 		helperSizer = BoxSizerHelper(self, wx.HORIZONTAL)
 		visibleHeaders = [x for x in headerList if ct.STATE_INVISIBLE not in x.states]
+		# Translators: Shown for a header which has no name.
 		choices = [x.name if x.name else _("Unnamed header") for x in visibleHeaders]
+		# Translators: Label for a list containing names of all headers of the current list.
 		self.list = helperSizer.addLabeledControl(_("Headers:"), wx.ListBox, choices=choices)
 		self.list.SetSelection(0 if len(choices) else -1)
 		self.headerList = visibleHeaders
 		actions = ButtonHelper(wx.VERTICAL)
+		# Translators: Label for a button which clicks the given header with the left mouse button.
 		leftClickAction = actions.addButton(self, label=_("Left click"))
 		leftClickAction.Bind(wx.EVT_BUTTON, lambda event: self.onButtonClick(event, "LEFT"))
+		# Translators: Label for a button which clicks the given header with the right mouse button.
 		rightClickAction = actions.addButton(self, label=_("Right click"))
 		rightClickAction.Bind(wx.EVT_BUTTON, lambda event: self.onButtonClick(event, "RIGHT"))
 		helperSizer.addItem(actions)
@@ -125,7 +130,9 @@ class HeaderDialog(wx.Dialog):
 		winUser.setCursorPos(left + (width // 2), top + (height // 2))
 		winUser.mouse_event(getattr(winUser, "MOUSEEVENTF_{}DOWN".format(mouseButton)), 0, 0, None, None)
 		winUser.mouse_event(getattr(winUser, "MOUSEEVENTF_{}UP".format(mouseButton)), 0, 0, None, None)
-		ui.message(_("%s header clicked") % headerObj.name)
+		# Translators: Announced when the given header has been clicked, 'headerName' is replaced with the name of
+		# the  clicked object.
+		ui.message(_("{headerName} header clicked").format(headerName=headerObj.name))
 		self.Destroy()
 
 	def onEscape(self, event):

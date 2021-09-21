@@ -38,7 +38,6 @@ import globalPluginHandler
 import globalVars
 import gui
 import locale
-import os
 import speech
 import ui
 import watchdog
@@ -57,12 +56,6 @@ nvdaVersion = '.'.join([str(version_year), str(version_major)])
 SysLV32List = sysListView32.List
 py3 = sys.version.startswith("3")
 config.conf.spec["columnsReview"] = configSpec.confspec
-
-addonDir = os.path.join(os.path.dirname(__file__), "..", "..")
-if isinstance(addonDir, bytes):
-	addonDir = addonDir.decode("mbcs")
-curAddon = addonHandler.Addon(addonDir)
-addonSummary = curAddon.manifest['summary']
 
 addonHandler.initTranslation()
 
@@ -202,7 +195,9 @@ class CRList(object):
 	classes that define new list types must override it,
 	defining (or eventually re-defining) methods of this class."""
 
-	scriptCategory = ' '.join([addonSummary, _("(DO NOT EDIT!)")])
+	# Translators: Name of the default category
+	# in the Input Gestures dialog where scripts of this add-on are placed.
+	scriptCategory = _('{name} (DO NOT EDIT!)').format(name=addonHandler.getCodeAddon().manifest['summary'])
 
 	# the variable representing tens
 	# of current interval (except the last column,
@@ -368,12 +363,13 @@ class CRList(object):
 		try:
 			number = curItem.positionInfo["indexInGroup"]
 			total = curItem.positionInfo["similarItemsInGroup"]
-		except:
+		except (AttributeError, KeyError):
 			tempList = [i for i in self.children if i.role == ct.ROLE_LISTITEM]
 			if tempList:
 				number = tempList.index(curItem)
 				total = len(tempList)
 		if None in (number, total):
+			# Translators: Reported when information about position on a list cannot be retrieved.
 			ui.message(_("No information available"))
 		else:
 			info = ' '.join([NVDALocale("item"), NVDALocale("{number} of {total}").format(number=number, total=total)])
@@ -399,7 +395,9 @@ class CRList(object):
 		"""return the navigator object with header objects as children."""
 		raise NotImplementedError
 
-	def script_reportCurrentSelection(self, gesture):
+	def getSelectedItems(self):
+		"""Returns names of currently selected list items as a list of strings
+		or None if selected items cannot be retrieved."""
 		# generic (slow) implementation
 		# (actually not used by any subclass)
 		curItem = api.getFocusObject()
@@ -412,10 +410,15 @@ class CRList(object):
 				if itemName:
 					items.append(itemName)
 			item = item.next
-		spokenItems = ', '.join(items)
-		ui.message("%d %s: %s"%(len(items),
-			# translators: message presented when get selected item count and names
-			_("selected items"), spokenItems))
+		return items
+
+	def script_reportCurrentSelection(self, gesture):
+		items = self.getSelectedItems()
+		if items is not None:
+			ui.message(_(
+				# Translators: message presented when get selected item count and names
+				"{selCount} selected items: {selNames}").format(selCount=len(items), selNames=', '.join(items)
+			))
 
 	script_reportCurrentSelection.canPropagate = True
 	script_reportCurrentSelection.__doc__ = _(
@@ -672,7 +675,7 @@ class CRList32(CRList):
 		else:
 		 res.IAccessibleObject.accSelect(SELFLAG_TAKESELECTION | SELFLAG_TAKEFOCUS, res.IAccessibleChildID)
 
-	def script_reportCurrentSelection(self, gesture):
+	def getSelectedItems(self):
 		parentHandle = self.windowHandle
 		# index of first selected item
 		# use -1 to query first list item too
@@ -698,13 +701,7 @@ class CRList32(CRList):
 				selItemIndex,
 				ctypes.wintypes.LPARAM(sysListView32.LVNI_SELECTED)
 			)
-		spokenItems = ', '.join(items)
-		ui.message("%d %s: %s"%(len(items),
-			# translators: message presented when get selected item count and names
-			_("selected items"), spokenItems))
-
-	script_reportCurrentSelection.canPropagate = True
-	script_reportCurrentSelection.__doc__ = CRList.script_reportCurrentSelection.__doc__
+		return items
 
 
 class CRList64(CRList):
@@ -747,7 +744,7 @@ class CRList64(CRList):
 		else:
 			return headerParent.next
 
-	def preCheck(self, *args):
+	def preCheck(self, onFailureMsg=None):
 		# check to ensure shell32 method will work
 		# (not available in all context, as open dialog)
 		shell = CreateObject("shell.application")
@@ -760,43 +757,40 @@ class CRList64(CRList):
 			except:
 				pass
 		if not self.curWindow:
-			ui.message(NVDALocale("Not supported in this document"))
+			if onFailureMsg:
+				ui.message(onFailureMsg)
 			return False
 		return True
 
-	def script_reportCurrentSelection(self, gesture):
-		if not self.preCheck():
-			ui.message(_("Current selection info not available"))
-			return
+	def getSelectedItems(self):
+		# Translators: Reported when it is impossible to report currently selected items.
+		if not self.preCheck(_("Current selection info not available")):
+			return None
 		items = [i.name for i in self.curWindow.Document.SelectedItems()]
 		if items:
 			# for some reasons, the last selected item appears as first, fix it
 			lastItem = items.pop(0)
 			items.append(lastItem)
-		spokenItems = ', '.join(items)
-		ui.message("%d %s: %s"%(len(items),
-			# translators: message presented when get selected item count and names
-			_("selected items"), spokenItems))
-
-	script_reportCurrentSelection.canPropagate = True
-	script_reportCurrentSelection.__doc__ = CRList.script_reportCurrentSelection.__doc__
+		return items
 
 	def script_find(self, gesture, reverse=False):
-		if self.preCheck():
+		# Translators: Reported when current list does not support searching.
+		if self.preCheck(_("Cannot search here.")):
 			super(CRList64, self).script_find(gesture, reverse)
 
 	script_find.canPropagate = True
 	script_find.__doc__ = CRList.script_find.__doc__
 
 	def script_findNext(self, gesture):
-		if self.preCheck():
+		# Translators: Reported when current list does not support searching.
+		if self.preCheck(_("Cannot search here.")):
 			super(CRList64, self).script_findNext(gesture)
-
 	script_findNext.canPropagate = True
 	script_findNext.__doc__ = CRList.script_findNext.__doc__
 
 	def script_findPrevious(self, gesture):
-		if self.preCheck():
+		# Translators: Reported when current list does not support searching.
+		if self.preCheck(_("Cannot search here.")):
 			super(CRList64, self).script_findPrevious(gesture)
 
 	script_findPrevious.canPropagate = True
@@ -805,7 +799,7 @@ class CRList64(CRList):
 	def findInList(self, text, reverse, caseSensitive, stopCheck=lambda:False):
 		"""performs search in item list, via shell32 object."""
 		# reacquire curWindow for current thread
-		self.preCheck()
+		self.preCheck()  # No message on failure here as we cannot hit this code path if shell is not supported.
 		curFolder = self.curWindow.Document.Folder
 		curItem = self.searchFromItem
 		# names of children objects of current list item,
@@ -888,7 +882,7 @@ class CRList64(CRList):
 		global useMultipleSelection
 		speech.cancelSpeech()
 		# reacquire curWindow for current thread
-		self.preCheck()
+		self.preCheck()  # No message on failure here as we cannot hit this code path if shell is not supported.
 		# according to MS:
 		# https://docs.microsoft.com/en-us/windows/desktop/shell/shellfolderview-selectitem
 		# 17 should set focus and add item to selection,
@@ -933,12 +927,9 @@ class MozillaTable(CRList32):
 	def isMultipleSelectionSupported(self):
 		return True
 
-	def script_reportCurrentSelection(self, gesture):
+	def getSelectedItems(self):
 		# specific implementation, see:
 		# https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XPCOM/Reference/Interface/IAccessibleTable2
-		# try to avoid COM call generates a crash
-		if getLastScriptRepeatCount():
-			sleep(0.5)
 		table = self.IAccessibleTable2Object
 		selRowArray, selRowNum = table.selectedRows
 		items = []
@@ -951,10 +942,13 @@ class MozillaTable(CRList32):
 				itemCells.append(cellText)
 			item = ' '.join(itemCells)
 			items.append(item)
-		spokenItems = ', '.join(items)
-		ui.message("%d %s: %s"%(len(items),
-			# translators: message presented when get selected item count and names
-			_("selected items"), spokenItems))
+		return items
+
+	def script_reportCurrentSelection(self, gesture):
+		# try to avoid COM call generates a crash
+		if getLastScriptRepeatCount():
+			sleep(0.5)
+		super(MozillaTable, self).script_reportCurrentSelection(gesture)
 
 	script_reportCurrentSelection.canPropagate = True
 	script_reportCurrentSelection.__doc__ = CRList.script_reportCurrentSelection.__doc__
@@ -1105,7 +1099,7 @@ class CRTreeview(CRList32):
 			if stopCheck():
 				break
 
-	def script_reportCurrentSelection(self, gesture):
+	def getSelectedItems(self):
 		# generic (slow) implementation
 		curItem = api.getFocusObject()
 		items = []
@@ -1116,13 +1110,7 @@ class CRTreeview(CRList32):
 				if itemName:
 					items.append(itemName)
 			item = item.next
-		spokenItems = ', '.join(items)
-		ui.message("%d %s: %s"%(len(items),
-			# translators: message presented when get selected item count and names
-			_("selected items"), spokenItems))
-
-	script_reportCurrentSelection.canPropagate = True
-	script_reportCurrentSelection.__doc__ = CRList.script_reportCurrentSelection.__doc__
+		return items
 
 
 class Finder(Thread):
@@ -1174,6 +1162,8 @@ class FindDialog(cursorManager.FindDialog):
 		mainSizer = self.GetSizer()
 		if not self.activeCursorManager.isMultipleSelectionSupported():
 			return
+		# Translators: Label of the checkbox in the find dialog which, if checked, selects multiple
+		# items if they match the search query.
 		self.multipleSelectionCheckBox = wx.CheckBox(self, wx.ID_ANY, label=_("Use multiple selection"))
 		global useMultipleSelection
 		self.multipleSelectionCheckBox.SetValue(useMultipleSelection)
