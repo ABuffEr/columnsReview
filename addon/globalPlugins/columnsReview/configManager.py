@@ -15,9 +15,9 @@ class ConfigFromObject(object):
 	def triggersApplyForObj(self):
 		return (
 			list(config.conf.listProfiles())
-			or config.conf.profileTriggersEnabled
-			or not config.conf._suspendedTriggers
-			or self.possibleTriggerName in config.conf.triggersToProfiles.keys()
+			and config.conf.profileTriggersEnabled
+			and not config.conf._suspendedTriggers
+			and self.possibleTriggerName in config.conf.triggersToProfiles.keys()
 		)
 
 	def getApplicableProfiles(self):
@@ -29,8 +29,11 @@ class ConfigFromObject(object):
 			try:
 				res.append(config.conf._profileCache[config.conf.triggersToProfiles[self.possibleTriggerName]])
 			except KeyError:
-				config.conf._getProfile(config.conf.triggersToProfiles[self.possibleTriggerName])
-				res.append(config.conf._profileCache[config.conf.triggersToProfiles[self.possibleTriggerName]])
+				try:
+					config.conf._getProfile(config.conf.triggersToProfiles[self.possibleTriggerName])
+					res.append(config.conf._profileCache[config.conf.triggersToProfiles[self.possibleTriggerName]])
+				except KeyError:
+					pass
 			res.append(config.conf._profileCache[None])  # Default config
 			res.append(config.conf)
 		else:
