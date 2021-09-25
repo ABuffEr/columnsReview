@@ -67,9 +67,8 @@ getBytePerSector = ctypes.windll.kernel32.GetDiskFreeSpaceW
 
 # (re)load config
 def loadConfig():
-	global myConf, switchChar, baseKeys
+	global baseKeys
 	myConf = config.conf["columnsReview"]
-	switchChar = myConf["keyboard"]["switchChar"]
 	configGestures = myConf["gestures"].items() if py3 else myConf["gestures"].iteritems()
 	chosenKeys = [g[0] for g in configGestures if g[1]]
 	baseKeys = '+'.join(chosenKeys)
@@ -195,7 +194,7 @@ class CRList(object):
 		if utils._RowsReader.isSupported():
 			for gesture in getScriptGestures(commands.script_sayAll):
 				self.bindGesture(gesture, "readListItems")
-		global switchChar, baseKeys
+		global baseKeys
 		confFromObj = configManager.ConfigFromObject(self)
 		numpadUsedForColumnNav = confFromObj.numpadUsedForColumnsNavigation
 		# a string useful for defining gestures
@@ -215,7 +214,7 @@ class CRList(object):
 		else:
 			# do same things for no numpad case
 			self.bindGesture("kb:{0}+0".format(baseKeys), "readColumn")
-			self.bindGesture("kb:{0}+{1}".format(baseKeys, switchChar), "changeInterval")
+			self.bindGesture("kb:{0}+{1}".format(baseKeys, confFromObj.nextColumnsGroupKey), "changeInterval")
 			self.bindGesture("kb:{0}+delete".format(baseKeys), "itemInfo")
 			self.bindGesture("kb:{0}+enter".format(baseKeys), "manageHeaders")
 

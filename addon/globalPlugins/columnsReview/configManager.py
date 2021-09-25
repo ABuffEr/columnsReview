@@ -47,11 +47,19 @@ class ConfigFromObject(object):
 				return is_boolean(profile["columnsReview"]["general"]["announceEmptyList"])
 			except KeyError:
 				continue
-	
+
 	@property
 	def numpadUsedForColumnsNavigation(self):
 		for profile in self.getApplicableProfiles():
 			try:
 				return is_boolean(profile["columnsReview"]["keyboard"]["useNumpadKeys"])
+			except KeyError:
+				continue
+
+	@property
+	def nextColumnsGroupKey(self):
+		for profile in self.getApplicableProfiles():
+			try:
+				return profile["columnsReview"]["keyboard"]["switchChar"]
 			except KeyError:
 				continue
