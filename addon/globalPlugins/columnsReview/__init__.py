@@ -23,6 +23,7 @@ from comtypes.gen.IAccessible2Lib import IAccessible2
 from globalCommands import commands
 from oleacc import STATE_SYSTEM_MULTISELECTABLE, SELFLAG_TAKEFOCUS, SELFLAG_TAKESELECTION, SELFLAG_ADDSELECTION
 from scriptHandler import getLastScriptRepeatCount
+import weakref
 from threading import Thread, Event
 from time import sleep
 from tones import beep
@@ -46,6 +47,7 @@ import wx
 from versionInfo import version_year, version_major
 from .actions import ACTIONS, actionFromName, configuredActions
 from .commonFunc import NVDALocale, rangeFunc, findAllDescendantWindows, getScriptGestures
+from . import configManager
 from . import configSpec
 from . import dialogs
 from .exceptions import columnAtIndexNotVisible, noColumnAtIndex
@@ -65,9 +67,8 @@ getBytePerSector = ctypes.windll.kernel32.GetDiskFreeSpaceW
 
 # (re)load config
 def loadConfig():
-	global myConf, announceEmptyList, useNumpadKeys, switchChar, baseKeys
+	global myConf, useNumpadKeys, switchChar, baseKeys
 	myConf = config.conf["columnsReview"]
-	announceEmptyList = myConf["general"]["announceEmptyList"]
 	useNumpadKeys = myConf["keyboard"]["useNumpadKeys"]
 	switchChar = myConf["keyboard"]["switchChar"]
 	configGestures = myConf["gestures"].items() if py3 else myConf["gestures"].iteritems()
@@ -136,6 +137,8 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 
 	def handleConfigProfileSwitch(self):
 		loadConfig()
+		for inst in CRList._instances:
+			inst.bindCRGestures(reinitializeObj=True)
 
 	def event_foreground(self, obj, nextHandler):
 		if nvdaVersion < '2018.3':
@@ -152,6 +155,7 @@ class CRList(object):
 	# in the Input Gestures dialog where scripts of this add-on are placed.
 	scriptCategory = _('{name} (DO NOT EDIT!)').format(name=addonHandler.getCodeAddon().manifest['summary'])
 
+	_instances = weakref.WeakSet()
 	# the variable representing tens
 	# of current interval (except the last column,
 	# for which it's tens+1)
@@ -178,6 +182,9 @@ class CRList(object):
 	def bindCRGestures(self, reinitializeObj=False):
 		if reinitializeObj:
 			self.clearGestureBindings()
+		if self.supportsEmptyListAnnouncements and self.isEmptyList():
+			self.handleEmpty()
+			return
 		# find gestures
 		self.bindGesture("kb:NVDA+control+f", "find")
 		self.bindGesture("kb:NVDA+f3", "findNext")
@@ -212,11 +219,9 @@ class CRList(object):
 			self.bindGesture("kb:{0}+enter".format(baseKeys), "manageHeaders")
 
 	def initOverlayClass(self):
-		"""maps the correct gestures"""
-		if self.supportsEmptyListAnnouncements and self.isEmptyList():
-			self.handleEmpty()
-		else:
-			self.bindCRGestures()
+		"""maps the correct gestures and adds the new objects to the list of existintg instances"""
+		self.__class__._instances.add(self)
+		self.bindCRGestures()
 
 	def getColumnData(self, colNumber):
 		"""Returs information about the column at the index given as  parameter.
@@ -690,7 +695,7 @@ class CRList32(CRList):
 			return False
 
 	def handleEmpty(self):
-		if announceEmptyList and self.isEmptyList():
+		if configManager.ConfigFromObject(self).announceEmptyLists and self.isEmptyList():
 			self.bindGesturesForEmpty()
 			self.isEmpty = True
 
