@@ -67,9 +67,8 @@ getBytePerSector = ctypes.windll.kernel32.GetDiskFreeSpaceW
 
 # (re)load config
 def loadConfig():
-	global myConf, useNumpadKeys, switchChar, baseKeys
+	global myConf, switchChar, baseKeys
 	myConf = config.conf["columnsReview"]
-	useNumpadKeys = myConf["keyboard"]["useNumpadKeys"]
 	switchChar = myConf["keyboard"]["switchChar"]
 	configGestures = myConf["gestures"].items() if py3 else myConf["gestures"].iteritems()
 	chosenKeys = [g[0] for g in configGestures if g[1]]
@@ -196,13 +195,15 @@ class CRList(object):
 		if utils._RowsReader.isSupported():
 			for gesture in getScriptGestures(commands.script_sayAll):
 				self.bindGesture(gesture, "readListItems")
-		global useNumpadKeys, switchChar, baseKeys
+		global switchChar, baseKeys
+		confFromObj = configManager.ConfigFromObject(self)
+		numpadUsedForColumnNav = confFromObj.numpadUsedForColumnsNavigation
 		# a string useful for defining gestures
-		nk = "numpad" if useNumpadKeys else ""
+		nk = "numpad" if numpadUsedForColumnNav else ""
 		# bind gestures from 1 to 9
 		for n in rangeFunc(1, 10):
 			self.bindGesture("kb:{0}+{1}{2}".format(baseKeys, nk, n), "readColumn")
-		if useNumpadKeys:
+		if numpadUsedForColumnNav:
 			# map numpadMinus for 10th column
 			self.bindGesture("kb:{0}+numpadMinus".format(baseKeys), "readColumn")
 			# ...numpadPlus to change interval
@@ -219,7 +220,7 @@ class CRList(object):
 			self.bindGesture("kb:{0}+enter".format(baseKeys), "manageHeaders")
 
 	def initOverlayClass(self):
-		"""maps the correct gestures and adds the new objects to the list of existintg instances"""
+		"""maps the correct gestures and adds the new objects to the list of existing instances"""
 		self.__class__._instances.add(self)
 		self.bindCRGestures()
 
