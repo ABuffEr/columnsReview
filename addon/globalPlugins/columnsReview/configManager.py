@@ -63,3 +63,16 @@ class ConfigFromObject(object):
 				return profile["columnsReview"]["keyboard"]["switchChar"]
 			except KeyError:
 				continue
+
+	@property
+	def enabledModifiers(self):
+		keys = dict()
+		POSSIBLE_MODIFIERS = ("NVDA", "control", "alt", "shift", "windows")
+		for profile in reversed(self.getApplicableProfiles()):
+			for keyName in POSSIBLE_MODIFIERS:
+				try:
+					keys[keyName] = is_boolean(profile["columnsReview"]["gestures"][keyName])
+				except KeyError:
+					continue
+		enabledKeys = dict(filter(lambda elem: elem[1], keys.items()))
+		return "+".join(enabledKeys.keys())

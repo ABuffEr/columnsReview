@@ -44,7 +44,6 @@ import ui
 import watchdog
 import winUser
 import wx
-from versionInfo import version_year, version_major
 from .actions import ACTIONS, actionFromName, configuredActions
 from .commonFunc import NVDALocale, rangeFunc, findAllDescendantWindows, getScriptGestures
 from . import configManager
@@ -53,8 +52,6 @@ from . import dialogs
 from .exceptions import columnAtIndexNotVisible, noColumnAtIndex
 from . import utils
 
-# useful to simulate profile switch handling
-nvdaVersion = '.'.join([str(version_year), str(version_major)])
 # rename for code clarity
 SysLV32List = sysListView32.List
 py3 = sys.version.startswith("3")
@@ -64,16 +61,6 @@ addonHandler.initTranslation()
 
 # useful in ColumnsReview64 to calculate file size
 getBytePerSector = ctypes.windll.kernel32.GetDiskFreeSpaceW
-
-# (re)load config
-def loadConfig():
-	global baseKeys
-	myConf = config.conf["columnsReview"]
-	configGestures = myConf["gestures"].items() if py3 else myConf["gestures"].iteritems()
-	chosenKeys = [g[0] for g in configGestures if g[1]]
-	baseKeys = '+'.join(chosenKeys)
-
-loadConfig()
 
 
 class GlobalPlugin(globalPluginHandler.GlobalPlugin):
@@ -134,14 +121,8 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 				pass
 
 	def handleConfigProfileSwitch(self):
-		loadConfig()
 		for inst in CRList._instances:
 			inst.bindCRGestures(reinitializeObj=True)
-
-	def event_foreground(self, obj, nextHandler):
-		if nvdaVersion < '2018.3':
-			self.handleConfigProfileSwitch()
-		nextHandler()
 
 
 class CRList(object):
@@ -194,29 +175,29 @@ class CRList(object):
 		if utils._RowsReader.isSupported():
 			for gesture in getScriptGestures(commands.script_sayAll):
 				self.bindGesture(gesture, "readListItems")
-		global baseKeys
 		confFromObj = configManager.ConfigFromObject(self)
 		numpadUsedForColumnNav = confFromObj.numpadUsedForColumnsNavigation
+		enabledModifiers = confFromObj.enabledModifiers
 		# a string useful for defining gestures
 		nk = "numpad" if numpadUsedForColumnNav else ""
 		# bind gestures from 1 to 9
 		for n in rangeFunc(1, 10):
-			self.bindGesture("kb:{0}+{1}{2}".format(baseKeys, nk, n), "readColumn")
+			self.bindGesture("kb:{0}+{1}{2}".format(enabledModifiers, nk, n), "readColumn")
 		if numpadUsedForColumnNav:
 			# map numpadMinus for 10th column
-			self.bindGesture("kb:{0}+numpadMinus".format(baseKeys), "readColumn")
+			self.bindGesture("kb:{0}+numpadMinus".format(enabledModifiers), "readColumn")
 			# ...numpadPlus to change interval
-			self.bindGesture("kb:{0}+numpadPlus".format(baseKeys), "changeInterval")
+			self.bindGesture("kb:{0}+numpadPlus".format(enabledModifiers), "changeInterval")
 			# delete for list item info
-			self.bindGesture("kb:{0}+numpadDelete".format(baseKeys), "itemInfo")
+			self.bindGesture("kb:{0}+numpadDelete".format(enabledModifiers), "itemInfo")
 			# ...and enter to headers manager
-			self.bindGesture("kb:{0}+numpadEnter".format(baseKeys), "manageHeaders")
+			self.bindGesture("kb:{0}+numpadEnter".format(enabledModifiers), "manageHeaders")
 		else:
 			# do same things for no numpad case
-			self.bindGesture("kb:{0}+0".format(baseKeys), "readColumn")
-			self.bindGesture("kb:{0}+{1}".format(baseKeys, confFromObj.nextColumnsGroupKey), "changeInterval")
-			self.bindGesture("kb:{0}+delete".format(baseKeys), "itemInfo")
-			self.bindGesture("kb:{0}+enter".format(baseKeys), "manageHeaders")
+			self.bindGesture("kb:{0}+0".format(enabledModifiers), "readColumn")
+			self.bindGesture("kb:{0}+{1}".format(enabledModifiers, confFromObj.nextColumnsGroupKey), "changeInterval")
+			self.bindGesture("kb:{0}+delete".format(enabledModifiers), "itemInfo")
+			self.bindGesture("kb:{0}+enter".format(enabledModifiers), "manageHeaders")
 
 	def initOverlayClass(self):
 		"""maps the correct gestures and adds the new objects to the list of existing instances"""
