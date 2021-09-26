@@ -61,6 +61,7 @@ addonHandler.initTranslation()
 
 # useful in ColumnsReview64 to calculate file size
 getBytePerSector = ctypes.windll.kernel32.GetDiskFreeSpaceW
+PROFILE_SWITCHED_NOTIFIERS = ("configProfileSwitch", "post_configProfileSwitch")
 
 
 class GlobalPlugin(globalPluginHandler.GlobalPlugin):
@@ -70,8 +71,11 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 		if globalVars.appArgs.secure:
 			return
 		self.createMenu()
-		if hasattr(config, "post_configProfileSwitch"):
-			config.post_configProfileSwitch.register(self.handleConfigProfileSwitch)
+		for extPointName in PROFILE_SWITCHED_NOTIFIERS:
+			try:
+				getattr(config, extPointName).register(self.handleConfigProfileSwitch)
+			except AttributeError:
+				continue
 
 	def chooseNVDAObjectOverlayClasses(self, obj, clsList):
 		if obj.role == ct.ROLE_LIST:
@@ -110,6 +114,11 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 			)
 
 	def terminate(self):
+		for extPointName in PROFILE_SWITCHED_NOTIFIERS:
+			try:
+				getattr(config, extPointName).unregister(self.handleConfigProfileSwitch)
+			except AttributeError:
+				continue
 		if hasattr(gui.settingsDialogs, "SettingsPanel"):
 			gui.settingsDialogs.NVDASettingsDialog.categoryClasses.remove(
 				dialogs.ColumnsReviewSettingsDialog
