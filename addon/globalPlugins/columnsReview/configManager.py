@@ -9,7 +9,10 @@ class ConfigFromObject(object):
 
 	def __init__(self, obj):
 		self.obj = obj
-		self.possibleTriggerName = "app:{0}".format(self.obj.appModule.appName)
+		try:
+			self.possibleTriggerName = "app:{0}".format(self.obj.appModule.appName)
+		except AttributeError:
+			self.possibleTriggerName = None
 
 	@property
 	def triggersApplyForObj(self):
@@ -17,6 +20,7 @@ class ConfigFromObject(object):
 			list(config.conf.listProfiles())
 			and config.conf.profileTriggersEnabled
 			and not config.conf._suspendedTriggers
+			and self.possibleTriggerName is not None
 			and self.possibleTriggerName in config.conf.triggersToProfiles.keys()
 		)
 
