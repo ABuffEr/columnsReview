@@ -14,6 +14,7 @@
 # and to other users of NVDA mailing lists
 # for feedback and comments
 
+from logHandler import log
 from NVDAObjects.IAccessible import getNVDAObjectFromEvent
 from NVDAObjects.IAccessible import sysListView32
 from NVDAObjects.UIA import UIA # For UIA implementations only, chiefly 64-bit.
@@ -41,6 +42,7 @@ import locale
 import os
 import speech
 import ui
+import UIAHandler
 import watchdog
 import winUser
 import wx
@@ -105,6 +107,10 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 			# Windows 8/8.1/10 Start Screen tiles should not expose column info.
 			elif UIA in clsList and obj.UIAElement.cachedClassName == "UIItemsView":
 				clsList.insert(0, CRList64)
+			return
+		# for Outlook
+		if obj.role == ct.ROLE_TABLE and UIA in clsList and obj.UIAElement.cachedClassName == "SuperGrid":
+			clsList.insert(0, UIASuperGrid)
 			return
 		if obj.windowClassName == "MozillaWindowClass" and obj.role in (ct.ROLE_TABLE, ct.ROLE_TREEVIEW) and not obj.treeInterceptor:
 			clsList.insert(0, MozillaTable)
@@ -723,10 +729,10 @@ class CRList64(CRList):
 		if colNumber > curItem.childCount-1:
 			raise noColumnAtIndex
 		obj = curItem.getChild(colNumber)
+		# obj.value is the column content
 		# in Windows 7, an empty value is a None object,
 		# in Windows 8, instead, it's a unicode object with length 0
 		if obj and obj.value and len(obj.value):
-			# obj.value is the column content
 			content = obj.value
 		else:
 			content = None
@@ -907,6 +913,91 @@ class CRList64(CRList):
 	@staticmethod
 	def threatedSearchDone():
 		ctypes.windll.Ole32.CoUninitialize()
+
+class UIASuperGrid(CRList32):
+
+	def getColumnData(self, colNumber):
+		curItem = api.getFocusObject()
+		if colNumber > curItem.childCount:
+			raise noColumnAtIndex
+		obj = curItem.getChild(colNumber-1)
+		# obj.name is the column content
+		if obj and obj.name and len(obj.name):
+			content = obj.name
+		else:
+			content = None
+		header = obj.columnHeaderText
+		if not header or len(header) == 0:
+			header = None
+		return {"columnContent": content, "columnHeader": header}
+
+	def script_reportCurrentSelection(self, gesture):
+		items = []
+		try:
+			selArray = self.UIASelectionPattern.GetCurrentSelection()
+			for index in rangeFunc(0,selArray.Length):
+				item = selArray.GetElement(index).CurrentName
+				items.append(item)
+		except:
+			pass
+		spokenItems = ', '.join(items)
+		ui.message("%d %s: %s"%(len(items),
+			# translators: message presented when get selected item count and names
+			_("selected items"), spokenItems))
+
+	script_reportCurrentSelection.canPropagate = True
+	script_reportCurrentSelection.__doc__ = CRList.script_reportCurrentSelection.__doc__
+
+	def isMultipleSelectionSupported(self):
+		try:
+			return bool(self.UIASelectionPattern.CurrentCanSelectMultiple)
+		except:
+			return False
+
+	def findInList(self, text, reverse, caseSensitive, stopCheck=lambda:False):
+		# specific implementation
+		# TODO: restore selection
+		curItem = self.searchFromItem
+		curPos = curItem.positionInfo["indexInGroup"]
+		listLen = curItem.positionInfo["similarItemsInGroup"]
+		cl = UIAHandler.handler.clientObject
+		classCond = cl.CreatePropertyCondition(UIAHandler.UIA_ClassNamePropertyId, "LeafRow")
+		scrollManager = self._getUIAPattern(UIAHandler.UIA_ScrollPatternId, UIAHandler.IUIAutomationScrollPattern)
+		verticalAmount = UIAHandler.ScrollAmount_LargeDecrement if reverse else UIAHandler.ScrollAmount_LargeIncrement
+		while True:
+			msgArr = self.UIAElement.FindAll(UIAHandler.TreeScope_Subtree, classCond)
+			if reverse:
+				indexes = rangeFunc(msgArr.Length-1, -1, -1)
+			else:
+				indexes = rangeFunc(0, msgArr.Length)
+			for index in indexes:
+				item = msgArr.GetElement(index)
+				itemPos = item.GetCurrentPropertyValue(UIAHandler.UIA_PositionInSetPropertyId)
+				if (reverse and itemPos >= curPos) or (not reverse and itemPos <= curPos):
+					continue
+				if (
+					(not caseSensitive and text.lower() in item.CurrentName.lower())
+					or
+					(caseSensitive and text in item.CurrentName)
+				):
+					return item
+			if stopCheck():
+				break
+			if (reverse and itemPos > 1) or (not reverse and itemPos < listLen):
+				scrollManager.Scroll(UIAHandler.ScrollAmount_NoAmount, verticalAmount)
+			else:
+				return
+
+	def successSearchAction(self, res):
+		global useMultipleSelection
+		speech.cancelSpeech()
+		selId = res.GetCurrentPattern(UIAHandler.UIA_SelectionItemPatternId)
+		selManager = selId.QueryInterface(UIAHandler.IUIAutomationSelectionItemPattern)
+		if useMultipleSelection:
+			# TODO: restore selection for all items
+			selManager.AddToSelection()
+		else:
+			selManager.Select()
 
 
 class MozillaTable(CRList32):
