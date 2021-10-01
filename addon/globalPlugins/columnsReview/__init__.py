@@ -130,7 +130,9 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 				pass
 
 	def handleConfigProfileSwitch(self):
-		for inst in CRList._instances:
+		# We cannot iterate through original set of instances
+		# since it may be mutated during iteration when new objects are created as a result of focus events.
+		for inst in CRList._instances.copy():
 			inst.bindCRGestures(reinitializeObj=True)
 
 
