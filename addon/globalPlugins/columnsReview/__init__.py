@@ -914,7 +914,30 @@ class CRList64(CRList):
 	def threatedSearchDone():
 		ctypes.windll.Ole32.CoUninitialize()
 
-class UIASuperGrid(CRList32):
+class UIASuperGrid(CRList):
+
+	# flag to guarantee thread support,
+	# apparently, self-managed by UIAHandler.handler.MTAThreadFunc
+	THREAD_SUPPORTED = True
+	# available features from UIA
+	UIAFeatures = None
+
+	def preCheck(self, featureKeys, onFailureMsg=None):
+		if self.UIAFeatures is None:
+			# check and cache results
+			self.UIAFeatures = {}.fromkeys(("selection","scroll","selectionItem"), False)
+			if hasattr(self, 'UIASelectionPattern') and self.UIASelectionPattern is not None:
+				self.UIAFeatures["selection"] = True
+			# for some reason, NVDA does not expose UIAScrollPattern, so...
+			if hasattr(self, '_getUIAPattern') and self._getUIAPattern(UIAHandler.UIA_ScrollPatternId, UIAHandler.IUIAutomationScrollPattern) is not None:
+				self.UIAFeatures["scroll"] = True
+			focus = api.getFocusObject()
+			if hasattr(focus, 'UIASelectionItemPattern') and focus.UIASelectionItemPattern is not None:
+				self.UIAFeatures["selectionItem"] = True
+		res = all((self.UIAFeatures[x] for x in featureKeys))
+		if not res and onFailureMsg:
+			ui.message(onFailureMsg)
+		return res
 
 	def getColumnData(self, colNumber):
 		curItem = api.getFocusObject()
@@ -931,32 +954,75 @@ class UIASuperGrid(CRList32):
 			header = None
 		return {"columnContent": content, "columnHeader": header}
 
-	def script_reportCurrentSelection(self, gesture):
+	def script_manageHeaders(self, gesture):
+		# no way to manage column headers at the moment;
+		# investigating:
+		# GetCurrentPropertyValue(UIAHandler.UIA_TableColumnHeadersPropertyId).QueryInterface(UIAHandler.IUIAutomationElementArray)
+		ui.message(NVDALocale("Not supported in this document"))
+
+	script_manageHeaders.canPropagate = True
+	script_manageHeaders.__doc__ = CRList.script_manageHeaders.__doc__
+
+	def getSelectedItems(self):
+		# Translators: Reported when it is impossible to report currently selected items.
+		if not self.preCheck(("selection",), _("Current selection info not available")):
+			return None
 		items = []
 		try:
 			selArray = self.UIASelectionPattern.GetCurrentSelection()
 			for index in rangeFunc(0,selArray.Length):
 				item = selArray.GetElement(index).CurrentName
 				items.append(item)
-		except:
+		except AttributeError: # UIASelectionPattern absent or None
 			pass
-		spokenItems = ', '.join(items)
-		ui.message("%d %s: %s"%(len(items),
-			# translators: message presented when get selected item count and names
-			_("selected items"), spokenItems))
+		return items
+
+	def script_reportCurrentSelection(self, gesture):
+		# to remove after merging
+		items = self.getSelectedItems()
+		if items is not None:
+			ui.message(_(
+				# Translators: message presented when get selected item count and names
+				"{selCount} selected items: {selNames}").format(selCount=len(items), selNames=', '.join(items)
+			))
 
 	script_reportCurrentSelection.canPropagate = True
 	script_reportCurrentSelection.__doc__ = CRList.script_reportCurrentSelection.__doc__
 
 	def isMultipleSelectionSupported(self):
-		try:
-			return bool(self.UIASelectionPattern.CurrentCanSelectMultiple)
-		except:
-			return False
+		# currently, scrolling the list brings to previous selection lost,
+		# making this feature quite useless, so no support for now
+		#try:
+		#	return bool(self.UIASelectionPattern.CurrentCanSelectMultiple)
+		#except AttributeError: # UIASelectionPattern absent or None
+		return False
+
+	def script_find(self, gesture, reverse=False):
+		# Translators: Reported when current list does not support searching.
+		if self.preCheck(("scroll", "selectionItem"), _("Cannot search here.")):
+			super(UIASuperGrid, self).script_find(gesture, reverse)
+
+	script_find.canPropagate = True
+	script_find.__doc__ = CRList.script_find.__doc__
+
+	def script_findNext(self, gesture):
+		# Translators: Reported when current list does not support searching.
+		if self.preCheck(("scroll", "selectionItem"), _("Cannot search here.")):
+			super(UIASuperGrid, self).script_findNext(gesture)
+
+	script_findNext.canPropagate = True
+	script_findNext.__doc__ = CRList.script_findNext.__doc__
+
+	def script_findPrevious(self, gesture):
+		# Translators: Reported when current list does not support searching.
+		if self.preCheck(("scroll", "selectionItem"), _("Cannot search here.")):
+			super(UIASuperGrid, self).script_findPrevious(gesture)
+
+	script_findPrevious.canPropagate = True
+	script_findPrevious.__doc__ = CRList.script_findPrevious.__doc__
 
 	def findInList(self, text, reverse, caseSensitive, stopCheck=lambda:False):
 		# specific implementation
-		# TODO: restore selection
 		curItem = self.searchFromItem
 		curPos = curItem.positionInfo["indexInGroup"]
 		listLen = curItem.positionInfo["similarItemsInGroup"]
@@ -989,12 +1055,11 @@ class UIASuperGrid(CRList32):
 				return
 
 	def successSearchAction(self, res):
-		global useMultipleSelection
 		speech.cancelSpeech()
 		selId = res.GetCurrentPattern(UIAHandler.UIA_SelectionItemPatternId)
 		selManager = selId.QueryInterface(UIAHandler.IUIAutomationSelectionItemPattern)
 		if useMultipleSelection:
-			# TODO: restore selection for all items
+			# when it'll be
 			selManager.AddToSelection()
 		else:
 			selManager.Select()
