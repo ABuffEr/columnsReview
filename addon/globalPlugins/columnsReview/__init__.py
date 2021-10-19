@@ -709,6 +709,10 @@ class CRList32(CRList):
 			self.reportEmpty()
 
 	def script_reportEmpty(self, gesture):
+		if not self.isEmptyList():
+			self.isEmpty = False
+			self.bindCRGestures(reinitializeObj=True)
+			return
 		self.reportEmpty()
 
 	def bindGesturesForEmpty(self):
