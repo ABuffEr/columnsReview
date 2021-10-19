@@ -971,18 +971,6 @@ class UIASuperGrid(CRList):
 			pass
 		return items
 
-	def script_reportCurrentSelection(self, gesture):
-		# to remove after merging
-		items = self.getSelectedItems()
-		if items is not None:
-			ui.message(_(
-				# Translators: message presented when get selected item count and names
-				"{selCount} selected items: {selNames}").format(selCount=len(items), selNames=', '.join(items)
-			))
-
-	script_reportCurrentSelection.canPropagate = True
-	script_reportCurrentSelection.__doc__ = CRList.script_reportCurrentSelection.__doc__
-
 	def isMultipleSelectionSupported(self):
 		# currently, scrolling the list brings to previous selection lost,
 		# making this feature quite useless, so no support for now
