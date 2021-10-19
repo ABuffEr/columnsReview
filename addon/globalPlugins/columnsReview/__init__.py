@@ -531,6 +531,53 @@ class CRList(object):
 		"""Executed when searching in a separate thread has been finished"""
 		pass
 
+	def isEmptyList(self):
+		raise NotImplementedError
+
+	def handleEmpty(self):
+		if configManager.ConfigFromObject(self).announceEmptyLists and self.isEmptyList():
+			self.bindGesturesForEmpty()
+			self.isEmpty = True
+
+	def reportEmpty(self):
+		# brailled and spoken the "0 items" message
+		text = NVDALocale("%s items") % 0
+		speech.speakMessage(text)
+		region = braille.TextRegion(" {0}".format(text))
+		region.focusToHardLeft = True
+		region.update()
+		braille.handler.buffer.regions.append(region)
+		braille.handler.buffer.focus(region)
+		braille.handler.buffer.update()
+		braille.handler.update()
+
+	def reportFocus(self):
+		super(CRList, self).reportFocus()
+		if hasattr(self, "isEmpty") and self.isEmpty:
+			self.reportEmpty()
+
+	def script_reportEmpty(self, gesture):
+		if not self.isEmptyList():
+			self.isEmpty = False
+			self.bindCRGestures(reinitializeObj=True)
+			return
+		self.reportEmpty()
+
+	def bindGesturesForEmpty(self):
+		# bind arrows to focus again (and report empty)
+		for item in ["Up", "Down", "Left", "Right"]:
+			self.bindGesture("kb:{0}Arrow".format(item), "reportEmpty")
+		# other useful gesture to remap
+		# script_reportCurrentFocus
+		for gesture in getScriptGestures(commands.script_reportCurrentFocus):
+			self.bindGesture(gesture, "reportEmpty")
+		# script_reportCurrentLine
+		for gesture in getScriptGestures(commands.script_reportCurrentLine):
+			self.bindGesture(gesture, "reportEmpty")
+		# script_reportCurrentSelection
+		for gesture in getScriptGestures(commands.script_reportCurrentSelection):
+			self.bindGesture(gesture, "reportEmpty")
+
 
 class CRList32(CRList):
 # for SysListView32 or WindowsForms10.SysListView32.app.0.*
@@ -685,50 +732,6 @@ class CRList32(CRList):
 			return False
 		except AttributeError:
 			return False
-
-	def handleEmpty(self):
-		if configManager.ConfigFromObject(self).announceEmptyLists and self.isEmptyList():
-			self.bindGesturesForEmpty()
-			self.isEmpty = True
-
-	def reportEmpty(self):
-		# brailled and spoken the "0 items" message
-		text = NVDALocale("%s items") % 0
-		speech.speakMessage(text)
-		region = braille.TextRegion(" {0}".format(text))
-		region.focusToHardLeft = True
-		region.update()
-		braille.handler.buffer.regions.append(region)
-		braille.handler.buffer.focus(region)
-		braille.handler.buffer.update()
-		braille.handler.update()
-
-	def reportFocus(self):
-		super(CRList32, self).reportFocus()
-		if hasattr(self, "isEmpty") and self.isEmpty:
-			self.reportEmpty()
-
-	def script_reportEmpty(self, gesture):
-		if not self.isEmptyList():
-			self.isEmpty = False
-			self.bindCRGestures(reinitializeObj=True)
-			return
-		self.reportEmpty()
-
-	def bindGesturesForEmpty(self):
-		# bind arrows to focus again (and report empty)
-		for item in ["Up", "Down", "Left", "Right"]:
-			self.bindGesture("kb:{0}Arrow".format(item), "reportEmpty")
-		# other useful gesture to remap
-		# script_reportCurrentFocus
-		for gesture in getScriptGestures(commands.script_reportCurrentFocus):
-			self.bindGesture(gesture, "reportEmpty")
-		# script_reportCurrentLine
-		for gesture in getScriptGestures(commands.script_reportCurrentLine):
-			self.bindGesture(gesture, "reportEmpty")
-		# script_reportCurrentSelection
-		for gesture in getScriptGestures(commands.script_reportCurrentSelection):
-			self.bindGesture(gesture, "reportEmpty")
 
 
 class CRList64(CRList):
