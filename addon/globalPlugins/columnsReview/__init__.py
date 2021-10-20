@@ -551,8 +551,8 @@ class CRList(object):
 		braille.handler.buffer.update()
 		braille.handler.update()
 
-	def reportFocus(self):
-		super(CRList, self).reportFocus()
+	def event_gainFocus(self):
+		super(CRList, self).event_gainFocus()
 		if hasattr(self, "isEmpty") and self.isEmpty:
 			self.reportEmpty()
 
