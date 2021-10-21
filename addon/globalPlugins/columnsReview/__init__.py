@@ -24,6 +24,7 @@ from comtypes.gen.IAccessible2Lib import IAccessible2
 from globalCommands import commands
 from oleacc import STATE_SYSTEM_MULTISELECTABLE, SELFLAG_TAKEFOCUS, SELFLAG_TAKESELECTION, SELFLAG_ADDSELECTION
 from scriptHandler import getLastScriptRepeatCount
+import weakref
 from threading import Thread, Event
 from time import sleep
 from tones import beep
@@ -45,15 +46,14 @@ import UIAHandler
 import watchdog
 import winUser
 import wx
-from versionInfo import version_year, version_major
-from .actions import ACTIONS, actionFromName, configuredActions, getActionIndexFromName
+from .actions import ACTIONS, actionFromName, configuredActions
 from .commonFunc import NVDALocale, rangeFunc, findAllDescendantWindows, getScriptGestures
+from . import configManager
 from . import configSpec
+from . import dialogs
 from .exceptions import columnAtIndexNotVisible, noColumnAtIndex
 from . import utils
 
-# useful to simulate profile switch handling
-nvdaVersion = '.'.join([str(version_year), str(version_major)])
 # rename for code clarity
 SysLV32List = sysListView32.List
 py3 = sys.version.startswith("3")
@@ -63,21 +63,7 @@ addonHandler.initTranslation()
 
 # useful in ColumnsReview64 to calculate file size
 getBytePerSector = ctypes.windll.kernel32.GetDiskFreeSpaceW
-
-# (re)load config
-def loadConfig():
-	global myConf, readHeader, copyHeader, announceEmptyList, useNumpadKeys, switchChar, baseKeys
-	myConf = config.conf["columnsReview"]
-	readHeader = myConf["general"]["readHeader"]
-	copyHeader = myConf["general"]["copyHeader"]
-	announceEmptyList = myConf["general"]["announceEmptyList"]
-	useNumpadKeys = myConf["keyboard"]["useNumpadKeys"]
-	switchChar = myConf["keyboard"]["switchChar"]
-	configGestures = myConf["gestures"].items() if py3 else myConf["gestures"].iteritems()
-	chosenKeys = [g[0] for g in configGestures if g[1]]
-	baseKeys = '+'.join(chosenKeys)
-
-loadConfig()
+PROFILE_SWITCHED_NOTIFIERS = ("configProfileSwitch", "post_configProfileSwitch")
 
 
 class GlobalPlugin(globalPluginHandler.GlobalPlugin):
@@ -87,13 +73,13 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 		if globalVars.appArgs.secure:
 			return
 		self.createMenu()
-		if hasattr(config, "post_configProfileSwitch"):
-			config.post_configProfileSwitch.register(self.handleConfigProfileSwitch)
+		for extPointName in PROFILE_SWITCHED_NOTIFIERS:
+			try:
+				getattr(config, extPointName).register(self.handleConfigProfileSwitch)
+			except AttributeError:
+				continue
 
 	def chooseNVDAObjectOverlayClasses(self, obj, clsList):
-		if announceEmptyList and SysLV32List in clsList and obj.childCount <= 1:
-			clsList.insert(0, EmptyList)
-			return
 		if obj.role == ct.ROLE_LIST:
 			if SysLV32List in clsList:
 				clsList.insert(0, CRList32)
@@ -120,16 +106,29 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 	def createMenu(self):
 		# Dialog or the panel.
 		if hasattr(gui.settingsDialogs, "SettingsPanel"):
-			gui.settingsDialogs.NVDASettingsDialog.categoryClasses.append(ColumnsReviewSettingsDialog)
+			gui.settingsDialogs.NVDASettingsDialog.categoryClasses.append(
+				dialogs.ColumnsReviewSettingsDialog
+			)
 		else:
 			self.prefsMenu = gui.mainFrame.sysTrayIcon.menu.GetMenuItems()[0].GetSubMenu()
 			# Translators: menu item in preferences
 			self.ColumnsReviewItem = self.prefsMenu.Append(wx.ID_ANY, _("Columns Review Settings..."), "")
-			gui.mainFrame.sysTrayIcon.Bind(wx.EVT_MENU, lambda e: gui.mainFrame._popupSettingsDialog(ColumnsReviewSettingsDialog), self.ColumnsReviewItem)
+			gui.mainFrame.sysTrayIcon.Bind(
+				wx.EVT_MENU,
+				lambda e: gui.mainFrame._popupSettingsDialog(dialogs.ColumnsReviewSettingsDialog),
+				self.ColumnsReviewItem
+			)
 
 	def terminate(self):
+		for extPointName in PROFILE_SWITCHED_NOTIFIERS:
+			try:
+				getattr(config, extPointName).unregister(self.handleConfigProfileSwitch)
+			except AttributeError:
+				continue
 		if hasattr(gui.settingsDialogs, "SettingsPanel"):
-			gui.settingsDialogs.NVDASettingsDialog.categoryClasses.remove(ColumnsReviewSettingsDialog)
+			gui.settingsDialogs.NVDASettingsDialog.categoryClasses.remove(
+				dialogs.ColumnsReviewSettingsDialog
+			)
 		else:
 			try:
 				self.prefsMenu.RemoveItem(self.ColumnsReviewItem)
@@ -137,63 +136,10 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 				pass
 
 	def handleConfigProfileSwitch(self):
-		loadConfig()
-
-	def event_foreground(self, obj, nextHandler):
-		if nvdaVersion < '2018.3':
-			self.handleConfigProfileSwitch()
-		nextHandler()
-
-
-class EmptyList(object):
-	"""Class to announce empty list."""
-
-	def event_gainFocus(self):
-		if not self.isEmptyList():
-			self.clearGestureBindings()
-			return
-		# brailled and spoken the "0 items" message
-		text = NVDALocale("%s items")%0
-		speech.speakMessage(text)
-		region = braille.TextRegion(" "+text)
-		region.focusToHardLeft = True
-		region.update()
-		braille.handler.buffer.regions.append(region)
-		braille.handler.buffer.focus(region)
-		braille.handler.buffer.update()
-		braille.handler.update()
-		# bind arrows to focus again (and repeat message)
-		for item in ["Up", "Down", "Left", "Right"]:
-			self.bindGesture("kb:%sArrow"%item, "alert")
-		# other useful gesture to remap
-		# script_reportCurrentFocus
-		for gesture in getScriptGestures(commands.script_reportCurrentFocus):
-			self.bindGesture(gesture, "alert")
-		# script_reportCurrentLine
-		for gesture in getScriptGestures(commands.script_reportCurrentLine):
-			self.bindGesture(gesture, "alert")
-		# script_reportCurrentSelection
-		for gesture in getScriptGestures(commands.script_reportCurrentSelection):
-			self.bindGesture(gesture, "alert")
-
-	def script_alert(self, gesture):
-		self.event_gainFocus()
-
-	def isEmptyList(self):
-		try:
-			if (
-				# simple and fast check
-				(not self.rowCount)
-				# usual condition for SysListView32
-				# (the unique child should be the header list, that usually follows items)
-				or (self.firstChild.role != ct.ROLE_LISTITEM and self.firstChild == self.lastChild)
-				# condition for possible strange cases
-				or (self.childCount <= 1)
-			):
-				return True
-			return False
-		except AttributeError:
-			pass
+		# We cannot iterate through original set of instances
+		# since it may be mutated during iteration when new objects are created as a result of focus events.
+		for inst in CRList._instances.copy():
+			inst.bindCRGestures(reinitializeObj=True)
 
 
 class CRList(object):
@@ -205,6 +151,7 @@ class CRList(object):
 	# in the Input Gestures dialog where scripts of this add-on are placed.
 	scriptCategory = _('{name} (DO NOT EDIT!)').format(name=addonHandler.getCodeAddon().manifest['summary'])
 
+	_instances = weakref.WeakSet()
 	# the variable representing tens
 	# of current interval (except the last column,
 	# for which it's tens+1)
@@ -224,30 +171,16 @@ class CRList(object):
 	shouldExecuteNextPresses = True
 	# Keeps track of how many times the given command has been pressed
 	repeatCount = 0
+	# Set to `True` if the particular class should behave differently when the list is empty.
+	# Don't forget to implement `isEmptyList` for the class if this is set to `True`.
+	supportsEmptyListAnnouncements = False
 
-	def initOverlayClass(self):
-		"""maps the correct gestures"""
-		global useNumpadKeys, switchChar, baseKeys
-		# a string useful for defining gestures
-		nk = "numpad" if useNumpadKeys else ""
-		# bind gestures from 1 to 9
-		for n in rangeFunc(1,10):
-			self.bindGesture("kb:%s+%s%d"%(baseKeys, nk, n), "readColumn")
-		if useNumpadKeys:
-			# map numpadMinus for 10th column
-			self.bindGesture("kb:%s+numpadMinus"%baseKeys, "readColumn")
-			# ...numpadPlus to change interval
-			self.bindGesture("kb:%s+numpadPlus"%baseKeys, "changeInterval")
-			# delete for list item info
-			self.bindGesture("kb:%s+numpadDelete"%baseKeys, "itemInfo")
-			# ...and enter to headers manager
-			self.bindGesture("kb:%s+numpadEnter"%baseKeys, "manageHeaders")
-		else:
-			# do same things for no numpad case
-			self.bindGesture("kb:%s+0"%baseKeys, "readColumn")
-			self.bindGesture("kb:%s+%s"%(baseKeys, switchChar), "changeInterval")
-			self.bindGesture("kb:%s+delete"%baseKeys, "itemInfo")
-			self.bindGesture("kb:%s+enter"%baseKeys, "manageHeaders")
+	def bindCRGestures(self, reinitializeObj=False):
+		if reinitializeObj:
+			self.clearGestureBindings()
+		if self.supportsEmptyListAnnouncements and self.isEmptyList():
+			self.handleEmpty()
+			return
 		# find gestures
 		self.bindGesture("kb:NVDA+control+f", "find")
 		self.bindGesture("kb:NVDA+f3", "findNext")
@@ -259,6 +192,34 @@ class CRList(object):
 		if utils._RowsReader.isSupported():
 			for gesture in getScriptGestures(commands.script_sayAll):
 				self.bindGesture(gesture, "readListItems")
+		confFromObj = configManager.ConfigFromObject(self)
+		numpadUsedForColumnNav = confFromObj.numpadUsedForColumnsNavigation
+		enabledModifiers = confFromObj.enabledModifiers
+		# a string useful for defining gestures
+		nk = "numpad" if numpadUsedForColumnNav else ""
+		# bind gestures from 1 to 9
+		for n in rangeFunc(1, 10):
+			self.bindGesture("kb:{0}+{1}{2}".format(enabledModifiers, nk, n), "readColumn")
+		if numpadUsedForColumnNav:
+			# map numpadMinus for 10th column
+			self.bindGesture("kb:{0}+numpadMinus".format(enabledModifiers), "readColumn")
+			# ...numpadPlus to change interval
+			self.bindGesture("kb:{0}+numpadPlus".format(enabledModifiers), "changeInterval")
+			# delete for list item info
+			self.bindGesture("kb:{0}+numpadDelete".format(enabledModifiers), "itemInfo")
+			# ...and enter to headers manager
+			self.bindGesture("kb:{0}+numpadEnter".format(enabledModifiers), "manageHeaders")
+		else:
+			# do same things for no numpad case
+			self.bindGesture("kb:{0}+0".format(enabledModifiers), "readColumn")
+			self.bindGesture("kb:{0}+{1}".format(enabledModifiers, confFromObj.nextColumnsGroupKey), "changeInterval")
+			self.bindGesture("kb:{0}+delete".format(enabledModifiers), "itemInfo")
+			self.bindGesture("kb:{0}+enter".format(enabledModifiers), "manageHeaders")
+
+	def initOverlayClass(self):
+		"""maps the correct gestures and adds the new objects to the list of existing instances"""
+		self.__class__._instances.add(self)
+		self.bindCRGestures()
 
 	def getColumnData(self, colNumber):
 		"""Returs information about the column at the index given as  parameter.
@@ -388,8 +349,11 @@ class CRList(object):
 	)
 
 	def script_manageHeaders(self, gesture):
-		from .dialogs import HeaderDialog
-		wx.CallAfter(HeaderDialog.Run, title=self.appModule.appName, headerList=self.getHeaderParent().children)
+		wx.CallAfter(
+			dialogs.HeaderDialog.Run,
+			title=self.appModule.appName,
+			headerList=self.getHeaderParent().children
+		)
 
 	script_manageHeaders.canPropagate = True
 	script_manageHeaders.__doc__ = _(
@@ -573,12 +537,60 @@ class CRList(object):
 		"""Executed when searching in a separate thread has been finished"""
 		pass
 
+	def isEmptyList(self):
+		raise NotImplementedError
+
+	def handleEmpty(self):
+		if configManager.ConfigFromObject(self).announceEmptyLists and self.isEmptyList():
+			self.bindGesturesForEmpty()
+			self.isEmpty = True
+
+	def reportEmpty(self):
+		# brailled and spoken the "0 items" message
+		text = NVDALocale("%s items") % 0
+		speech.speakMessage(text)
+		region = braille.TextRegion(" {0}".format(text))
+		region.focusToHardLeft = True
+		region.update()
+		braille.handler.buffer.regions.append(region)
+		braille.handler.buffer.focus(region)
+		braille.handler.buffer.update()
+		braille.handler.update()
+
+	def event_gainFocus(self):
+		super(CRList, self).event_gainFocus()
+		if hasattr(self, "isEmpty") and self.isEmpty:
+			self.reportEmpty()
+
+	def script_reportEmpty(self, gesture):
+		if not self.isEmptyList():
+			self.isEmpty = False
+			self.bindCRGestures(reinitializeObj=True)
+			return
+		self.reportEmpty()
+
+	def bindGesturesForEmpty(self):
+		# bind arrows to focus again (and report empty)
+		for item in ["Up", "Down", "Left", "Right"]:
+			self.bindGesture("kb:{0}Arrow".format(item), "reportEmpty")
+		# other useful gesture to remap
+		# script_reportCurrentFocus
+		for gesture in getScriptGestures(commands.script_reportCurrentFocus):
+			self.bindGesture(gesture, "reportEmpty")
+		# script_reportCurrentLine
+		for gesture in getScriptGestures(commands.script_reportCurrentLine):
+			self.bindGesture(gesture, "reportEmpty")
+		# script_reportCurrentSelection
+		for gesture in getScriptGestures(commands.script_reportCurrentSelection):
+			self.bindGesture(gesture, "reportEmpty")
+
 
 class CRList32(CRList):
 # for SysListView32 or WindowsForms10.SysListView32.app.0.*
 
 	# flag to guarantee thread support
 	THREAD_SUPPORTED = True
+	supportsEmptyListAnnouncements = True
 
 	def getColumnData(self, colNumber):
 		curItem = api.getFocusObject()
@@ -709,12 +721,31 @@ class CRList32(CRList):
 			)
 		return items
 
+	def isEmptyList(self):
+		try:
+			if self.childCount > 1:
+				return False
+			if (
+				# simple and fast check
+				(not self.rowCount)
+				# usual condition for SysListView32
+				# (the unique child should be the header list, that usually follows items)
+				or (self.firstChild.role != ct.ROLE_LISTITEM and self.firstChild == self.lastChild)
+				# condition for possible strange cases
+				or (self.childCount <= 1)
+			):
+				return True
+			return False
+		except AttributeError:
+			return False
+
 
 class CRList64(CRList):
 	"""for 64-bit systems (DirectUIHWND window class)
 	see CRList32 class for more comments"""
 
 	THREAD_SUPPORTED = True
+	supportsEmptyListAnnouncements = False
 
 	# window shell variable
 	curWindow = None
@@ -1051,6 +1082,7 @@ class MozillaTable(CRList32):
 	"""Class to manage column headers in Mozilla list"""
 
 	THREAD_SUPPORTED = True
+	supportsEmptyListAnnouncements = False
 
 	def _getColumnHeader(self, index):
 		"""Returns the column header in Mozilla applications"""
@@ -1160,6 +1192,7 @@ class CRTreeview(CRList32):
 
 	# flag to guarantee thread support
 	THREAD_SUPPORTED = False
+	supportsEmptyListAnnouncements = False
 
 	def getColumnData(self, colNumber):
 		curItem = api.getFocusObject()
@@ -1323,126 +1356,3 @@ class FindDialog(cursorManager.FindDialog):
 		else:
 			useMultipleSelection = self.multipleSelectionCheckBox.GetValue()
 		super(FindDialog, self).onOk(evt)
-
-
-# for settings presentation compatibility
-if hasattr(gui.settingsDialogs, "SettingsPanel"):
-	superDialogClass = gui.settingsDialogs.SettingsPanel
-else:
-	superDialogClass = gui.SettingsDialog
-
-
-class ColumnsReviewSettingsDialog(superDialogClass):
-	"""Class to define settings dialog."""
-
-	if hasattr(gui.settingsDialogs, "SettingsPanel"):
-		# Translators: title of settings dialog
-		title = _("Columns Review")
-	else:
-		# Translators: title of settings dialog
-		title = _("Columns Review Settings")
-
-	# common to dialog and panel
-	def makeSettings(self, settingsSizer):
-		from .dialogs import configureActionPanel
-		global useNumpadKeys, switchChar, announceEmptyList
-		self.copyCheckboxEnabled = self.readCheckboxEnabled = self.hideNextPanels = False
-		self.panels = []
-		panelsSizer = wx.StaticBoxSizer(
-			wx.StaticBox(
-				self,
-				# Translators: Help message for group of comboboxes allowing to assign action to a keypress.
-				label=_("When pressing combination to read column:")
-			),
-			wx.VERTICAL
-		)
-		for pressNumber, actionName in configuredActions().items():
-			actionIndex = getActionIndexFromName(actionName)
-			panel = configureActionPanel(self, pressNumber, actionIndex)
-			panelsSizer.Add(panel)
-			self.panels.append(panel)
-			if self.hideNextPanels:
-				panel.Disable()
-			if panel.HIDE_NEXT_PANELS_AFTER is not None and actionIndex == panel.HIDE_NEXT_PANELS_AFTER:
-				self.hideNextPanels = True
-		settingsSizer.Add(panelsSizer)
-		keysSizer = wx.StaticBoxSizer(wx.StaticBox(self,
-			# Translators: Help message for sub-sizer of keys choices
-			label=_("Choose the keys you want to use with numbers:")), wx.VERTICAL)
-		self.keysChks = []
-		configGestures = myConf["gestures"].items() if py3 else myConf["gestures"].iteritems()
-		for keyName,keyEnabled in configGestures:
-			chk = wx.CheckBox(self, label = NVDALocale(keyName))
-			chk.SetValue(keyEnabled)
-			keysSizer.Add(chk)
-			self.keysChks.append((keyName, chk))
-		settingsSizer.Add(keysSizer)
-		# Translators: label for numpad keys checkbox in settings
-		self._useNumpadKeys = wx.CheckBox(self, label = _("Use numpad keys to navigate through the columns"))
-		self._useNumpadKeys.Bind(wx.EVT_CHECKBOX, self.onCheck)
-		self._useNumpadKeys.SetValue(useNumpadKeys)
-		settingsSizer.Add(self._useNumpadKeys)
-		# Translators: label for edit field in settings, visible if previous checkbox is disabled
-		self._switchCharLabel = wx.StaticText(self, label = _("Insert the char after \"0\" in your keyboard layout, or another char as you like:"))
-		settingsSizer.Add(self._switchCharLabel)
-		self._switchChar = wx.TextCtrl(self, name = "switchCharTextCtrl")
-		self._switchChar.SetMaxLength(1)
-		self._switchChar.SetValue(switchChar)
-		settingsSizer.Add(self._switchChar)
-		if self._useNumpadKeys.IsChecked():
-			settingsSizer.Hide(self._switchCharLabel)
-			settingsSizer.Hide(self._switchChar)
-		# Translators: label for announce-empty-list checkbox in settings
-		self._announceEmptyList = wx.CheckBox(self, label = _("Announce empty list (not working in Win8/10 folders)"))
-		self._announceEmptyList.SetValue(announceEmptyList)
-		settingsSizer.Add(self._announceEmptyList)
-
-	# for dialog only
-	def postInit(self):
-		for panel in self.panels:
-			if panel.IsEnabled():
-				panel.chooseActionCombo.SetFocus()
-				break
-
-	# shared between onOk and onSave
-	def saveConfig(self):
-		# Update Configuration
-		copyChkFound = readChkFound = False
-		actionsSection = config.conf["columnsReview"]["actions"]
-		for panel in self.panels:
-			if panel.IsEnabled():
-				selectedActionName = ACTIONS[panel.chooseActionCombo.GetSelection()].name
-				actionsSection["press{}".format(panel.panelNumber)] = selectedActionName
-				if not readChkFound and panel.readHeader.IsEnabled():
-					readChkFound = True
-					config.conf["columnsReview"]["general"]["readHeader"] = panel.readHeader.IsChecked()
-				if not copyChkFound and panel.copyHeader.IsEnabled():
-					copyChkFound = True
-					config.conf["columnsReview"]["general"]["copyHeader"] = panel.copyHeader.IsChecked()
-			else:
-				continue
-		myConf["general"]["announceEmptyList"] = self._announceEmptyList.IsChecked()
-		for item in self.keysChks:
-			myConf["gestures"][item[0]] = item[1].IsChecked()
-		myConf["keyboard"]["useNumpadKeys"] = self._useNumpadKeys.IsChecked()
-		myConf["keyboard"]["switchChar"] = self._switchChar.GetValue()
-		# update global variables
-		loadConfig()
-
-	# for dialog only
-	def onOk(self, evt):
-		self.saveConfig()
-		super(ColumnsReviewSettingsDialog, self).onOk(evt)
-
-	# for panel only
-	def onSave(self):
-		self.saveConfig()
-
-	def onCheck(self, evt):
-		if self._useNumpadKeys.IsChecked():
-			self.settingsSizer.Hide(self._switchCharLabel)
-			self.settingsSizer.Hide(self._switchChar)
-		else:
-			self.settingsSizer.Show(self._switchCharLabel)
-			self.settingsSizer.Show(self._switchChar)
-		self.Fit()

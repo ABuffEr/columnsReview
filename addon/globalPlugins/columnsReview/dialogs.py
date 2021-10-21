@@ -8,7 +8,11 @@ import gui
 from gui.guiHelper import BoxSizerHelper, ButtonHelper
 import ui
 import winUser
-from .actions import ACTIONS, getActionIndexFromName
+
+
+from .actions import ACTIONS, configuredActions, getActionIndexFromName
+from .commonFunc import NVDALocale
+
 addonHandler.initTranslation()
 
 
@@ -92,6 +96,129 @@ class configureActionPanel(wx.Panel):
 			self.copyHeader.Enable()
 		else:
 			self.copyHeader.Disable()
+
+
+class ColumnsReviewSettingsDialog(getattr(gui.settingsDialogs, "SettingsPanel", gui.SettingsDialog)):
+	"""Class to define settings dialog."""
+
+	if hasattr(gui.settingsDialogs, "SettingsPanel"):
+		# Translators: title of settings dialog
+		title = _("Columns Review")
+	else:
+		# Translators: title of settings dialog
+		title = _("Columns Review Settings")
+
+	# common to dialog and panel
+	def makeSettings(self, settingsSizer):
+		self.copyCheckboxEnabled = self.readCheckboxEnabled = self.hideNextPanels = False
+		self.panels = []
+		panelsSizer = wx.StaticBoxSizer(
+			wx.StaticBox(
+				self,
+				# Translators: Help message for group of comboboxes allowing to assign action to a keypress.
+				label=_("When pressing combination to read column:")
+			),
+			wx.VERTICAL
+		)
+		for pressNumber, actionName in configuredActions().items():
+			actionIndex = getActionIndexFromName(actionName)
+			panel = configureActionPanel(self, pressNumber, actionIndex)
+			panelsSizer.Add(panel)
+			self.panels.append(panel)
+			if self.hideNextPanels:
+				panel.Disable()
+			if panel.HIDE_NEXT_PANELS_AFTER is not None and actionIndex == panel.HIDE_NEXT_PANELS_AFTER:
+				self.hideNextPanels = True
+		settingsSizer.Add(panelsSizer)
+		keysSizer = wx.StaticBoxSizer(
+			wx.StaticBox(
+				self,
+				# Translators: Help message for sub-sizer of keys choices
+				label=_("Choose the keys you want to use with numbers:")
+			),
+			wx.VERTICAL
+		)
+		self.keysChks = []
+		gesturesSect = config.conf["columnsReview"]["gestures"]
+		configGestures = gesturesSect.items() if hasattr(gesturesSect, "items") else gesturesSect.iteritems()
+		for keyName, keyEnabled in configGestures:
+			chk = wx.CheckBox(self, label=NVDALocale(keyName))
+			chk.SetValue(keyEnabled)
+			keysSizer.Add(chk)
+			self.keysChks.append((keyName, chk))
+		settingsSizer.Add(keysSizer)
+		# Translators: label for numpad keys checkbox in settings
+		self._useNumpadKeys = wx.CheckBox(self, label=_("Use numpad keys to navigate through the columns"))
+		self._useNumpadKeys.Bind(wx.EVT_CHECKBOX, self.onCheck)
+		self._useNumpadKeys.SetValue(config.conf["columnsReview"]["keyboard"]["useNumpadKeys"])
+		settingsSizer.Add(self._useNumpadKeys)
+		self._switchCharLabel = wx.StaticText(
+			self,
+			# Translators: label for edit field in settings, visible if previous checkbox is disabled
+			label=_("Insert the char after \"0\" in your keyboard layout, or another char as you like:")
+		)
+		settingsSizer.Add(self._switchCharLabel)
+		self._switchChar = wx.TextCtrl(self, name="switchCharTextCtrl")
+		self._switchChar.SetMaxLength(1)
+		self._switchChar.SetValue(config.conf["columnsReview"]["keyboard"]["switchChar"])
+		settingsSizer.Add(self._switchChar)
+		if self._useNumpadKeys.IsChecked():
+			settingsSizer.Hide(self._switchCharLabel)
+			settingsSizer.Hide(self._switchChar)
+		self._announceEmptyList = wx.CheckBox(
+			# Translators: label for announce-empty-list checkbox in settings
+			self, label=_("Announce empty list (not working in Win8/10 folders")
+		)
+		self._announceEmptyList.SetValue(config.conf["columnsReview"]["general"]["announceEmptyList"])
+		settingsSizer.Add(self._announceEmptyList)
+
+	# for dialog only
+	def postInit(self):
+		for panel in self.panels:
+			if panel.IsEnabled():
+				panel.chooseActionCombo.SetFocus()
+				break
+
+	# shared between onOk and onSave
+	def saveConfig(self):
+		# Update Configuration
+		copyChkFound = readChkFound = False
+		actionsSection = config.conf["columnsReview"]["actions"]
+		for panel in self.panels:
+			if panel.IsEnabled():
+				selectedActionName = ACTIONS[panel.chooseActionCombo.GetSelection()].name
+				actionsSection["press{}".format(panel.panelNumber)] = selectedActionName
+				if not readChkFound and panel.readHeader.IsEnabled():
+					readChkFound = True
+					config.conf["columnsReview"]["general"]["readHeader"] = panel.readHeader.IsChecked()
+				if not copyChkFound and panel.copyHeader.IsEnabled():
+					copyChkFound = True
+					config.conf["columnsReview"]["general"]["copyHeader"] = panel.copyHeader.IsChecked()
+			else:
+				continue
+		config.conf["columnsReview"]["general"]["announceEmptyList"] = self._announceEmptyList.IsChecked()
+		for item in self.keysChks:
+			config.conf["columnsReview"]["gestures"][item[0]] = item[1].IsChecked()
+		config.conf["columnsReview"]["keyboard"]["useNumpadKeys"] = self._useNumpadKeys.IsChecked()
+		config.conf["columnsReview"]["keyboard"]["switchChar"] = self._switchChar.GetValue()
+
+	# for dialog only
+	def onOk(self, evt):
+		self.saveConfig()
+		super(ColumnsReviewSettingsDialog, self).onOk(evt)
+
+	# for panel only
+	def onSave(self):
+		self.saveConfig()
+
+	def onCheck(self, evt):
+		if self._useNumpadKeys.IsChecked():
+			self.settingsSizer.Hide(self._switchCharLabel)
+			self.settingsSizer.Hide(self._switchChar)
+		else:
+			self.settingsSizer.Show(self._switchCharLabel)
+			self.settingsSizer.Show(self._switchChar)
+		self.Fit()
 
 
 class HeaderDialog(wx.Dialog):
