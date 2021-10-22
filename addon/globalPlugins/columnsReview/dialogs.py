@@ -3,7 +3,6 @@
 import wx
 import addonHandler
 import config
-import controlTypes as ct
 import gui
 from gui.guiHelper import BoxSizerHelper, ButtonHelper
 import ui
@@ -228,13 +227,12 @@ class HeaderDialog(wx.Dialog):
 		# Translators: Title of the dialog which allows to perform actions on headers of the current list.
 		super(HeaderDialog, self).__init__(None, title=' - '.join([_("Headers manager"), title]))
 		helperSizer = BoxSizerHelper(self, wx.HORIZONTAL)
-		visibleHeaders = [x for x in headerList if ct.STATE_INVISIBLE not in x.states]
 		# Translators: Shown for a header which has no name.
-		choices = [x.name if x.name else _("Unnamed header") for x in visibleHeaders]
+		choices = [x.name if x.name else _("Unnamed header") for x in headerList]
 		# Translators: Label for a list containing names of all headers of the current list.
 		self.list = helperSizer.addLabeledControl(_("Headers:"), wx.ListBox, choices=choices)
 		self.list.SetSelection(0 if len(choices) else -1)
-		self.headerList = visibleHeaders
+		self.headerList = headerList
 		actions = ButtonHelper(wx.VERTICAL)
 		# Translators: Label for a button which clicks the given header with the left mouse button.
 		leftClickAction = actions.addButton(self, label=_("Left click"))
