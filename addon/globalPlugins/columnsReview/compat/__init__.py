@@ -3,7 +3,7 @@
 import controlTypes
 
 
-class  EnhancedGetter(object):
+class EnhancedGetter(object):
 
 	def __init__(self, modWithAttrs, baseAttrName, gettersToTry):
 		super(EnhancedGetter, self).__init__()
