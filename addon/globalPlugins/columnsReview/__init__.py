@@ -32,7 +32,6 @@ import addonHandler
 import api
 import braille
 import config
-import controlTypes as ct
 import core
 import ctypes
 import cursorManager
@@ -48,6 +47,7 @@ import winUser
 import wx
 from .actions import ACTIONS, actionFromName, configuredActions
 from .commonFunc import NVDALocale, rangeFunc, findAllDescendantWindows, getScriptGestures
+from .compat import CTWRAPPER
 from . import configManager
 from . import configSpec
 from . import dialogs
@@ -80,7 +80,7 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 				continue
 
 	def chooseNVDAObjectOverlayClasses(self, obj, clsList):
-		if obj.role == ct.ROLE_LIST:
+		if obj.role == CTWRAPPER.Role.LIST:
 			if SysLV32List in clsList:
 				clsList.insert(0, CRList32)
 			# Windows 8/8.1/10 Start Screen tiles should not expose column info.
@@ -88,15 +88,23 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 				clsList.insert(0, CRList64)
 			return
 		# for Outlook
-		if obj.role == ct.ROLE_TABLE and UIA in clsList and obj.UIAElement.cachedClassName == "SuperGrid":
+		if(
+			obj.role == CTWRAPPER.Role.TABLE
+			and UIA in clsList
+			and obj.UIAElement.cachedClassName == "SuperGrid"
+		):
 			clsList.insert(0, UIASuperGrid)
 			return
-		if obj.windowClassName == "MozillaWindowClass" and obj.role in (ct.ROLE_TABLE, ct.ROLE_TREEVIEW) and not obj.treeInterceptor:
+		if(
+			obj.windowClassName == "MozillaWindowClass"
+			and obj.role in (CTWRAPPER.Role.TABLE, CTWRAPPER.Role.TREEVIEW)
+			and not obj.treeInterceptor
+		):
 			clsList.insert(0, MozillaTable)
 			return
 		# found in RSSOwlnix, but may be in other software
 		if (
-			obj.role == ct.ROLE_TREEVIEW
+			obj.role == CTWRAPPER.Role.TREEVIEW
 			and obj.parent
 			and obj.parent.previous
 			and obj.parent.previous.windowClassName == "SysHeader32"
@@ -331,7 +339,7 @@ class CRList(object):
 			number = curItem.positionInfo["indexInGroup"]
 			total = curItem.positionInfo["similarItemsInGroup"]
 		except (AttributeError, KeyError):
-			tempList = [i for i in self.children if i.role == ct.ROLE_LISTITEM]
+			tempList = [i for i in self.children if i.role == CTWRAPPER.Role.LISTITEM]
 			if tempList:
 				number = tempList.index(curItem)
 				total = len(tempList)
@@ -349,10 +357,11 @@ class CRList(object):
 	)
 
 	def script_manageHeaders(self, gesture):
+		headers = [h for h in self.getHeaderParent().children if CTWRAPPER.State.INVISIBLE not in h.states]
 		wx.CallAfter(
 			dialogs.HeaderDialog.Run,
 			title=self.appModule.appName,
-			headerList=self.getHeaderParent().children
+			headerList=headers
 		)
 
 	script_manageHeaders.canPropagate = True
@@ -374,7 +383,7 @@ class CRList(object):
 		items = []
 		item = self.firstChild
 		while (item and item.role == curItem.role):
-			if ct.STATE_SELECTED in item.states:
+			if CTWRAPPER.State.SELECTED in item.states:
 				itemChild = item.getChild(0)
 				itemName = itemChild.name if itemChild else item.name
 				if itemName:
@@ -633,7 +642,7 @@ class CRList32(CRList):
 			child = child.next
 			if not child:
 				break
-			if ct.STATE_INVISIBLE not in child.states:
+			if CTWRAPPER.State.INVISIBLE not in child.states:
 				counter += 1
 			if counter == num:
 				stop = True
@@ -730,7 +739,7 @@ class CRList32(CRList):
 				(not self.rowCount)
 				# usual condition for SysListView32
 				# (the unique child should be the header list, that usually follows items)
-				or (self.firstChild.role != ct.ROLE_LISTITEM and self.firstChild == self.lastChild)
+				or (self.firstChild.role != CTWRAPPER.Role.LISTITEM and self.firstChild == self.lastChild)
 				# condition for possible strange cases
 				or (self.childCount <= 1)
 			):
@@ -776,7 +785,7 @@ class CRList64(CRList):
 		# otherwise individually visible as first list children
 		curItem = api.getFocusObject()
 		headerParent = curItem.simpleParent.simpleFirstChild
-		if headerParent.parent.role == ct.ROLE_HEADER:
+		if headerParent.parent.role == CTWRAPPER.Role.HEADER:
 			return headerParent.parent
 		else:
 			return headerParent.next
@@ -1088,7 +1097,7 @@ class MozillaTable(CRList32):
 		"""Returns the column header in Mozilla applications"""
 		# get the list with headers, excluding these
 		# which are not header (i.e. for settings, in Thunderbird)
-		headers = [i for i in self.getHeaderParent().children if i.role == ct.ROLE_TABLECOLUMNHEADER]
+		headers = [i for i in self.getHeaderParent().children if i.role == CTWRAPPER.Role.TABLECOLUMNHEADER]
 		# now, headers are not ordered as on screen,
 		# but we deduce the order thanks to top location of each header
 		headers.sort(key=lambda i: i.location)
@@ -1282,7 +1291,7 @@ class CRTreeview(CRList32):
 		items = []
 		item = self.firstChild
 		while (item and item.role == curItem.role):
-			if ct.STATE_SELECTED in item.states:
+			if CTWRAPPER.State.SELECTED in item.states:
 				itemName = ' '.join([item.name, item.description])
 				if itemName:
 					items.append(itemName)
