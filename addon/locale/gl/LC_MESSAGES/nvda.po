@@ -1,0 +1,215 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the columnsReview package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: columnsReview 3.0\n"
+"Report-Msgid-Bugs-To: nvda-translations@groups.io\n"
+"POT-Creation-Date: 2021-09-16 00:36+0000\n"
+"PO-Revision-Date: 2021-10-29 11:51+0200\n"
+"Language: gl\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Last-Translator: Iván Novegil Cancelas <ivan.novegil.cancelas@gmail.com>\n"
+"Language-Team: \n"
+"X-Generator: Poedit 3.0\n"
+
+#. Translators: menu item in preferences
+msgid "Columns Review Settings..."
+msgstr "Opcións de Columns Review..."
+
+msgid "(DO NOT EDIT!)"
+msgstr "(NON EDITAR!)"
+
+#. Translators: message when digit pressed exceed the columns number
+msgid "No more columns available"
+msgstr "Non hai máis columnas"
+
+#. Translators: Announced when the column at the requested index is not visible.
+msgid "No more visible columns available"
+msgstr "Non hai máis columnas visibles"
+
+#. Translators: Presented for an empty column.
+msgid "Empty column"
+msgstr "Columna baleira"
+
+#. Translators: documentation of script to read columns
+msgid ""
+"Returns the header and the content of the list column at the index "
+"corresponding to the number pressed"
+msgstr ""
+"Devolve a cabeceira e o contido da columna da lista no índice "
+"correspondente co número premido"
+
+#. Translators: message when you change interval in a list with more ten columns
+#, python-brace-format
+msgid "From {start} to {end}"
+msgstr "Dende {start} ata {end}"
+
+#. Translators: documentation for script to change interval
+msgid "Cycles between a variable number of intervals of ten columns"
+msgstr "Alterna entre un número variable de intervalos de dez columnas"
+
+msgid "No information available"
+msgstr "Sen información dispoñible"
+
+#. Translators: documentation for script to announce list item info
+msgid "Announces list item position information"
+msgstr "Anuncia a información sobre posición do elemento de lista"
+
+#. Translators: documentation for script to manage headers
+msgid "Provides a dialog for interactions with list column headers"
+msgstr ""
+"Fornece un diálogo para interactuar coas cabeceiras de columnas de lista"
+
+#. translators: message presented when get selected item count and names
+msgid "selected items"
+msgstr "elementos seleccionados"
+
+#. Translators: documentation for script to know current selected items
+msgid "Reports current selected list items"
+msgstr "Anuncia os elementos de lista actualmente seleccionados"
+
+#. Translators: documentation for script to find in list
+msgid "Provides a dialog for searching in item list"
+msgstr "Fornece un diálogo para procurar na lista de elementos"
+
+#. Translators: Message presented when search is in progress.
+msgid "Searching..."
+msgstr "Buscando..."
+
+#. Translators: documentation for script to manage headers
+msgid "Goes to next result of current search"
+msgstr "Vai ó seguinte resultado da procura actual"
+
+#. Translators: documentation for script to manage headers
+msgid "Goes to previous result of current search"
+msgstr "Vai ó resultado anterior da procura actual"
+
+#. Translators: documentation for script to read all list items starting from the focused one.
+msgid "Starts reading all list items beginning at the item with focus"
+msgstr "Comeza a ler todos os elementos de lista dende o elemento co foco"
+
+msgid "Current selection info not available"
+msgstr "Información sobre a selección actual non dispoñible"
+
+msgid "Use multiple selection"
+msgstr "Utilizar selección múltiple"
+
+#. Translators: title of settings dialog
+#. Add-on summary, usually the user visible name of the addon.
+#. Translators: Summary for this add-on
+#. to be shown on installation and add-on information found in Add-ons Manager.
+msgid "Columns Review"
+msgstr "Columns Review"
+
+#. Translators: title of settings dialog
+msgid "Columns Review Settings"
+msgstr "Opcións de Columns Review"
+
+#. Translators: Help message for group of comboboxes allowing to assign action to a keypress.
+msgid "When pressing combination to read column:"
+msgstr "Ó premer a combinación para ler columna:"
+
+#. Translators: Help message for sub-sizer of keys choices
+msgid "Choose the keys you want to use with numbers:"
+msgstr "Escolle as teclas que queres utilizar cos números:"
+
+#. Translators: label for numpad keys checkbox in settings
+msgid "Use numpad keys to navigate through the columns"
+msgstr "Utiliza as teclas do teclado numérico para navegar entre columnas"
+
+#. Translators: label for edit field in settings, visible if previous checkbox is disabled
+msgid ""
+"Insert the char after \"0\" in your keyboard layout, or another char as you "
+"like:"
+msgstr ""
+"Inserta o carácter despois do \"0\" na túa distribución de teclado, ou "
+"outro carácter, como máis che guste:"
+
+#. Translators: label for announce-empty-list checkbox in settings
+msgid "Announce empty list (not working in Win8/10 folders)"
+msgstr "Anunciar lista baleira (non funciona en cartafoles en Win8/10)"
+
+#. Translators: Description of the action which simply ignores the pressed key
+msgid "Do nothing"
+msgstr "Non facer nada"
+
+#. Translators: Name of the action which reads given column.
+msgid "Read column"
+msgstr "Ler columna"
+
+#. Translators: Name of the action which copies given column.
+msgid "Copy column"
+msgstr "Copiar columna"
+
+#. Translators: Name of the action which spells given column.
+msgid "Spell column"
+msgstr "Deletrear columna"
+
+#. Translators: Name of the action which displays content of the given column in the browseable message.
+msgid "Show column content in browse mode"
+msgstr "Amosar contido de columna en modo exploración"
+
+#. Translators: Label of a combobox in which action can be assigned to a first press of the shortcut.
+msgid "On first press:"
+msgstr "Ó premer unha vez:"
+
+#. Translators: Label of a combobox in which action can be assigned to a second press of the shortcut.
+msgid "On second press:"
+msgstr "Ó premer dúas veces:"
+
+#. Translators: Label of a combobox in which action can be assigned to a third press of the shortcut.
+msgid "On third press:"
+msgstr "Ó premer tres veces:"
+
+#. Translators: Label of a combobox in which action can be assigned to a fourth press of the shortcut.
+msgid "On fourth press:"
+msgstr "Ó premer catro veces:"
+
+#. Translators: label for read-header checkbox in settings
+msgid "Read the column header"
+msgstr "Ler a cabeceira de columna"
+
+#. Translators: label for copy-header checkbox in settings
+msgid "Copy the column header"
+msgstr "Copiar a cabeceira de columna"
+
+msgid "Headers manager"
+msgstr "Administrador de cabeceiras"
+
+msgid "Unnamed header"
+msgstr "Cabeceira sen nome"
+
+msgid "Headers:"
+msgstr "Cabeceiras:"
+
+msgid "Left click"
+msgstr "Click esquerdo"
+
+msgid "Right click"
+msgstr "Click dereito"
+
+#, python-format
+msgid "%s header clicked"
+msgstr "Click en cabeceira %s"
+
+#. Translators: the label of a message box dialog.
+msgid ""
+"Previous add-on settings will be lost. Please configure it again, from NVDA "
+"preferences."
+msgstr ""
+"As opcións anteriores do complemento perderanse. Por favor configúraas de "
+"novo, dende as preferencias de NVDA."
+
+#. Translators: the title of a message box dialog.
+msgid "Add-on settings reset"
+msgstr "Restablecer opcións do complemento"
+
+#. Add-on description
+#. Translators: Long description to be shown for this add-on on add-on information from add-ons manager
+msgid "A better experience with lists"
+msgstr "Unha mellor experiencia con listas"
