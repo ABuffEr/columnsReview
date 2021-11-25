@@ -1353,6 +1353,10 @@ class FindDialog(cursorManager.FindDialog):
 		self.multipleSelectionCheckBox = wx.CheckBox(self, wx.ID_ANY, label=_("Use multiple selection"))
 		global useMultipleSelection
 		self.multipleSelectionCheckBox.SetValue(useMultipleSelection)
+		boxSizer = mainSizer.Children[0].Sizer
+		pos = [c.Window for c in boxSizer.Children].index(self.caseSensitiveCheckBox) + 1
+		boxSizer.Insert(pos, self.multipleSelectionCheckBox)
+		boxSizer.InsertSpacer(pos, gui.guiHelper.SPACE_BETWEEN_VERTICAL_DIALOG_ITEMS)
 		self.multipleSelectionCheckBox.MoveAfterInTabOrder(self.caseSensitiveCheckBox)
 		self.Layout()
 		mainSizer.Fit(self)
