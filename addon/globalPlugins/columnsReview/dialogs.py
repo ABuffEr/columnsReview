@@ -72,7 +72,7 @@ class configureActionPanel(wx.Panel):
 		else:
 			self.copyHeader.Disable()
 		self.Parent.copyCheckboxEnabled = any([p.copyHeader.IsEnabled() for p in self.Parent.panels])
-		for panel in self.Parent.panels[self.panelNumber:]:
+		for panel in self.Parent.panels:
 			panel.setControlsVisibility()
 		if evt.GetSelection() == self.HIDE_NEXT_PANELS_AFTER:
 			for panel in self.Parent.panels[self.panelNumber:]:
@@ -85,15 +85,33 @@ class configureActionPanel(wx.Panel):
 		self.Parent.settingsSizer.Fit(self.Parent)
 
 	def setControlsVisibility(self):
-		if self.chooseActionCombo.GetSelection() == self.READ_ACTION_INDEX and not self.Parent.readCheckboxEnabled:
+		shouldEnableReadHeaderChk = (
+			self.chooseActionCombo.GetSelection() == self.READ_ACTION_INDEX
+			and not self.readHeader.IsEnabled()
+			and not self.Parent.readCheckboxEnabled
+		)
+		if shouldEnableReadHeaderChk:
 			self.Parent.readCheckboxEnabled = True
 			self.readHeader.Enable()
-		else:
+		shouldDisableReadHeaderChk = (
+			self.chooseActionCombo.GetSelection() != self.READ_ACTION_INDEX
+			and self.readHeader.IsEnabled()
+		)
+		if shouldDisableReadHeaderChk:
 			self.readHeader.Disable()
-		if self.chooseActionCombo.GetSelection() == self.COPY_ACTION_INDEX and not self.Parent.copyCheckboxEnabled:
+		shouldEnableCopyHeaderChk = (
+			self.chooseActionCombo.GetSelection() == self.COPY_ACTION_INDEX
+			and not self.copyHeader.IsEnabled()
+			and not self.Parent.copyCheckboxEnabled
+		)
+		if shouldEnableCopyHeaderChk:
 			self.Parent.copyCheckboxEnabled = True
 			self.copyHeader.Enable()
-		else:
+		shouldDisableCopyHeaderChk = (
+			self.chooseActionCombo.GetSelection() != self.COPY_ACTION_INDEX
+			and self.copyHeader.IsEnabled()
+		)
+		if shouldDisableCopyHeaderChk:
 			self.copyHeader.Disable()
 
 
