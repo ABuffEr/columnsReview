@@ -42,16 +42,18 @@ See also add-on preferences for numpad mode, keyboard layout (without numpad), a
 
 ## Support
 
-This add-on provide a general support for more common lists (see below), and some specific applications. Main author (Alberto Buffolino) cannot guarantee compatibility/functionality for those applications he not uses, like Outlook and Windows Mail, but he'll be happy to collaborate with their users or accept a pull request for them.
+This add-on provide a general support for more common lists (see below), and some specific applications. Main author (Alberto Buffolino) cannot guarantee compatibility/functionality for those applications he not uses, like Outlook and Windows Mail, but he'll be happy to collaborate with their users or accept a pull request for them (note: Outlook is covered now, but user reports are still welcome).
 
-Lists supported are:
+Following list types are supported:
 
 * SysListView32;
 * DirectUIHWND (present in 64-bit systems);
 * WindowsForms10.SysListView32.* (applications that use .NET);
-* multi-column treeview like as that presents in RSSOwlnix;
-* Mozilla table (tipically, Thunderbird message list, thread-grouping supported).
+* multi-column treeview like as that presents in [RSSOwlnix][rss];
+* Thunderbird messages table (thread-grouping supported);
+* Outlook messages table (but list search is not recommended in thread view).
 
+[rss]: https://github.com/ABuffEr/rssowlnixSupport
 
 [stable]: https://addons.nvda-project.org/files/get.php?file=cr
 
