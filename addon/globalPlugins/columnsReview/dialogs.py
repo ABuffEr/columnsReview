@@ -7,6 +7,7 @@ import gui
 from gui.guiHelper import BoxSizerHelper, ButtonHelper
 import ui
 import winUser
+import mouseHandler
 
 
 from .actions import ACTIONS, configuredActions, getActionIndexFromName
@@ -271,8 +272,13 @@ class HeaderDialog(wx.Dialog):
 		self.Close()
 		(left, top, width, height) = headerObj.location
 		winUser.setCursorPos(left + (width // 2), top + (height // 2))
-		winUser.mouse_event(getattr(winUser, "MOUSEEVENTF_{}DOWN".format(mouseButton)), 0, 0, None, None)
-		winUser.mouse_event(getattr(winUser, "MOUSEEVENTF_{}UP".format(mouseButton)), 0, 0, None, None)
+		# from 2022.1 NVDA considers the possibility of primary mouse button swap, see:
+		# https://github.com/nvaccess/nvda/pull/12922
+		if hasattr(mouseHandler, "getLogicalButtonFlags"):
+			mouseHandler.doPrimaryClick() if mouseButton == "LEFT" else mouseHandler.doSecondaryClick()
+		else:
+			winUser.mouse_event(getattr(winUser, "MOUSEEVENTF_{}DOWN".format(mouseButton)), 0, 0, None, None)
+			winUser.mouse_event(getattr(winUser, "MOUSEEVENTF_{}UP".format(mouseButton)), 0, 0, None, None)
 		# Translators: Announced when the given header has been clicked, 'headerName' is replaced with the name of
 		# the  clicked object.
 		ui.message(_("{headerName} header clicked").format(headerName=headerObj.name))
