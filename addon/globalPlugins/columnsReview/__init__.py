@@ -14,7 +14,6 @@
 # and to other users of NVDA mailing lists
 # for feedback and comments
 
-from logHandler import log
 from NVDAObjects.IAccessible import getNVDAObjectFromEvent
 from NVDAObjects.IAccessible import sysListView32
 from NVDAObjects.UIA import UIA # For UIA implementations only, chiefly 64-bit.
