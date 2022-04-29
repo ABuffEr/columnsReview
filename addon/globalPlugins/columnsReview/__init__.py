@@ -44,6 +44,7 @@ import UIAHandler
 import watchdog
 import winUser
 import wx
+from _ctypes import COMError
 from .actions import ACTIONS, actionFromName, configuredActions
 from .commonFunc import NVDALocale, rangeFunc, findAllDescendantWindows, getScriptGestures
 from .compat import CTWRAPPER
@@ -1113,18 +1114,31 @@ class MozillaTable(CRList32):
 
 	def getSelectedItems(self):
 		# specific implementation, see:
-		# https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XPCOM/Reference/Interface/IAccessibleTable2
-		table = self.IAccessibleTable2Object
-		selRowArray, selRowNum = table.selectedRows
+		# https://developer.mozilla.org.cach3.com/en-US/docs/Mozilla/Tech/XPCOM/Reference/Interface/IAccessibleTable2
 		items = []
+		table = self.IAccessibleTable2Object
+		# workaround: selectedRows is broken in recent Thunderbird
+		# use nColumns, nSelectedRows, selectedCells instead
 		colNum = table.nColumns
-		for i in rangeFunc(0, selRowNum):
-			row = selRowArray[i]
+		selRowNum = table.nSelectedRows
+		selCellArray, selCellNum = table.selectedCells
+		for row in rangeFunc(0, selRowNum):
+			# to scan cells of the row
+			rowRange = row*colNum
 			itemCells = []
 			for col in rangeFunc(0, colNum):
-				cellText = table.cellAt(row, col).QueryInterface(IAccessible2).accName[0]
-				itemCells.append(cellText)
-			item = ' '.join(itemCells)
+				if rowRange+col >= selCellNum:
+					# it should not happen, but if it is,
+					# subscripting cells crashes NVDA, so...
+					continue
+				try:
+					cellText = selCellArray[rowRange+col].QueryInterface(IAccessible2).accName[0]
+					if cellText:
+						itemCells.append(cellText)
+				except COMError: # unexplicable, but happens
+					pass
+			if itemCells:
+				item = ' '.join(itemCells)+";"
 			items.append(item)
 		return items
 
