@@ -6,7 +6,8 @@ import config
 import speech
 import ui
 
-from .commonFunc import rangeFunc, NVDALocale
+from .commonFunc import NVDALocale
+from .compat import rangeFunc
 
 addonHandler.initTranslation()
 

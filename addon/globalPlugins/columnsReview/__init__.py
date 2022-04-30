@@ -46,8 +46,8 @@ import winUser
 import wx
 from _ctypes import COMError
 from .actions import ACTIONS, actionFromName, configuredActions
-from .commonFunc import NVDALocale, rangeFunc, findAllDescendantWindows, getScriptGestures
-from .compat import CTWRAPPER
+from .commonFunc import NVDALocale, findAllDescendantWindows, getScriptGestures
+from .compat import CTWRAPPER, rangeFunc
 from . import configManager
 from . import configSpec
 from . import dialogs
