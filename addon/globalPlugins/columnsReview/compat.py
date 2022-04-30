@@ -43,3 +43,15 @@ class ControlTypesCompatWrapper(object):
 
 
 CTWRAPPER = ControlTypesCompatWrapper()
+
+
+def rangeFunc(*args, **kwargs):
+	try:
+		import six
+		return six.moves.range(*args, **kwargs)
+	except ImportError:
+		try:
+			import __builtin__
+			return __builtin__.xrange(*args, **kwargs)
+		except ImportError:
+			return range(*args, **kwargs)

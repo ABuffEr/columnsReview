@@ -8,15 +8,6 @@ import winUser
 # to be able to take advantage of messages translated in NVDA core.
 NVDALocale = _
 
-def rangeFunc(*args, **kwargs):
-	try:
-		import six
-		return six.moves.range(*args, **kwargs)
-	except ImportError:
-		try:
-			return __builtins__["xrange"](*args, **kwargs)
-		except TypeError:
-			return range(*args, **kwargs)
 
 WNDENUMPROC = ctypes.WINFUNCTYPE(ctypes.wintypes.BOOL, ctypes.wintypes.HWND, ctypes.wintypes.LPARAM)
 def findAllDescendantWindows(parent, visible=None, controlID=None, className=None):
