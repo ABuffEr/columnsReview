@@ -34,6 +34,7 @@ import config
 import core
 import ctypes
 import cursorManager
+import eventHandler
 import globalPluginHandler
 import globalVars
 import gui
@@ -110,6 +111,52 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 			and obj.parent.previous.windowClassName == "SysHeader32"
 		):
 			clsList.insert(0, CRTreeview)
+			return
+		# for opening an empty folder
+		if obj.role == CTWRAPPER.Role.WINDOW and obj.windowClassName == "ToolbarWindow32" and obj.appModule and obj.appModule.appName == "explorer":
+			# to avoid focus moving when tabbing among folder controls
+			focus = api.getFocusObject()
+			if focus.role != CTWRAPPER.Role.LISTITEM or focus.windowClassName not in ("DirectUIHWND", "MultitaskingViewFrame"):
+				return
+			# strange, but works better with pending events check
+			parObj = obj.simpleParent
+			if eventHandler.isPendingEvents(obj=parObj):
+				return
+			# Ribbon enabled, Ribbon disabled...
+			if hasattr(parObj, "UIAElement"):
+				curList = self.getFolderListViaUIA(parObj)
+			else:
+				curList = parObj.simpleLastChild
+			if curList and curList.isEmptyList():
+				# force the event that lacks
+				eventHandler.queueEvent("focusEntered", curList)
+		# uncomment for investigating
+#		if obj.appModule and obj.appModule.appName == "explorer":
+#			fg = api.getForegroundObject()
+#			log.info(f"{fg.name}: {obj.name}, {repr(obj.role)}, {obj.windowClassName}")
+
+	def getFolderListViaUIA(self, startObj):
+		cl = UIAHandler.handler.clientObject
+		classCond = cl.CreatePropertyCondition(UIAHandler.UIA_ClassNamePropertyId, "UIItemsView")
+		try:
+			UIAPointer = startObj.UIAElement.FindFirstBuildCache(UIAHandler.TreeScope_Descendants, classCond, UIAHandler.handler.baseCacheRequest)
+			folderList = UIA(UIAElement=UIAPointer)
+		except:
+			folderList = None
+		return folderList
+
+	def event_gainFocus(self, obj, nextHandler):
+		if obj.appModule and obj.appModule.appName == "explorer":
+			# for focusing a previously opened empty folder
+			# (Ribbon disabled)
+			if obj.name and obj.role == CTWRAPPER.Role.PANE and obj.windowClassName == "CabinetWClass":
+				# unusually, focus is on a pane
+				# containing the folder and other controls
+				curList = obj.simpleLastChild
+				if hasattr(curList, "isEmptyList") and curList.isEmptyList():
+					# force the event that lacks
+					eventHandler.queueEvent("focusEntered", curList)
+		nextHandler()
 
 	def createMenu(self):
 		# Dialog or the panel.
@@ -754,7 +801,7 @@ class CRList64(CRList):
 	see CRList32 class for more comments"""
 
 	THREAD_SUPPORTED = True
-	supportsEmptyListAnnouncements = False
+	supportsEmptyListAnnouncements = True
 
 	# window shell variable
 	curWindow = None
@@ -948,6 +995,21 @@ class CRList64(CRList):
 	def threatedSearchDone():
 		ctypes.windll.Ole32.CoUninitialize()
 
+	def isEmptyList(self):
+		# use UIA to avoid recursion error getting lastChild
+		try:
+			childCount = self.UIAGridPattern.CurrentRowCount
+		except:
+			# assume not empty
+			childCount = 1
+		return not bool(childCount)
+
+	def event_focusEntered(self):
+		# for focusing when moving among folder controls
+		if self.isEmptyList():
+			eventHandler.queueEvent("gainFocus", self)
+
+
 class UIASuperGrid(CRList):
 
 	# flag to guarantee thread support,
@@ -1091,7 +1153,7 @@ class MozillaTable(CRList32):
 	"""Class to manage column headers in Mozilla list"""
 
 	THREAD_SUPPORTED = True
-	supportsEmptyListAnnouncements = False
+	supportsEmptyListAnnouncements = True
 
 	def _getColumnHeader(self, index):
 		"""Returns the column header in Mozilla applications"""
@@ -1202,6 +1264,14 @@ class MozillaTable(CRList32):
 		else:
 		 res.IAccessibleObject.accSelect(SELFLAG_TAKESELECTION, res.IAccessibleChildID)
 		 res.IAccessibleObject.accSelect(SELFLAG_TAKEFOCUS, res.IAccessibleChildID)
+
+	def isEmptyList(self):
+		try:
+			if self.IAccessibleTable2Object.nRows == 0:
+				return True
+		except:
+			pass
+		return False
 
 
 # Global ref on current finder
