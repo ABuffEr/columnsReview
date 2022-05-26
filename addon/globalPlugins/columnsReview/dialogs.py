@@ -185,7 +185,7 @@ class ColumnsReviewSettingsDialog(getattr(gui.settingsDialogs, "SettingsPanel", 
 			settingsSizer.Hide(self._switchChar)
 		self._announceEmptyList = wx.CheckBox(
 			# Translators: label for announce-empty-list checkbox in settings
-			self, label=_("Announce empty list (not working in Win8/10 folders")
+			self, label=_("Announce empty list")
 		)
 		self._announceEmptyList.SetValue(config.conf["columnsReview"]["general"]["announceEmptyList"])
 		settingsSizer.Add(self._announceEmptyList)
