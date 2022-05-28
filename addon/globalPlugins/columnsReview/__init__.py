@@ -14,6 +14,7 @@
 # and to other users of NVDA mailing lists
 # for feedback and comments
 
+from logHandler import log
 from NVDAObjects.IAccessible import getNVDAObjectFromEvent
 from NVDAObjects.IAccessible import sysListView32
 from NVDAObjects.UIA import UIA # For UIA implementations only, chiefly 64-bit.
@@ -47,7 +48,7 @@ import winUser
 import wx
 from _ctypes import COMError
 from .actions import ACTIONS, actionFromName, configuredActions
-from .commonFunc import NVDALocale, findAllDescendantWindows, getScriptGestures
+from .commonFunc import NVDALocale, findAllDescendantWindows, getScriptGestures, getFolderListViaUIA, getFolderListViaHandle
 from .compat import CTWRAPPER, rangeFunc
 from . import configManager
 from . import configSpec
@@ -65,7 +66,12 @@ addonHandler.initTranslation()
 # useful in ColumnsReview64 to calculate file size
 getBytePerSector = ctypes.windll.kernel32.GetDiskFreeSpaceW
 PROFILE_SWITCHED_NOTIFIERS = ("configProfileSwitch", "post_configProfileSwitch")
+# for debug logging
+DEBUG = False
 
+def debugLog(message):
+	if DEBUG:
+		log.info(message)
 
 class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 
@@ -87,6 +93,11 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 			# Windows 8/8.1/10 Start Screen tiles should not expose column info.
 			elif UIA in clsList and obj.UIAElement.cachedClassName == "UIItemsView":
 				clsList.insert(0, CRList64)
+			# closing menu (Ribbon disabled) return a unexpected IAccessible version of folder list
+			elif obj.isFocusable and obj.hasFocus and obj.windowClassName == "DirectUIHWND" and CTWRAPPER.State.READONLY in obj.states:
+				# so, normalize getting the usual UIA version
+				obj = getFolderListViaHandle(obj.simpleParent)
+				eventHandler.queueEvent("focusEntered", obj)
 			return
 		# for Outlook
 		if(
@@ -113,7 +124,7 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 			clsList.insert(0, CRTreeview)
 			return
 		# for opening an empty folder
-		if obj.role == CTWRAPPER.Role.WINDOW and obj.windowClassName == "ToolbarWindow32" and obj.appModule and obj.appModule.appName == "explorer":
+		if obj.appModule and obj.appModule.appName == "explorer" and obj.role == CTWRAPPER.Role.WINDOW and obj.windowClassName == "ToolbarWindow32" and obj.windowText:
 			# to avoid focus moving when tabbing among folder controls
 			focus = api.getFocusObject()
 			if focus.role != CTWRAPPER.Role.LISTITEM or focus.windowClassName not in ("DirectUIHWND", "MultitaskingViewFrame"):
@@ -122,40 +133,28 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 			parObj = obj.simpleParent
 			if eventHandler.isPendingEvents(obj=parObj):
 				return
-			# Ribbon enabled, Ribbon disabled...
+			# Ribbon enabled, Ribbon disabled, UIA may be or not to be...
 			if hasattr(parObj, "UIAElement"):
-				curList = self.getFolderListViaUIA(parObj)
+				curList = getFolderListViaUIA(parObj)
 			else:
-				curList = parObj.simpleLastChild
-			if curList and curList.isEmptyList():
+				curList = getFolderListViaHandle(parObj)
+			if hasattr(curList, "isEmptyList") and curList.isEmptyList():
 				# force the event that lacks
 				eventHandler.queueEvent("focusEntered", curList)
 		# uncomment for investigating
 #		if obj.appModule and obj.appModule.appName == "explorer":
 #			fg = api.getForegroundObject()
-#			log.info(f"{fg.name}: {obj.name}, {repr(obj.role)}, {obj.windowClassName}")
-
-	def getFolderListViaUIA(self, startObj):
-		cl = UIAHandler.handler.clientObject
-		classCond = cl.CreatePropertyCondition(UIAHandler.UIA_ClassNamePropertyId, "UIItemsView")
-		try:
-			UIAPointer = startObj.UIAElement.FindFirstBuildCache(UIAHandler.TreeScope_Descendants, classCond, UIAHandler.handler.baseCacheRequest)
-			folderList = UIA(UIAElement=UIAPointer)
-		except:
-			folderList = None
-		return folderList
+#			debugLog(f"{fg.name}: {obj.name}, {repr(obj.role)}, {obj.windowClassName}")
 
 	def event_gainFocus(self, obj, nextHandler):
-		if obj.appModule and obj.appModule.appName == "explorer":
-			# for focusing a previously opened empty folder
-			# (Ribbon disabled)
-			if obj.name and obj.role == CTWRAPPER.Role.PANE and obj.windowClassName == "CabinetWClass":
-				# unusually, focus is on a pane
-				# containing the folder and other controls
-				curList = obj.simpleLastChild
-				if hasattr(curList, "isEmptyList") and curList.isEmptyList():
-					# force the event that lacks
-					eventHandler.queueEvent("focusEntered", curList)
+		# for focusing a previously opened empty folder
+		if obj.appModule and obj.appModule.appName == "explorer" and obj.name and obj.windowClassName == "CabinetWClass" and obj.role == CTWRAPPER.Role.PANE:
+			# unusually, focus is on a pane
+			# containing the folder and other controls
+			curList = getFolderListViaHandle(obj)
+			if hasattr(curList, "isEmptyList") and curList.isEmptyList():
+				# force the event that lacks
+				eventHandler.queueEvent("focusEntered", curList)
 		nextHandler()
 
 	def createMenu(self):

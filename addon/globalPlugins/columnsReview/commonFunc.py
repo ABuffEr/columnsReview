@@ -1,8 +1,12 @@
 # Utility functions for the Columns Review add-on
 
+from .compat import CTWRAPPER
+from NVDAObjects.IAccessible import getNVDAObjectFromEvent
+from NVDAObjects.UIA import UIA
 import ctypes
 import winUser
-
+import UIAHandler
+import windowUtils
 
 # We need to store original NVDA gettext function,
 # to be able to take advantage of messages translated in NVDA core.
@@ -42,3 +46,29 @@ def getScriptGestures(scriptFunc):
 	except:
 		pass
 	return scriptGestures
+
+def getFolderListViaUIA(startObj):
+	cl = UIAHandler.handler.clientObject
+	classCond = cl.CreatePropertyCondition(UIAHandler.UIA_ClassNamePropertyId, "UIItemsView")
+	try:
+		UIAPointer = startObj.UIAElement.FindFirstBuildCache(UIAHandler.TreeScope_Descendants, classCond, UIAHandler.handler.baseCacheRequest)
+		folderList = UIA(UIAElement=UIAPointer)
+	except:
+		folderList = None
+	return folderList
+
+def getFolderListViaHandle(startObj):
+	folderList = None
+	cl = UIAHandler.handler.clientObject
+	try:
+		containerHandle = windowUtils.findDescendantWindow(startObj.windowHandle, visible=True, controlID=0, className="DirectUIHWND")
+		containerObj = getNVDAObjectFromEvent(containerHandle, winUser.OBJID_CLIENT, 0)
+		candidate = containerObj.simpleLastChild
+		if candidate.role == CTWRAPPER.Role.LIST and hasattr(candidate, "UIAElement") and candidate.UIAElement.CurrentClassName == "UIItemsView":
+			folderList = candidate
+			# try to get UIA version
+			UIAPointer = cl.elementFromHandleBuildCache(folderList.windowHandle, UIAHandler.handler.baseCacheRequest)
+			folderList = UIA(UIAElement=UIAPointer)
+	except:
+		pass
+	return folderList
