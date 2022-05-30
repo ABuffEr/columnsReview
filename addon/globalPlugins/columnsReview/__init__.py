@@ -124,7 +124,8 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 			clsList.insert(0, CRTreeview)
 			return
 		# for opening an empty folder
-		if obj.appModule and obj.appModule.appName == "explorer" and obj.role == CTWRAPPER.Role.WINDOW and obj.windowClassName == "ToolbarWindow32" and obj.windowText:
+		# Note: windowText is to avoid problems with menubar (Ribbon disabled)
+		if hasattr(obj, "appModule") and obj.appModule.appName == "explorer" and obj.role == CTWRAPPER.Role.WINDOW and obj.windowClassName == "ToolbarWindow32" and obj.windowText:
 			# to avoid focus moving when tabbing among folder controls
 			focus = api.getFocusObject()
 			if focus.role != CTWRAPPER.Role.LISTITEM or focus.windowClassName not in ("DirectUIHWND", "MultitaskingViewFrame"):
@@ -138,24 +139,27 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 				curList = getFolderListViaUIA(parObj)
 			else:
 				curList = getFolderListViaHandle(parObj)
-			if hasattr(curList, "isEmptyList") and curList.isEmptyList():
+			# ensure to remain in explorer and on an empty folder list
+			if hasattr(curList, "appModule") and curList.appModule.appName == "explorer" and hasattr(curList, "isEmptyList") and curList.isEmptyList():
 				# force the event that lacks
 				eventHandler.queueEvent("focusEntered", curList)
-		# uncomment for investigating
-#		if obj.appModule and obj.appModule.appName == "explorer":
+		# uncomment and set DEBUG to True for investigating
+#		if hasattr(obj, "appModule") and obj.appModule.appName == "outlook":
 #			fg = api.getForegroundObject()
 #			debugLog(f"{fg.name}: {obj.name}, {repr(obj.role)}, {obj.windowClassName}")
 
 	def event_gainFocus(self, obj, nextHandler):
+		# speed-up: immediately release for unrelated obj
+		nextHandler()
 		# for focusing a previously opened empty folder
-		if obj.appModule and obj.appModule.appName == "explorer" and obj.name and obj.windowClassName == "CabinetWClass" and obj.role == CTWRAPPER.Role.PANE:
+		if hasattr(obj, "appModule") and obj.appModule.appName == "explorer" and obj.name and obj.windowClassName == "CabinetWClass" and obj.role == CTWRAPPER.Role.PANE:
 			# unusually, focus is on a pane
 			# containing the folder and other controls
 			curList = getFolderListViaHandle(obj)
-			if hasattr(curList, "isEmptyList") and curList.isEmptyList():
+			# ensure to remain in explorer and on an empty folder list
+			if hasattr(curList, "appModule") and curList.appModule.appName == "explorer" and hasattr(curList, "isEmptyList") and curList.isEmptyList():
 				# force the event that lacks
 				eventHandler.queueEvent("focusEntered", curList)
-		nextHandler()
 
 	def createMenu(self):
 		# Dialog or the panel.
@@ -1014,13 +1018,14 @@ class UIASuperGrid(CRList):
 	# flag to guarantee thread support,
 	# apparently, self-managed by UIAHandler.handler.MTAThreadFunc
 	THREAD_SUPPORTED = True
+	supportsEmptyListAnnouncements = True
 	# available features from UIA
 	UIAFeatures = None
 
 	def preCheck(self, featureKeys, onFailureMsg=None):
 		if self.UIAFeatures is None:
 			# check and cache results
-			self.UIAFeatures = {}.fromkeys(("selection","scroll","selectionItem"), False)
+			self.UIAFeatures = {}.fromkeys(("selection","scroll","selectionItem", "count"), False)
 			if hasattr(self, 'UIASelectionPattern') and self.UIASelectionPattern is not None:
 				self.UIAFeatures["selection"] = True
 			# for some reason, NVDA does not expose UIAScrollPattern, so...
@@ -1029,6 +1034,8 @@ class UIASuperGrid(CRList):
 			focus = api.getFocusObject()
 			if hasattr(focus, 'UIASelectionItemPattern') and focus.UIASelectionItemPattern is not None:
 				self.UIAFeatures["selectionItem"] = True
+			if hasattr(self, 'UIAGridPattern') and self.UIAGridPattern is not None:
+				self.UIAFeatures["count"] = True
 		res = all((self.UIAFeatures[x] for x in featureKeys))
 		if not res and onFailureMsg:
 			ui.message(onFailureMsg)
@@ -1146,6 +1153,18 @@ class UIASuperGrid(CRList):
 			selManager.AddToSelection()
 		else:
 			selManager.Select()
+
+	def isEmptyList(self):
+		if self.preCheck(("count",)):
+			try:
+				count = self.UIAGridPattern.CurrentRowCount
+				return not bool(count)
+			except:
+				pass
+		if self.childCount == 1 and self.firstChild.role == CTWRAPPER.Role.PANE:
+			return True
+		else:
+			return False
 
 
 class MozillaTable(CRList32):
