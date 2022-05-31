@@ -14,7 +14,7 @@ Its features include:
 * simplified header management (mouse clicks);
 * on-demand reading of relative current item position (i.e.: item 7 of 10);
 * customizable gestures with or without numpad;
-* "0 items" announcement when list is empty (not working in Win8/10 folders, unfortunately);
+* "0 items" announcement when list is empty;
 * say all support;
 * report of selected items (amount and item names);
 * list search (with item multiselection, if checked/supported).
