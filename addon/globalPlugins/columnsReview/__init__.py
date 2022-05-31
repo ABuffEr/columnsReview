@@ -96,8 +96,9 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 			# closing menu (Ribbon disabled) return a unexpected IAccessible version of folder list
 			elif obj.isFocusable and obj.hasFocus and obj.windowClassName == "DirectUIHWND" and CTWRAPPER.State.READONLY in obj.states:
 				# so, normalize getting the usual UIA version
-				obj = getFolderListViaHandle(obj.simpleParent)
-				eventHandler.queueEvent("focusEntered", obj)
+				newObj = getFolderListViaHandle(obj.simpleParent)
+				if hasattr(newObj, "appModule") and newObj.appModule.appName == obj.appModule.appName:
+					eventHandler.queueEvent("focusEntered", newObj)
 			return
 		# for Outlook
 		if(
@@ -144,7 +145,7 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 				# force the event that lacks
 				eventHandler.queueEvent("focusEntered", curList)
 		# uncomment and set DEBUG to True for investigating
-#		if hasattr(obj, "appModule") and obj.appModule.appName == "outlook":
+#		if hasattr(obj, "appModule") and obj.appModule.appName == "explorer":
 #			fg = api.getForegroundObject()
 #			debugLog(f"{fg.name}: {obj.name}, {repr(obj.role)}, {obj.windowClassName}")
 
@@ -1008,9 +1009,10 @@ class CRList64(CRList):
 		return not bool(childCount)
 
 	def event_focusEntered(self):
-		# for focusing when moving among folder controls
 		if self.isEmptyList():
 			eventHandler.queueEvent("gainFocus", self)
+		else:
+			super(CRList64, self).event_focusEntered()
 
 
 class UIASuperGrid(CRList):
@@ -1157,11 +1159,12 @@ class UIASuperGrid(CRList):
 	def isEmptyList(self):
 		if self.preCheck(("count",)):
 			try:
-				count = self.UIAGridPattern.CurrentRowCount
-				return not bool(count)
+				childCount = self.UIAGridPattern.CurrentRowCount
+				return not bool(childCount)
 			except:
 				pass
 		if self.childCount == 1 and self.firstChild.role == CTWRAPPER.Role.PANE:
+			# it's an empty list with header objs, so...
 			return True
 		else:
 			return False
@@ -1302,7 +1305,7 @@ class CRTreeview(CRList32):
 
 	# flag to guarantee thread support
 	THREAD_SUPPORTED = False
-	supportsEmptyListAnnouncements = False
+	supportsEmptyListAnnouncements = True
 
 	def getColumnData(self, colNumber):
 		curItem = api.getFocusObject()
@@ -1398,6 +1401,14 @@ class CRTreeview(CRList32):
 					items.append(itemName)
 			item = item.next
 		return items
+
+	def isEmptyList(self):
+		try:
+			childCount = self.childCount
+		except:
+			# assume not empty
+			childCount = 1
+		return not bool(childCount)
 
 
 class Finder(Thread):
