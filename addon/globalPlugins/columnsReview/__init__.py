@@ -93,12 +93,6 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 			# Windows 8/8.1/10 Start Screen tiles should not expose column info.
 			elif UIA in clsList and obj.UIAElement.cachedClassName == "UIItemsView":
 				clsList.insert(0, CRList64)
-			# closing menu (Ribbon disabled) return a unexpected IAccessible version of folder list
-			elif obj.isFocusable and obj.hasFocus and obj.windowClassName == "DirectUIHWND" and CTWRAPPER.State.READONLY in obj.states:
-				# so, normalize getting the usual UIA version
-				newObj = getFolderListViaHandle(obj.simpleParent)
-				if hasattr(newObj, "appModule") and newObj.appModule.appName == obj.appModule.appName:
-					eventHandler.queueEvent("focusEntered", newObj)
 			return
 		# for Outlook
 		if(
@@ -150,17 +144,24 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 #			debugLog(f"{fg.name}: {obj.name}, {repr(obj.role)}, {obj.windowClassName}")
 
 	def event_gainFocus(self, obj, nextHandler):
-		# speed-up: immediately release for unrelated obj
+		if hasattr(obj, "appModule") and obj.appModule.appName == "explorer":
+			# for focusing a previously opened empty folder
+			if obj.name and obj.windowClassName == "CabinetWClass" and obj.role == CTWRAPPER.Role.PANE:
+				# unusually, focus is on a pane
+				# containing the folder and other controls
+				curList = getFolderListViaHandle(obj)
+				# ensure to remain in explorer and on an empty folder list
+				if hasattr(curList, "appModule") and curList.appModule.appName == "explorer" and hasattr(curList, "isEmptyList") and curList.isEmptyList():
+					# force the event that lacks
+					eventHandler.queueEvent("focusEntered", curList)
+			# closing menu (Ribbon disabled) return a unexpected IAccessible version of folder list
+			elif obj.role == CTWRAPPER.Role.LIST and obj.hasFocus and obj.windowClassName == "DirectUIHWND" and not isinstance(obj, UIA): #and obj.isFocusable and CTWRAPPER.State.READONLY in obj.states:
+				# so, normalize getting the usual UIA version
+				newObj = getFolderListViaHandle(obj.simpleParent)
+				# ensure to remain in same application (explorer)
+				if hasattr(newObj, "appModule") and newObj.appModule.appName == obj.appModule.appName:
+					eventHandler.queueEvent("focusEntered", newObj)
 		nextHandler()
-		# for focusing a previously opened empty folder
-		if hasattr(obj, "appModule") and obj.appModule.appName == "explorer" and obj.name and obj.windowClassName == "CabinetWClass" and obj.role == CTWRAPPER.Role.PANE:
-			# unusually, focus is on a pane
-			# containing the folder and other controls
-			curList = getFolderListViaHandle(obj)
-			# ensure to remain in explorer and on an empty folder list
-			if hasattr(curList, "appModule") and curList.appModule.appName == "explorer" and hasattr(curList, "isEmptyList") and curList.isEmptyList():
-				# force the event that lacks
-				eventHandler.queueEvent("focusEntered", curList)
 
 	def createMenu(self):
 		# Dialog or the panel.
@@ -1027,17 +1028,18 @@ class UIASuperGrid(CRList):
 	def preCheck(self, featureKeys, onFailureMsg=None):
 		if self.UIAFeatures is None:
 			# check and cache results
-			self.UIAFeatures = {}.fromkeys(("selection","scroll","selectionItem", "count"), False)
+			self.UIAFeatures = {}.fromkeys(("selection","scroll","selectionItem", "grid"), False)
 			if hasattr(self, 'UIASelectionPattern') and self.UIASelectionPattern is not None:
 				self.UIAFeatures["selection"] = True
 			# for some reason, NVDA does not expose UIAScrollPattern, so...
 			if hasattr(self, '_getUIAPattern') and self._getUIAPattern(UIAHandler.UIA_ScrollPatternId, UIAHandler.IUIAutomationScrollPattern) is not None:
 				self.UIAFeatures["scroll"] = True
-			focus = api.getFocusObject()
-			if hasattr(focus, 'UIASelectionItemPattern') and focus.UIASelectionItemPattern is not None:
-				self.UIAFeatures["selectionItem"] = True
 			if hasattr(self, 'UIAGridPattern') and self.UIAGridPattern is not None:
-				self.UIAFeatures["count"] = True
+				self.UIAFeatures["grid"] = True
+		# check everytime
+		focus = api.getFocusObject()
+		if hasattr(focus, 'UIASelectionItemPattern') and focus.UIASelectionItemPattern is not None:
+			self.UIAFeatures["selectionItem"] = True
 		res = all((self.UIAFeatures[x] for x in featureKeys))
 		if not res and onFailureMsg:
 			ui.message(onFailureMsg)
@@ -1157,7 +1159,7 @@ class UIASuperGrid(CRList):
 			selManager.Select()
 
 	def isEmptyList(self):
-		if self.preCheck(("count",)):
+		if self.preCheck(("grid",)):
 			try:
 				childCount = self.UIAGridPattern.CurrentRowCount
 				return not bool(childCount)
