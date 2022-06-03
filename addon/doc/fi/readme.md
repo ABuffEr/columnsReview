@@ -17,21 +17,21 @@ Sen ominaisuuksia ovat mm.:
 * Yksinkertaistettu otsakkeiden hallinta (hiiren napsautukset);
 * Nykyisen kohteenn suhteellisen sijainnin lukeminen tarvittaessa
   (esim. kohde 7 / 10);
-* Mukautettavat syötekomennot laskinnäppäimistöllä tai ilman;
+* Mukautettavat näppäinkomennot laskinnäppäimistöllä tai ilman;
 * "0 kohdetta" -ilmoitus luettelon ollessa tyhjä (ei valitettavasti toimi
   Win8:n/10:n kansioissa);
 * Tuki jatkuvalle luvulle;
 * Valittujen kohteiden ilmoittaminen (määrä ja nimet);
 * Luettelohaku (kohteiden monivalinnalla, mikäli valittuna/sitä tuetaan).
 
-## Syötekomennot
+## Näppäinkomennot
 
 Sarakkeisiin, otsikoihin ja sijaintiin liitetyt oletusnäppäimet ovat NVDA ja
 Ctrl, mutta niitä on myös mahdollista mukauttaa lisäosan asetuksista (ei
-"Syötekomennot"-valintaikkunasta!).
+"Näppäinkomennot"-valintaikkunasta!).
 
 Huomaa, että näppäimistöllä voi olla ongelmia joidenkin näppäinyhdistelmien
-käsittelyssä, joten kokeile kaikkia lisäsyötekomentoja ja muuta niitä
+käsittelyssä, joten kokeile kaikkia lisänäppäinkomentoja ja muuta niitä
 parempien tulosten saamiseksi.
 
 Katso myös lisäosan asetuksista laskinnäppäimistötila, näppäinasettelu
@@ -56,9 +56,9 @@ Katso myös lisäosan asetuksista laskinnäppäimistötila, näppäinasettelu
 * Nuolinäppäimet ja NVDA+Sarkain (tyhjässä listassa): toistaa "0 kohdetta"
   -ilmoitusta.
 * NVDA+Alanuoli (pöytäkoneen näppäinasettelu) tai NVDA+A (kannettavan
-  näppäinasettelu): aloita jatkuva luku (tämä syötekomento riippuu
+  näppäinasettelu): aloita jatkuva luku (tämä näppäinkomento on riippuvainen
   alkuperäisestä komennosta kohdassa
-  "Syötekomennot"/"Järjestelmäkohdistin");
+  "Näppäinkomennot"/"Järjestelmäkohdistin");
 * NVDA+Vaihto+Ylänuoli (pöytäkoneen näppäinasettelu) tai NVDA+Vaihto+S
   (kannettavan näppäinasettelu): lue valittujen luettelokohteiden määrä ja
   nimet (kuten aiemmassa mukautuskomennossa);
