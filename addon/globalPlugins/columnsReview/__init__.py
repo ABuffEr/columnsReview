@@ -14,6 +14,8 @@
 # and to other users of NVDA mailing lists
 # for feedback and comments
 
+from displayModel import DisplayModelTextInfo
+import textInfos
 from logHandler import log
 from NVDAObjects.IAccessible import getNVDAObjectFromEvent
 from NVDAObjects.IAccessible import sysListView32
@@ -245,12 +247,18 @@ class CRList(object):
 		self.bindGesture("kb:NVDA+control+f", "find")
 		self.bindGesture("kb:NVDA+f3", "findNext")
 		self.bindGesture("kb:NVDA+shift+f3", "findPrevious")
+		# for color reporting
+		scriptGestures = getScriptGestures(commands.script_reportOrShowFormattingAtCaret)
+		for gesture in scriptGestures:
+			self.bindGesture(gesture, "reportOrShowFormattingAtCaret")
 		# for current selection
-		for gesture in getScriptGestures(commands.script_reportCurrentSelection):
+		scriptGestures = getScriptGestures(commands.script_reportCurrentSelection)
+		for gesture in scriptGestures:
 			self.bindGesture(gesture, "reportCurrentSelection")
 		# for say all - bind only if it is actually supported
 		if utils._RowsReader.isSupported():
-			for gesture in getScriptGestures(commands.script_sayAll):
+			scriptGestures = getScriptGestures(commands.script_sayAll)
+			for gesture in scriptGestures:
 				self.bindGesture(gesture, "readListItems")
 		confFromObj = configManager.ConfigFromObject(self)
 		numpadUsedForColumnNav = confFromObj.numpadUsedForColumnsNavigation
@@ -636,15 +644,42 @@ class CRList(object):
 			self.bindGesture("kb:{0}Arrow".format(item), "reportEmpty")
 		# other useful gesture to remap
 		# script_reportCurrentFocus
-		for gesture in getScriptGestures(commands.script_reportCurrentFocus):
+		scriptGestures = getScriptGestures(commands.script_reportCurrentFocus)
+		for gesture in scriptGestures:
 			self.bindGesture(gesture, "reportEmpty")
 		# script_reportCurrentLine
-		for gesture in getScriptGestures(commands.script_reportCurrentLine):
+		scriptGestures = getScriptGestures(commands.script_reportCurrentLine)
+		for gesture in scriptGestures:
 			self.bindGesture(gesture, "reportEmpty")
 		# script_reportCurrentSelection
-		for gesture in getScriptGestures(commands.script_reportCurrentSelection):
+		scriptGestures = getScriptGestures(commands.script_reportCurrentSelection)
+		for gesture in scriptGestures:
 			self.bindGesture(gesture, "reportEmpty")
 
+	def script_reportOrShowFormattingAtCaret(self, gesture):
+		item = api.getFocusObject()
+		dmti = DisplayModelTextInfo(item, textInfos.POSITION_ALL)
+		# try to consider all object text chunks
+		dmti.expand(textInfos.UNIT_LINE)
+		fields = dmti.getTextWithFields()
+		# collect all foreground and background colors
+		fgColors = set()
+		bgColors = set()
+		for field in fields:
+			if isinstance(field, textInfos.FieldCommand) and isinstance(field.field, textInfos.FormatField):
+				fgColor = field.field.get("color")
+				if fgColor: fgColors.add(fgColor.name)
+				bgColor = field.field.get("background-color")
+				if bgColor: bgColors.add(bgColor.name)
+		if fgColors and bgColors:
+			foregroundColors = ', '.join(fgColors)
+			backgroundColors = ', '.join(bgColors)
+			# Translators: message listing foreground over background colors
+			message = _("{foregroundColors} over {backgroundColors}").format(foregroundColors=foregroundColors, backgroundColors=backgroundColors)
+		else:
+			message = NVDALocale("No formatting information")
+		ui.message(message)
+	script_reportOrShowFormattingAtCaret.canPropagate = True
 
 class CRList32(CRList):
 # for SysListView32 or WindowsForms10.SysListView32.app.0.*

@@ -45,6 +45,8 @@ def getScriptGestures(scriptFunc):
 		scriptGestures = script.gestures
 	except:
 		pass
+	# try to avoid garbageHandler warnings
+	del allGestures
 	return scriptGestures
 
 def getFolderListViaUIA(startObj):
