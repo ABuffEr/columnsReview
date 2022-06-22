@@ -248,7 +248,9 @@ class CRList(object):
 		self.bindGesture("kb:NVDA+f3", "findNext")
 		self.bindGesture("kb:NVDA+shift+f3", "findPrevious")
 		# for color reporting
-		scriptGestures = getScriptGestures(commands.script_reportOrShowFormattingAtCaret)
+		scriptGestures = getScriptGestures(
+			getattr(commands, "script_reportOrShowFormattingAtCaret", commands.script_reportFormatting)
+		)
 		for gesture in scriptGestures:
 			self.bindGesture(gesture, "reportOrShowFormattingAtCaret")
 		# for current selection
@@ -680,6 +682,11 @@ class CRList(object):
 			message = NVDALocale("No formatting information")
 		ui.message(message)
 	script_reportOrShowFormattingAtCaret.canPropagate = True
+	script_reportOrShowFormattingAtCaret.__doc__ = _(
+		# Translators: Description of the keyboard command,
+		# which reports foreground and background color of the current list item.
+		"reports foreground and background colors of the current list item."
+	)
 
 class CRList32(CRList):
 # for SysListView32 or WindowsForms10.SysListView32.app.0.*
