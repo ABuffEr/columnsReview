@@ -685,7 +685,7 @@ class CRList(object):
 	script_reportOrShowFormattingAtCaret.__doc__ = _(
 		# Translators: Description of the keyboard command,
 		# which reports foreground and background color of the current list item.
-		"reports foreground and background color of the current list item."
+		"reports foreground and background colors of the current list item."
 	)
 
 class CRList32(CRList):
