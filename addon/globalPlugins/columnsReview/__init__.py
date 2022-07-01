@@ -146,7 +146,18 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 #			debugLog(f"{fg.name}: {obj.name}, {repr(obj.role)}, {obj.windowClassName}")
 
 	def event_gainFocus(self, obj, nextHandler):
-		if hasattr(obj, "appModule") and obj.appModule.appName == "explorer":
+		# speedup: nothing for web
+		if obj.treeInterceptor:
+			nextHandler()
+			return
+		if (
+			(obj.role == CTWRAPPER.Role.LISTITEM
+				or (obj.role == CTWRAPPER.Role.TABLEROW and obj.windowClassName == "MozillaWindowClass")
+			# delay config check, that seems slower
+			) and configManager.ConfigFromObject(obj).announceListBounds
+		):
+			self.reportListBounds(obj)
+		elif hasattr(obj, "appModule") and obj.appModule.appName == "explorer":
 			# for focusing a previously opened empty folder
 			if obj.name and obj.windowClassName == "CabinetWClass" and obj.role == CTWRAPPER.Role.PANE:
 				# unusually, focus is on a pane
@@ -164,6 +175,25 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 				if hasattr(newObj, "appModule") and newObj.appModule.appName == obj.appModule.appName:
 					eventHandler.queueEvent("focusEntered", newObj)
 		nextHandler()
+
+	def reportListBounds(self, obj):
+			message = None
+			try:
+				index = obj.positionInfo["indexInGroup"]
+				similar = obj.positionInfo["similarItemsInGroup"]
+				if index == similar == 1:
+					# Translators: message when list contains one item only
+					message = _("Mono-item list: ")
+				elif index == similar:
+					# Translators: message when user lands on the last list item
+					message = _("List bottom: ")
+				elif index == 1:
+					# Translators: message when user lands on the first list item
+					message = _("List top: ")
+			except: # positionInfo absent or empty
+				pass
+			if message:
+				speech.speakMessage(message)
 
 	def createMenu(self):
 		# Dialog or the panel.
@@ -964,7 +994,7 @@ class CRList64(CRList):
 		# path without leading file://
 		curPath = self.curWindow.LocationURL.rsplit("/", 1)[0][8:]
 		# we get from current path, to ensure precision
-		# also on external drives or different partitions
+		# also on external drives or different partitions (not verified)
 		getBytePerSector(ctypes.c_wchar_p(curPath), None, ctypes.pointer(bytePerSector), None, None,)
 		listLen = curItem.positionInfo["similarItemsInGroup"]
 		# 1-based index

@@ -189,6 +189,12 @@ class ColumnsReviewSettingsDialog(getattr(gui.settingsDialogs, "SettingsPanel", 
 		)
 		self._announceEmptyList.SetValue(config.conf["columnsReview"]["general"]["announceEmptyList"])
 		settingsSizer.Add(self._announceEmptyList)
+		self._announceListBounds = wx.CheckBox(
+			# Translators: label for announce-list-bounds checkbox in settings
+			self, label=_("Announce list bounds (voice only)")
+		)
+		self._announceListBounds.SetValue(config.conf["columnsReview"]["general"]["announceListBounds"])
+		settingsSizer.Add(self._announceListBounds)
 
 	# for dialog only
 	def postInit(self):
@@ -215,6 +221,7 @@ class ColumnsReviewSettingsDialog(getattr(gui.settingsDialogs, "SettingsPanel", 
 			else:
 				continue
 		config.conf["columnsReview"]["general"]["announceEmptyList"] = self._announceEmptyList.IsChecked()
+		config.conf["columnsReview"]["general"]["announceListBounds"] = self._announceListBounds.IsChecked()
 		for item in self.keysChks:
 			config.conf["columnsReview"]["gestures"][item[0]] = item[1].IsChecked()
 		config.conf["columnsReview"]["keyboard"]["useNumpadKeys"] = self._useNumpadKeys.IsChecked()
