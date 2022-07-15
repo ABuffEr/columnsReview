@@ -18,15 +18,15 @@ Zu den Funktionen gehören:
 * customizable gestures with or without numpad;
 * Die Ansage "0 Einträge", wenn die Liste lehr ist (derzeit nicht in Windows
   8/10-Ordnern)
-* Unterstützung für alles lesen
+* Unterstützung für alles lesen;
 * Ansage der markierten Einträge (Anzahl und Namen der Einträge);
 * list search (with item multiselection, if checked/supported).
 
 ## Gesten
 
-Die mit Zahlen verknüpften Standardtasten sind die NVDA- und die
-Steuerung-Taste. Sie können die Standardtasten über die Einstellungen der
-Erweiterung anpassen, nicht aber im Dialog Tastenbefehle. 
+Die Standard-Tastenkombinationen für Spalten, Überschriften und Position
+beinhalten NVDA+Steuerung. Dies kann in den Erweiterungseinstellungen, (aber
+nicht in den "Tastenbefehlen") geändert werden.
 
 Note that your keyboard could have problems processing some key
 combinations, so try all add-on gestures and adjust them for better results.
