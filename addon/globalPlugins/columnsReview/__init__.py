@@ -575,7 +575,7 @@ class CRList(object):
 		item = curItem.previous if reverse else curItem.next
 		while (item and item.role == curItem.role):
 			if (
-				(not caseSensitive and text.lower() in item.name.lower())
+				(not caseSensitive and item.name and text.lower() in item.name.lower())
 				or
 				(caseSensitive and text in item.name)
 			):
@@ -797,6 +797,8 @@ class CRList32(CRList):
 			indexes = rangeFunc(curIndex+1,listLen+1)
 		for index in indexes:
 			item = getNVDAObjectFromEvent(self.windowHandle, winUser.OBJID_CLIENT, index)
+			if not item or not item.name:
+				continue
 			if (
 				(not caseSensitive and text.lower() in item.name.lower())
 				or
@@ -1336,7 +1338,7 @@ class MozillaTable(CRList32):
 		item = curItem.previous if reverse else curItem.next
 		while (item and item.role == curItem.role):
 			if (
-				(not caseSensitive and text.lower() in item.name.lower())
+				(not caseSensitive and item.name and text.lower() in item.name.lower())
 				or
 				(caseSensitive and text in item.name)
 			):
@@ -1430,6 +1432,8 @@ class CRTreeview(CRList32):
 			indexes = rangeFunc(curIndex+1,listLen+1)
 		for index in indexes:
 			item = getNVDAObjectFromEvent(self.windowHandle, winUser.OBJID_CLIENT, index)
+			if not item or not item.name:
+				continue
 			if (
 				(not caseSensitive and text.lower() in item.name.lower())
 				or
@@ -1450,9 +1454,9 @@ class CRTreeview(CRList32):
 		item = curItem.previous if reverse else curItem.next
 		while (item and item.role == curItem.role):
 			if (
-				(not caseSensitive and text.lower() in item.name.lower())
+				(not caseSensitive and item.name and text.lower() in item.name.lower())
 				or
-				(not caseSensitive and text.lower() in item.description.lower())
+				(not caseSensitive and item.description and text.lower() in item.description.lower())
 				or
 				(caseSensitive and text in item.name)
 				or
@@ -1462,6 +1466,21 @@ class CRTreeview(CRList32):
 			item = item.previous if reverse else item.next
 			if stopCheck():
 				break
+
+	def successSearchAction(self, res):
+		global useMultipleSelection
+		speech.cancelSpeech()
+		# reacquire res for this thread
+		foundIndex = res.positionInfo["indexInGroup"]
+		res = getNVDAObjectFromEvent(self.windowHandle, winUser.OBJID_CLIENT, foundIndex)
+		resIndex = res.positionInfo["indexInGroup"]
+		# sometime, due to list updates, items/indexes may differ
+		if foundIndex != resIndex:
+			res = getNVDAObjectFromEvent(self.windowHandle, winUser.OBJID_CLIENT, foundIndex+(foundIndex-resIndex))
+		if useMultipleSelection:
+			res.IAccessibleObject.accSelect(SELFLAG_ADDSELECTION | SELFLAG_TAKEFOCUS, res.IAccessibleChildID)
+		else:
+		 res.IAccessibleObject.accSelect(SELFLAG_TAKESELECTION | SELFLAG_TAKEFOCUS, res.IAccessibleChildID)
 
 	def getSelectedItems(self):
 		# generic (slow) implementation
