@@ -14,6 +14,9 @@
 # and to other users of NVDA mailing lists
 # for feedback and comments
 
+from displayModel import DisplayModelTextInfo
+import textInfos
+from logHandler import log
 from NVDAObjects.IAccessible import getNVDAObjectFromEvent
 from NVDAObjects.IAccessible import sysListView32
 from NVDAObjects.UIA import UIA # For UIA implementations only, chiefly 64-bit.
@@ -34,6 +37,7 @@ import config
 import core
 import ctypes
 import cursorManager
+import eventHandler
 import globalPluginHandler
 import globalVars
 import gui
@@ -44,9 +48,10 @@ import UIAHandler
 import watchdog
 import winUser
 import wx
+from _ctypes import COMError
 from .actions import ACTIONS, actionFromName, configuredActions
-from .commonFunc import NVDALocale, rangeFunc, findAllDescendantWindows, getScriptGestures
-from .compat import CTWRAPPER
+from .commonFunc import NVDALocale, findAllDescendantWindows, getScriptGestures, getFolderListViaUIA, getFolderListViaHandle
+from .compat import CTWRAPPER, rangeFunc
 from . import configManager
 from . import configSpec
 from . import dialogs
@@ -63,7 +68,12 @@ addonHandler.initTranslation()
 # useful in ColumnsReview64 to calculate file size
 getBytePerSector = ctypes.windll.kernel32.GetDiskFreeSpaceW
 PROFILE_SWITCHED_NOTIFIERS = ("configProfileSwitch", "post_configProfileSwitch")
+# for debug logging
+DEBUG = False
 
+def debugLog(message):
+	if DEBUG:
+		log.info(message)
 
 class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 
@@ -109,6 +119,81 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 			and obj.parent.previous.windowClassName == "SysHeader32"
 		):
 			clsList.insert(0, CRTreeview)
+			return
+		# for opening an empty folder
+		# Note: windowText is to avoid problems with menubar (Ribbon disabled)
+		if hasattr(obj, "appModule") and obj.appModule.appName == "explorer" and obj.role == CTWRAPPER.Role.WINDOW and obj.windowClassName == "ToolbarWindow32" and obj.windowText:
+			# to avoid focus moving when tabbing among folder controls
+			focus = api.getFocusObject()
+			if focus.role != CTWRAPPER.Role.LISTITEM or focus.windowClassName not in ("DirectUIHWND", "MultitaskingViewFrame"):
+				return
+			# strange, but works better with pending events check
+			parObj = obj.simpleParent
+			if eventHandler.isPendingEvents(obj=parObj):
+				return
+			# Ribbon enabled, Ribbon disabled, UIA may be or not to be...
+			if hasattr(parObj, "UIAElement"):
+				curList = getFolderListViaUIA(parObj)
+			else:
+				curList = getFolderListViaHandle(parObj)
+			# ensure to remain in explorer and on an empty folder list
+			if hasattr(curList, "appModule") and curList.appModule.appName == "explorer" and hasattr(curList, "isEmptyList") and curList.isEmptyList():
+				# force the event that lacks
+				eventHandler.queueEvent("focusEntered", curList)
+		# uncomment and set DEBUG to True for investigating
+#		if hasattr(obj, "appModule") and obj.appModule.appName == "explorer":
+#			fg = api.getForegroundObject()
+#			debugLog(f"{fg.name}: {obj.name}, {repr(obj.role)}, {obj.windowClassName}")
+
+	def event_gainFocus(self, obj, nextHandler):
+		# speedup: nothing for web
+		if obj.treeInterceptor:
+			nextHandler()
+			return
+		if (
+			(obj.role == CTWRAPPER.Role.LISTITEM
+				or (obj.role == CTWRAPPER.Role.TABLEROW and obj.windowClassName == "MozillaWindowClass")
+			# delay config check, that seems slower
+			) and configManager.ConfigFromObject(obj).announceListBounds
+		):
+			self.reportListBounds(obj)
+		elif hasattr(obj, "appModule") and obj.appModule.appName == "explorer":
+			# for focusing a previously opened empty folder
+			if obj.name and obj.windowClassName == "CabinetWClass" and obj.role == CTWRAPPER.Role.PANE:
+				# unusually, focus is on a pane
+				# containing the folder and other controls
+				curList = getFolderListViaHandle(obj)
+				# ensure to remain in explorer and on an empty folder list
+				if hasattr(curList, "appModule") and curList.appModule.appName == "explorer" and hasattr(curList, "isEmptyList") and curList.isEmptyList():
+					# force the event that lacks
+					eventHandler.queueEvent("focusEntered", curList)
+			# closing menu (Ribbon disabled) return a unexpected IAccessible version of folder list
+			elif obj.role == CTWRAPPER.Role.LIST and obj.hasFocus and obj.windowClassName == "DirectUIHWND" and not isinstance(obj, UIA): #and obj.isFocusable and CTWRAPPER.State.READONLY in obj.states:
+				# so, normalize getting the usual UIA version
+				newObj = getFolderListViaHandle(obj.simpleParent)
+				# ensure to remain in same application (explorer)
+				if hasattr(newObj, "appModule") and newObj.appModule.appName == obj.appModule.appName:
+					eventHandler.queueEvent("focusEntered", newObj)
+		nextHandler()
+
+	def reportListBounds(self, obj):
+			message = None
+			try:
+				index = obj.positionInfo["indexInGroup"]
+				similar = obj.positionInfo["similarItemsInGroup"]
+				if index == similar == 1:
+					# Translators: message when list contains one item only
+					message = _("Mono-item list: ")
+				elif index == similar:
+					# Translators: message when user lands on the last list item
+					message = _("List bottom: ")
+				elif index == 1:
+					# Translators: message when user lands on the first list item
+					message = _("List top: ")
+			except: # positionInfo absent or empty
+				pass
+			if message:
+				speech.speakMessage(message)
 
 	def createMenu(self):
 		# Dialog or the panel.
@@ -192,12 +277,20 @@ class CRList(object):
 		self.bindGesture("kb:NVDA+control+f", "find")
 		self.bindGesture("kb:NVDA+f3", "findNext")
 		self.bindGesture("kb:NVDA+shift+f3", "findPrevious")
+		# for color reporting
+		scriptGestures = getScriptGestures(
+			getattr(commands, "script_reportOrShowFormattingAtCaret", commands.script_reportFormatting)
+		)
+		for gesture in scriptGestures:
+			self.bindGesture(gesture, "reportOrShowFormattingAtCaret")
 		# for current selection
-		for gesture in getScriptGestures(commands.script_reportCurrentSelection):
+		scriptGestures = getScriptGestures(commands.script_reportCurrentSelection)
+		for gesture in scriptGestures:
 			self.bindGesture(gesture, "reportCurrentSelection")
 		# for say all - bind only if it is actually supported
 		if utils._RowsReader.isSupported():
-			for gesture in getScriptGestures(commands.script_sayAll):
+			scriptGestures = getScriptGestures(commands.script_sayAll)
+			for gesture in scriptGestures:
 				self.bindGesture(gesture, "readListItems")
 		confFromObj = configManager.ConfigFromObject(self)
 		numpadUsedForColumnNav = confFromObj.numpadUsedForColumnsNavigation
@@ -482,7 +575,7 @@ class CRList(object):
 		item = curItem.previous if reverse else curItem.next
 		while (item and item.role == curItem.role):
 			if (
-				(not caseSensitive and text.lower() in item.name.lower())
+				(not caseSensitive and item.name and text.lower() in item.name.lower())
 				or
 				(caseSensitive and text in item.name)
 			):
@@ -583,15 +676,47 @@ class CRList(object):
 			self.bindGesture("kb:{0}Arrow".format(item), "reportEmpty")
 		# other useful gesture to remap
 		# script_reportCurrentFocus
-		for gesture in getScriptGestures(commands.script_reportCurrentFocus):
+		scriptGestures = getScriptGestures(commands.script_reportCurrentFocus)
+		for gesture in scriptGestures:
 			self.bindGesture(gesture, "reportEmpty")
 		# script_reportCurrentLine
-		for gesture in getScriptGestures(commands.script_reportCurrentLine):
+		scriptGestures = getScriptGestures(commands.script_reportCurrentLine)
+		for gesture in scriptGestures:
 			self.bindGesture(gesture, "reportEmpty")
 		# script_reportCurrentSelection
-		for gesture in getScriptGestures(commands.script_reportCurrentSelection):
+		scriptGestures = getScriptGestures(commands.script_reportCurrentSelection)
+		for gesture in scriptGestures:
 			self.bindGesture(gesture, "reportEmpty")
 
+	def script_reportOrShowFormattingAtCaret(self, gesture):
+		item = api.getFocusObject()
+		dmti = DisplayModelTextInfo(item, textInfos.POSITION_ALL)
+		# try to consider all object text chunks
+		dmti.expand(textInfos.UNIT_LINE)
+		fields = dmti.getTextWithFields()
+		# collect all foreground and background colors
+		fgColors = set()
+		bgColors = set()
+		for field in fields:
+			if isinstance(field, textInfos.FieldCommand) and isinstance(field.field, textInfos.FormatField):
+				fgColor = field.field.get("color")
+				if fgColor: fgColors.add(fgColor.name)
+				bgColor = field.field.get("background-color")
+				if bgColor: bgColors.add(bgColor.name)
+		if fgColors and bgColors:
+			foregroundColors = ', '.join(fgColors)
+			backgroundColors = ', '.join(bgColors)
+			# Translators: message listing foreground over background colors
+			message = _("{foregroundColors} over {backgroundColors}").format(foregroundColors=foregroundColors, backgroundColors=backgroundColors)
+		else:
+			message = NVDALocale("No formatting information")
+		ui.message(message)
+	script_reportOrShowFormattingAtCaret.canPropagate = True
+	script_reportOrShowFormattingAtCaret.__doc__ = _(
+		# Translators: Description of the keyboard command,
+		# which reports foreground and background color of the current list item.
+		"reports foreground and background colors of the current list item."
+	)
 
 class CRList32(CRList):
 # for SysListView32 or WindowsForms10.SysListView32.app.0.*
@@ -672,6 +797,8 @@ class CRList32(CRList):
 			indexes = rangeFunc(curIndex+1,listLen+1)
 		for index in indexes:
 			item = getNVDAObjectFromEvent(self.windowHandle, winUser.OBJID_CLIENT, index)
+			if not item or not item.name:
+				continue
 			if (
 				(not caseSensitive and text.lower() in item.name.lower())
 				or
@@ -753,7 +880,7 @@ class CRList64(CRList):
 	see CRList32 class for more comments"""
 
 	THREAD_SUPPORTED = True
-	supportsEmptyListAnnouncements = False
+	supportsEmptyListAnnouncements = True
 
 	# window shell variable
 	curWindow = None
@@ -869,7 +996,7 @@ class CRList64(CRList):
 		# path without leading file://
 		curPath = self.curWindow.LocationURL.rsplit("/", 1)[0][8:]
 		# we get from current path, to ensure precision
-		# also on external drives or different partitions
+		# also on external drives or different partitions (not verified)
 		getBytePerSector(ctypes.c_wchar_p(curPath), None, ctypes.pointer(bytePerSector), None, None,)
 		listLen = curItem.positionInfo["similarItemsInGroup"]
 		# 1-based index
@@ -947,26 +1074,46 @@ class CRList64(CRList):
 	def threatedSearchDone():
 		ctypes.windll.Ole32.CoUninitialize()
 
+	def isEmptyList(self):
+		# use UIA to avoid recursion error getting lastChild
+		try:
+			childCount = self.UIAGridPattern.CurrentRowCount
+		except:
+			# assume not empty
+			childCount = 1
+		return not bool(childCount)
+
+	def event_focusEntered(self):
+		if self.isEmptyList():
+			eventHandler.queueEvent("gainFocus", self)
+		else:
+			super(CRList64, self).event_focusEntered()
+
+
 class UIASuperGrid(CRList):
 
 	# flag to guarantee thread support,
 	# apparently, self-managed by UIAHandler.handler.MTAThreadFunc
 	THREAD_SUPPORTED = True
+	supportsEmptyListAnnouncements = True
 	# available features from UIA
 	UIAFeatures = None
 
 	def preCheck(self, featureKeys, onFailureMsg=None):
 		if self.UIAFeatures is None:
 			# check and cache results
-			self.UIAFeatures = {}.fromkeys(("selection","scroll","selectionItem"), False)
+			self.UIAFeatures = {}.fromkeys(("selection","scroll","selectionItem", "grid"), False)
 			if hasattr(self, 'UIASelectionPattern') and self.UIASelectionPattern is not None:
 				self.UIAFeatures["selection"] = True
 			# for some reason, NVDA does not expose UIAScrollPattern, so...
 			if hasattr(self, '_getUIAPattern') and self._getUIAPattern(UIAHandler.UIA_ScrollPatternId, UIAHandler.IUIAutomationScrollPattern) is not None:
 				self.UIAFeatures["scroll"] = True
-			focus = api.getFocusObject()
-			if hasattr(focus, 'UIASelectionItemPattern') and focus.UIASelectionItemPattern is not None:
-				self.UIAFeatures["selectionItem"] = True
+			if hasattr(self, 'UIAGridPattern') and self.UIAGridPattern is not None:
+				self.UIAFeatures["grid"] = True
+		# check everytime
+		focus = api.getFocusObject()
+		if hasattr(focus, 'UIASelectionItemPattern') and focus.UIASelectionItemPattern is not None:
+			self.UIAFeatures["selectionItem"] = True
 		res = all((self.UIAFeatures[x] for x in featureKeys))
 		if not res and onFailureMsg:
 			ui.message(onFailureMsg)
@@ -1085,12 +1232,25 @@ class UIASuperGrid(CRList):
 		else:
 			selManager.Select()
 
+	def isEmptyList(self):
+		if self.preCheck(("grid",)):
+			try:
+				childCount = self.UIAGridPattern.CurrentRowCount
+				return not bool(childCount)
+			except:
+				pass
+		if self.childCount == 1 and self.firstChild.role == CTWRAPPER.Role.PANE:
+			# it's an empty list with header objs, so...
+			return True
+		else:
+			return False
+
 
 class MozillaTable(CRList32):
 	"""Class to manage column headers in Mozilla list"""
 
 	THREAD_SUPPORTED = True
-	supportsEmptyListAnnouncements = False
+	supportsEmptyListAnnouncements = True
 
 	def _getColumnHeader(self, index):
 		"""Returns the column header in Mozilla applications"""
@@ -1113,18 +1273,31 @@ class MozillaTable(CRList32):
 
 	def getSelectedItems(self):
 		# specific implementation, see:
-		# https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XPCOM/Reference/Interface/IAccessibleTable2
-		table = self.IAccessibleTable2Object
-		selRowArray, selRowNum = table.selectedRows
+		# https://developer.mozilla.org.cach3.com/en-US/docs/Mozilla/Tech/XPCOM/Reference/Interface/IAccessibleTable2
 		items = []
+		table = self.IAccessibleTable2Object
+		# workaround: selectedRows is broken in recent Thunderbird
+		# use nColumns, nSelectedRows, selectedCells instead
 		colNum = table.nColumns
-		for i in rangeFunc(0, selRowNum):
-			row = selRowArray[i]
+		selRowNum = table.nSelectedRows
+		selCellArray, selCellNum = table.selectedCells
+		for row in rangeFunc(0, selRowNum):
+			# to scan cells of the row
+			rowRange = row*colNum
 			itemCells = []
 			for col in rangeFunc(0, colNum):
-				cellText = table.cellAt(row, col).QueryInterface(IAccessible2).accName[0]
-				itemCells.append(cellText)
-			item = ' '.join(itemCells)
+				if rowRange+col >= selCellNum:
+					# it should not happen, but if it is,
+					# subscripting cells crashes NVDA, so...
+					continue
+				try:
+					cellText = selCellArray[rowRange+col].QueryInterface(IAccessible2).accName[0]
+					if cellText:
+						itemCells.append(cellText)
+				except COMError: # unexplicable, but happens
+					pass
+			if itemCells:
+				item = ' '.join(itemCells)+";"
 			items.append(item)
 		return items
 
@@ -1165,7 +1338,7 @@ class MozillaTable(CRList32):
 		item = curItem.previous if reverse else curItem.next
 		while (item and item.role == curItem.role):
 			if (
-				(not caseSensitive and text.lower() in item.name.lower())
+				(not caseSensitive and item.name and text.lower() in item.name.lower())
 				or
 				(caseSensitive and text in item.name)
 			):
@@ -1189,6 +1362,14 @@ class MozillaTable(CRList32):
 		 res.IAccessibleObject.accSelect(SELFLAG_TAKESELECTION, res.IAccessibleChildID)
 		 res.IAccessibleObject.accSelect(SELFLAG_TAKEFOCUS, res.IAccessibleChildID)
 
+	def isEmptyList(self):
+		try:
+			if self.IAccessibleTable2Object.nRows == 0:
+				return True
+		except:
+			pass
+		return False
+
 
 # Global ref on current finder
 gFinder = None
@@ -1200,7 +1381,7 @@ class CRTreeview(CRList32):
 
 	# flag to guarantee thread support
 	THREAD_SUPPORTED = False
-	supportsEmptyListAnnouncements = False
+	supportsEmptyListAnnouncements = True
 
 	def getColumnData(self, colNumber):
 		curItem = api.getFocusObject()
@@ -1251,6 +1432,8 @@ class CRTreeview(CRList32):
 			indexes = rangeFunc(curIndex+1,listLen+1)
 		for index in indexes:
 			item = getNVDAObjectFromEvent(self.windowHandle, winUser.OBJID_CLIENT, index)
+			if not item or not item.name:
+				continue
 			if (
 				(not caseSensitive and text.lower() in item.name.lower())
 				or
@@ -1271,9 +1454,9 @@ class CRTreeview(CRList32):
 		item = curItem.previous if reverse else curItem.next
 		while (item and item.role == curItem.role):
 			if (
-				(not caseSensitive and text.lower() in item.name.lower())
+				(not caseSensitive and item.name and text.lower() in item.name.lower())
 				or
-				(not caseSensitive and text.lower() in item.description.lower())
+				(not caseSensitive and item.description and text.lower() in item.description.lower())
 				or
 				(caseSensitive and text in item.name)
 				or
@@ -1283,6 +1466,21 @@ class CRTreeview(CRList32):
 			item = item.previous if reverse else item.next
 			if stopCheck():
 				break
+
+	def successSearchAction(self, res):
+		global useMultipleSelection
+		speech.cancelSpeech()
+		# reacquire res for this thread
+		foundIndex = res.positionInfo["indexInGroup"]
+		res = getNVDAObjectFromEvent(self.windowHandle, winUser.OBJID_CLIENT, foundIndex)
+		resIndex = res.positionInfo["indexInGroup"]
+		# sometime, due to list updates, items/indexes may differ
+		if foundIndex != resIndex:
+			res = getNVDAObjectFromEvent(self.windowHandle, winUser.OBJID_CLIENT, foundIndex+(foundIndex-resIndex))
+		if useMultipleSelection:
+			res.IAccessibleObject.accSelect(SELFLAG_ADDSELECTION | SELFLAG_TAKEFOCUS, res.IAccessibleChildID)
+		else:
+		 res.IAccessibleObject.accSelect(SELFLAG_TAKESELECTION | SELFLAG_TAKEFOCUS, res.IAccessibleChildID)
 
 	def getSelectedItems(self):
 		# generic (slow) implementation
@@ -1296,6 +1494,14 @@ class CRTreeview(CRList32):
 					items.append(itemName)
 			item = item.next
 		return items
+
+	def isEmptyList(self):
+		try:
+			childCount = self.childCount
+		except:
+			# assume not empty
+			childCount = 1
+		return not bool(childCount)
 
 
 class Finder(Thread):

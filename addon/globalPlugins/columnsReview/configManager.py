@@ -53,6 +53,14 @@ class ConfigFromObject(object):
 				continue
 
 	@property
+	def announceListBounds(self):
+		for profile in self.getApplicableProfiles():
+			try:
+				return is_boolean(profile["columnsReview"]["general"]["announceListBounds"])
+			except KeyError:
+				continue
+
+	@property
 	def numpadUsedForColumnsNavigation(self):
 		for profile in self.getApplicableProfiles():
 			try:

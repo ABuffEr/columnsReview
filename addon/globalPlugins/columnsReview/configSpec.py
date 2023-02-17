@@ -12,6 +12,7 @@ configSpecString = ("""
 	readHeader = boolean(default=True)
 	copyHeader = boolean(default=True)
 	announceEmptyList = boolean(default=True)
+	announceListBounds = boolean(default=True)
 [keyboard]
 	useNumpadKeys = boolean(default=False)
 	switchChar = string(default="-")

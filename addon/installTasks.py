@@ -23,4 +23,11 @@ def onInstall():
 					os.remove(iniFile)
 				except:
 					pass
-			break
+		elif addon.name == "ExplorerEnhancements":
+			if gui.messageBox(
+				# Translators: the label of a message box dialog to uninstall another add-on
+				_("You have installed {another_addon} by {another_author}, that causes problems with empty folder feature of ColumnsReview (if enabled); do you want to remove it now?").format(another_addon=addon.manifest["summary"], another_author=addon.manifest["author"]),
+				# Translators: the title of a message box dialog.
+				_("Warning!"),
+				wx.YES|wx.NO|wx.ICON_WARNING) == wx.YES:
+				addon.requestRemove()
