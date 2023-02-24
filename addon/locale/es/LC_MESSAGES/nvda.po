@@ -9,19 +9,34 @@ msgstr ""
 "Report-Msgid-Bugs-To: nvda-translations@groups.io\n"
 "POT-Creation-Date: 2021-09-16 00:36+0000\n"
 "PO-Revision-Date: 2021-09-24 09:28+0200\n"
+"Last-Translator: \n"
+"Language-Team: \n"
 "Language: es\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Last-Translator: \n"
-"Language-Team: \n"
 "X-Generator: Poedit 3.0\n"
+
+#. Translators: message when list contains one item only
+msgid "Mono-item list: "
+msgstr ""
+
+#. Translators: message when user lands on the last list item
+msgid "List bottom: "
+msgstr ""
+
+#. Translators: message when user lands on the first list item
+msgid "List top: "
+msgstr ""
 
 #. Translators: menu item in preferences
 msgid "Columns Review Settings..."
 msgstr "Opciones de Columns Review..."
 
-msgid "(DO NOT EDIT!)"
+#. Translators: Name of the default category
+#. in the Input Gestures dialog where scripts of this add-on are placed.
+#, fuzzy, python-brace-format
+msgid "{name} (DO NOT EDIT!)"
 msgstr "(¡No edites!)"
 
 #. Translators: message when digit pressed exceed the columns number
@@ -53,6 +68,7 @@ msgstr "Desde {start} hasta {end}"
 msgid "Cycles between a variable number of intervals of ten columns"
 msgstr "Alterna entre un número variable de intervalos de diez columnas"
 
+#. Translators: Reported when information about position on a list cannot be retrieved.
 msgid "No information available"
 msgstr "No hay información disponible"
 
@@ -66,9 +82,10 @@ msgstr ""
 "Proporciona un diálogo para interactuar con las cabeceras de columna en una "
 "lista"
 
-#. translators: message presented when get selected item count and names
-msgid "selected items"
-msgstr "elementos seleccionados"
+#. Translators: message presented when get selected item count and names
+#, python-brace-format
+msgid "{selCount} selected items: {selNames}"
+msgstr ""
 
 #. Translators: documentation for script to know current selected items
 msgid "Reports current selected list items"
@@ -96,46 +113,28 @@ msgstr ""
 "Comienza a leer todos los elementos de la lista empezando por el que tiene "
 "el foco"
 
+#. Translators: message listing foreground over background colors
+#, python-brace-format
+msgid "{foregroundColors} over {backgroundColors}"
+msgstr ""
+
+#. Translators: Description of the keyboard command,
+#. which reports foreground and background color of the current list item.
+msgid "reports foreground and background colors of the current list item."
+msgstr ""
+
+#. Translators: Reported when it is impossible to report currently selected items.
 msgid "Current selection info not available"
 msgstr "Información de selección actual no disponible"
 
+#. Translators: Reported when current list does not support searching.
+msgid "Cannot search here."
+msgstr ""
+
+#. Translators: Label of the checkbox in the find dialog which, if checked, selects multiple
+#. items if they match the search query.
 msgid "Use multiple selection"
 msgstr "Usar selección múltiple"
-
-#. Translators: title of settings dialog
-#. Add-on summary, usually the user visible name of the addon.
-#. Translators: Summary for this add-on
-#. to be shown on installation and add-on information found in Add-ons Manager.
-msgid "Columns Review"
-msgstr "Columns Review"
-
-#. Translators: title of settings dialog
-msgid "Columns Review Settings"
-msgstr "Opciones de Columns Review"
-
-#. Translators: Help message for group of comboboxes allowing to assign action to a keypress.
-msgid "When pressing combination to read column:"
-msgstr "Al pulsar la combinación para leer columna:"
-
-#. Translators: Help message for sub-sizer of keys choices
-msgid "Choose the keys you want to use with numbers:"
-msgstr "Elige las teclas que quieres usar con los números:"
-
-#. Translators: label for numpad keys checkbox in settings
-msgid "Use numpad keys to navigate through the columns"
-msgstr "Usar teclas del bloque numérico para navegar por las columnas"
-
-#. Translators: label for edit field in settings, visible if previous checkbox is disabled
-msgid ""
-"Insert the char after \"0\" in your keyboard layout, or another char as you "
-"like:"
-msgstr ""
-"Inserta el carácter que hay después del \"0\" en tu distribución de "
-"teclado, o cualquier otro que prefieras:"
-
-#. Translators: label for announce-empty-list checkbox in settings
-msgid "Announce empty list (not working in Win8/10 folders)"
-msgstr "Anunciar lista vacía (no funciona en carpetas de Win8/10)"
 
 #. Translators: Description of the action which simply ignores the pressed key
 msgid "Do nothing"
@@ -181,23 +180,69 @@ msgstr "Leer la cabecera de la columna"
 msgid "Copy the column header"
 msgstr "Copiar la cabecera de la columna"
 
+#. Translators: title of settings dialog
+#. Add-on summary, usually the user visible name of the addon.
+#. Translators: Summary for this add-on
+#. to be shown on installation and add-on information found in Add-ons Manager.
+msgid "Columns Review"
+msgstr "Columns Review"
+
+#. Translators: title of settings dialog
+msgid "Columns Review Settings"
+msgstr "Opciones de Columns Review"
+
+#. Translators: Help message for group of comboboxes allowing to assign action to a keypress.
+msgid "When pressing combination to read column:"
+msgstr "Al pulsar la combinación para leer columna:"
+
+#. Translators: Help message for sub-sizer of keys choices
+msgid "Choose the keys you want to use with numbers:"
+msgstr "Elige las teclas que quieres usar con los números:"
+
+#. Translators: label for numpad keys checkbox in settings
+msgid "Use numpad keys to navigate through the columns"
+msgstr "Usar teclas del bloque numérico para navegar por las columnas"
+
+#. Translators: label for edit field in settings, visible if previous checkbox is disabled
+msgid ""
+"Insert the char after \"0\" in your keyboard layout, or another char as you "
+"like:"
+msgstr ""
+"Inserta el carácter que hay después del \"0\" en tu distribución de teclado, "
+"o cualquier otro que prefieras:"
+
+#. Translators: label for announce-empty-list checkbox in settings
+msgid "Announce empty list"
+msgstr ""
+
+#. Translators: label for announce-list-bounds checkbox in settings
+msgid "Announce list bounds (voice only)"
+msgstr ""
+
+#. Translators: Title of the dialog which allows to perform actions on headers of the current list.
 msgid "Headers manager"
 msgstr "Gestor de cabeceras"
 
+#. Translators: Shown for a header which has no name.
 msgid "Unnamed header"
 msgstr "Cabecera sin nombre"
 
+#. Translators: Label for a list containing names of all headers of the current list.
 msgid "Headers:"
 msgstr "Cabeceras:"
 
+#. Translators: Label for a button which clicks the given header with the left mouse button.
 msgid "Left click"
 msgstr "Clic izquierdo"
 
+#. Translators: Label for a button which clicks the given header with the right mouse button.
 msgid "Right click"
 msgstr "Clic derecho"
 
-#, python-format
-msgid "%s header clicked"
+#. Translators: Announced when the given header has been clicked, 'headerName' is replaced with the name of
+#. the  clicked object.
+#, fuzzy, python-brace-format
+msgid "{headerName} header clicked"
 msgstr "Se ha hecho clic en la cabecera %s"
 
 #. Translators: the label of a message box dialog.
@@ -212,7 +257,25 @@ msgstr ""
 msgid "Add-on settings reset"
 msgstr "Restablecimiento de las opciones del complemento"
 
+#. Translators: the label of a message box dialog to uninstall another add-on
+#, python-brace-format
+msgid ""
+"You have installed {another_addon} by {another_author}, that causes problems "
+"with empty folder feature of ColumnsReview (if enabled); do you want to "
+"remove it now?"
+msgstr ""
+
+#. Translators: the title of a message box dialog.
+msgid "Warning!"
+msgstr ""
+
 #. Add-on description
 #. Translators: Long description to be shown for this add-on on add-on information from add-ons manager
 msgid "A better experience with lists"
 msgstr "Experiencia mejorada con listas"
+
+#~ msgid "selected items"
+#~ msgstr "elementos seleccionados"
+
+#~ msgid "Announce empty list (not working in Win8/10 folders)"
+#~ msgstr "Anunciar lista vacía (no funciona en carpetas de Win8/10)"

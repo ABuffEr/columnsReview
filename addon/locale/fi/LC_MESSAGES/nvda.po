@@ -18,11 +18,26 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Generator: Poedit 1.6.11\n"
 
+#. Translators: message when list contains one item only
+msgid "Mono-item list: "
+msgstr ""
+
+#. Translators: message when user lands on the last list item
+msgid "List bottom: "
+msgstr ""
+
+#. Translators: message when user lands on the first list item
+msgid "List top: "
+msgstr ""
+
 #. Translators: menu item in preferences
 msgid "Columns Review Settings..."
 msgstr "Sarakkeiden tarkastelu..."
 
-msgid "(DO NOT EDIT!)"
+#. Translators: Name of the default category
+#. in the Input Gestures dialog where scripts of this add-on are placed.
+#, fuzzy, python-brace-format
+msgid "{name} (DO NOT EDIT!)"
 msgstr "(ÄLÄ MUOKKAA!)"
 
 #. Translators: message when digit pressed exceed the columns number
@@ -54,6 +69,7 @@ msgstr "{start} / {end}"
 msgid "Cycles between a variable number of intervals of ten columns"
 msgstr "Vaihtaa siirtymisväliä kymmenen saraketta kerrallaan."
 
+#. Translators: Reported when information about position on a list cannot be retrieved.
 msgid "No information available"
 msgstr "Tietoja ei käytettävissä"
 
@@ -66,9 +82,10 @@ msgid "Provides a dialog for interactions with list column headers"
 msgstr ""
 "Avaa valintaikkunan, jossa voidaan hallita luettelosarakkeiden otsikoita."
 
-#. translators: message presented when get selected item count and names
-msgid "selected items"
-msgstr "valittua kohdetta"
+#. Translators: message presented when get selected item count and names
+#, python-brace-format
+msgid "{selCount} selected items: {selNames}"
+msgstr ""
 
 #. Translators: documentation for script to know current selected items
 msgid "Reports current selected list items"
@@ -95,45 +112,28 @@ msgid "Starts reading all list items beginning at the item with focus"
 msgstr ""
 "Aloittaa kaikkien luettelokohteiden lukemisen aktiivisesta kohteesta alkaen."
 
+#. Translators: message listing foreground over background colors
+#, python-brace-format
+msgid "{foregroundColors} over {backgroundColors}"
+msgstr ""
+
+#. Translators: Description of the keyboard command,
+#. which reports foreground and background color of the current list item.
+msgid "reports foreground and background colors of the current list item."
+msgstr ""
+
+#. Translators: Reported when it is impossible to report currently selected items.
 msgid "Current selection info not available"
 msgstr "Valinnan tietoja ei käytettävissä"
 
+#. Translators: Reported when current list does not support searching.
+msgid "Cannot search here."
+msgstr ""
+
+#. Translators: Label of the checkbox in the find dialog which, if checked, selects multiple
+#. items if they match the search query.
 msgid "Use multiple selection"
 msgstr "Käytä monivalintaa"
-
-#. Translators: title of settings dialog
-#. Add-on summary, usually the user visible name of the addon.
-#. Translators: Summary for this add-on
-#. to be shown on installation and add-on information found in Add-ons Manager.
-msgid "Columns Review"
-msgstr "Sarakkeiden tarkastelu"
-
-#. Translators: title of settings dialog
-msgid "Columns Review Settings"
-msgstr "Sarakkeiden tarkastelun asetukset"
-
-#. Translators: Help message for group of comboboxes allowing to assign action to a keypress.
-msgid "When pressing combination to read column:"
-msgstr "Sarakkeen lukemisen pikanäppäin:"
-
-#. Translators: Help message for sub-sizer of keys choices
-msgid "Choose the keys you want to use with numbers:"
-msgstr "Valitse numeroiden kanssa käytettävät näppäimet:"
-
-#. Translators: label for numpad keys checkbox in settings
-msgid "Use numpad keys to navigate through the columns"
-msgstr "Käytä laskinnäppäimistön näppäimiä sarakkeissa liikkumiseen"
-
-#. Translators: label for edit field in settings, visible if previous checkbox is disabled
-msgid ""
-"Insert the char after \"0\" in your keyboard layout, or another char as you "
-"like:"
-msgstr ""
-"Lisää näppäinasettelussasi merkki 0:n tai muun haluamasi merkin jälkeen:"
-
-#. Translators: label for announce-empty-list checkbox in settings
-msgid "Announce empty list (not working in Win8/10 folders)"
-msgstr "Puhu tyhjä luettelo (ei toimi Win8:n/10:n kansioissa)"
 
 #. Translators: Description of the action which simply ignores the pressed key
 msgid "Do nothing"
@@ -179,23 +179,68 @@ msgstr "Lue sarakkeen otsikko"
 msgid "Copy the column header"
 msgstr "Kopioi sarakkeen otsikko"
 
+#. Translators: title of settings dialog
+#. Add-on summary, usually the user visible name of the addon.
+#. Translators: Summary for this add-on
+#. to be shown on installation and add-on information found in Add-ons Manager.
+msgid "Columns Review"
+msgstr "Sarakkeiden tarkastelu"
+
+#. Translators: title of settings dialog
+msgid "Columns Review Settings"
+msgstr "Sarakkeiden tarkastelun asetukset"
+
+#. Translators: Help message for group of comboboxes allowing to assign action to a keypress.
+msgid "When pressing combination to read column:"
+msgstr "Sarakkeen lukemisen pikanäppäin:"
+
+#. Translators: Help message for sub-sizer of keys choices
+msgid "Choose the keys you want to use with numbers:"
+msgstr "Valitse numeroiden kanssa käytettävät näppäimet:"
+
+#. Translators: label for numpad keys checkbox in settings
+msgid "Use numpad keys to navigate through the columns"
+msgstr "Käytä laskinnäppäimistön näppäimiä sarakkeissa liikkumiseen"
+
+#. Translators: label for edit field in settings, visible if previous checkbox is disabled
+msgid ""
+"Insert the char after \"0\" in your keyboard layout, or another char as you "
+"like:"
+msgstr ""
+"Lisää näppäinasettelussasi merkki 0:n tai muun haluamasi merkin jälkeen:"
+
+#. Translators: label for announce-empty-list checkbox in settings
+msgid "Announce empty list"
+msgstr ""
+
+#. Translators: label for announce-list-bounds checkbox in settings
+msgid "Announce list bounds (voice only)"
+msgstr ""
+
+#. Translators: Title of the dialog which allows to perform actions on headers of the current list.
 msgid "Headers manager"
 msgstr "Otsikoiden hallinta"
 
+#. Translators: Shown for a header which has no name.
 msgid "Unnamed header"
 msgstr "Nimetön otsikko"
 
+#. Translators: Label for a list containing names of all headers of the current list.
 msgid "Headers:"
 msgstr "Otsikot:"
 
+#. Translators: Label for a button which clicks the given header with the left mouse button.
 msgid "Left click"
 msgstr "Vasen napsautus"
 
+#. Translators: Label for a button which clicks the given header with the right mouse button.
 msgid "Right click"
 msgstr "Oikea napsautus"
 
-#, python-format
-msgid "%s header clicked"
+#. Translators: Announced when the given header has been clicked, 'headerName' is replaced with the name of
+#. the  clicked object.
+#, fuzzy, python-brace-format
+msgid "{headerName} header clicked"
 msgstr "%s-otsikkoa napsautettu"
 
 #. Translators: the label of a message box dialog.
@@ -210,7 +255,25 @@ msgstr ""
 msgid "Add-on settings reset"
 msgstr "Lisäosan asetukset nollattu"
 
+#. Translators: the label of a message box dialog to uninstall another add-on
+#, python-brace-format
+msgid ""
+"You have installed {another_addon} by {another_author}, that causes problems "
+"with empty folder feature of ColumnsReview (if enabled); do you want to "
+"remove it now?"
+msgstr ""
+
+#. Translators: the title of a message box dialog.
+msgid "Warning!"
+msgstr ""
+
 #. Add-on description
 #. Translators: Long description to be shown for this add-on on add-on information from add-ons manager
 msgid "A better experience with lists"
 msgstr "Parempi luetteloiden käyttökokemus"
+
+#~ msgid "selected items"
+#~ msgstr "valittua kohdetta"
+
+#~ msgid "Announce empty list (not working in Win8/10 folders)"
+#~ msgstr "Puhu tyhjä luettelo (ei toimi Win8:n/10:n kansioissa)"
