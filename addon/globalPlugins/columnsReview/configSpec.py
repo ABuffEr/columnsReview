@@ -13,6 +13,11 @@ configSpecString = ("""
 	copyHeader = boolean(default=True)
 	announceEmptyList = boolean(default=True)
 	announceListBounds = boolean(default=True)
+	announceListBoundsWith = option("voice", "beep", default="voice")
+[beep]
+	topBeep = integer(default=620)
+	bottomBeep = integer(default=440)
+	beepLen = integer(default=100)
 [keyboard]
 	useNumpadKeys = boolean(default=False)
 	switchChar = string(default="-")
