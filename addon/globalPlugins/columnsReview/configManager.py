@@ -72,7 +72,7 @@ class ConfigFromObject(object):
 	def topBeep(self):
 		for profile in self.getApplicableProfiles():
 			try:
-				return profile["columnsReview"]["beep"]["topBeep"]
+				return int(profile["columnsReview"]["beep"]["topBeep"])
 			except KeyError:
 				continue
 
@@ -80,7 +80,7 @@ class ConfigFromObject(object):
 	def bottomBeep(self):
 		for profile in self.getApplicableProfiles():
 			try:
-				return profile["columnsReview"]["beep"]["bottomBeep"]
+				return int(profile["columnsReview"]["beep"]["bottomBeep"])
 			except KeyError:
 				continue
 
@@ -88,7 +88,7 @@ class ConfigFromObject(object):
 	def beepLen(self):
 		for profile in self.getApplicableProfiles():
 			try:
-				return profile["columnsReview"]["beep"]["beepLen"]
+				return int(profile["columnsReview"]["beep"]["beepLen"])
 			except KeyError:
 				continue
 
