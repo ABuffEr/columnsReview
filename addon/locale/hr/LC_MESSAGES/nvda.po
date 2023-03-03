@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: columnsReview 3.0\n"
 "Report-Msgid-Bugs-To: nvda-translations@groups.io\n"
 "POT-Creation-Date: 2021-09-16 00:36+0000\n"
-"PO-Revision-Date: 2022-04-24 12:43+0200\n"
+"PO-Revision-Date: 2023-02-24 15:57+0100\n"
 "Last-Translator: Milo Ivir <mail@milotype.de>\n"
 "Language-Team: \n"
 "Language: hr\n"
@@ -19,15 +19,15 @@ msgstr ""
 
 #. Translators: message when list contains one item only
 msgid "Mono-item list: "
-msgstr ""
+msgstr "Popis s jednim elementom: "
 
 #. Translators: message when user lands on the last list item
 msgid "List bottom: "
-msgstr ""
+msgstr "Kraj popisa: "
 
 #. Translators: message when user lands on the first list item
 msgid "List top: "
-msgstr ""
+msgstr "Početak popisa: "
 
 #. Translators: menu item in preferences
 msgid "Columns Review Settings..."
@@ -35,9 +35,9 @@ msgstr "Postavke za „Pregled stupaca” …"
 
 #. Translators: Name of the default category
 #. in the Input Gestures dialog where scripts of this add-on are placed.
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "{name} (DO NOT EDIT!)"
-msgstr "(NEMOJ UREĐIVATI)"
+msgstr "{name} (NEMOJ UREĐIVATI)"
 
 #. Translators: message when digit pressed exceed the columns number
 msgid "No more columns available"
@@ -83,7 +83,7 @@ msgstr "Pruža dijaloški okvir za interakcije sa zaglavljima stupaca popisa"
 #. Translators: message presented when get selected item count and names
 #, python-brace-format
 msgid "{selCount} selected items: {selNames}"
-msgstr ""
+msgstr "Broj odabranih elemenata ({selCount}): {selNames}"
 
 #. Translators: documentation for script to know current selected items
 msgid "Reports current selected list items"
@@ -112,12 +112,13 @@ msgstr "Počinje čitati sve elemente popisa, počevši od elementa s fokusom"
 #. Translators: message listing foreground over background colors
 #, python-brace-format
 msgid "{foregroundColors} over {backgroundColors}"
-msgstr ""
+msgstr "{foregroundColors} preko {backgroundColors}"
 
 #. Translators: Description of the keyboard command,
 #. which reports foreground and background color of the current list item.
 msgid "reports foreground and background colors of the current list item."
 msgstr ""
+"izvještava o prednjim i pozadinskim bojama trenutačnog elementa popisa."
 
 #. Translators: Reported when it is impossible to report currently selected items.
 msgid "Current selection info not available"
@@ -125,7 +126,7 @@ msgstr "Informacije trenutačnog odabira nisu dostupne"
 
 #. Translators: Reported when current list does not support searching.
 msgid "Cannot search here."
-msgstr ""
+msgstr "Pretraživanje ovdje nije moguće."
 
 #. Translators: Label of the checkbox in the find dialog which, if checked, selects multiple
 #. items if they match the search query.
@@ -208,11 +209,11 @@ msgstr ""
 
 #. Translators: label for announce-empty-list checkbox in settings
 msgid "Announce empty list"
-msgstr ""
+msgstr "Najavi prazan popis"
 
 #. Translators: label for announce-list-bounds checkbox in settings
 msgid "Announce list bounds (voice only)"
-msgstr ""
+msgstr "Najavi granice popisa (samo glas)"
 
 #. Translators: Title of the dialog which allows to perform actions on headers of the current list.
 msgid "Headers manager"
@@ -236,9 +237,9 @@ msgstr "Desni klik"
 
 #. Translators: Announced when the given header has been clicked, 'headerName' is replaced with the name of
 #. the  clicked object.
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "{headerName} header clicked"
-msgstr "%s zaglavlje kliknuto"
+msgstr "{headerName} zaglavlje kliknuto"
 
 #. Translators: the label of a message box dialog.
 msgid ""
@@ -259,10 +260,13 @@ msgid ""
 "with empty folder feature of ColumnsReview (if enabled); do you want to "
 "remove it now?"
 msgstr ""
+"Instalirao/la si dodatak {another_addon} od {another_author}, koji uzrokuje "
+"probleme s funkcijom prazne mape dodatka „Pregled stupaca” (ako je "
+"aktiviran); želiš li ga sada ukloniti?"
 
 #. Translators: the title of a message box dialog.
 msgid "Warning!"
-msgstr ""
+msgstr "Upozorenje!"
 
 #. Add-on description
 #. Translators: Long description to be shown for this add-on on add-on information from add-ons manager
