@@ -17,11 +17,26 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 3.0.1\n"
 
+#. Translators: message when list contains one item only
+msgid "Mono-item list: "
+msgstr ""
+
+#. Translators: message when user lands on the last list item
+msgid "List bottom: "
+msgstr ""
+
+#. Translators: message when user lands on the first list item
+msgid "List top: "
+msgstr ""
+
 #. Translators: menu item in preferences
 msgid "Columns Review Settings..."
 msgstr "Ustawienia przeglądania kolumn..."
 
-msgid "(DO NOT EDIT!)"
+#. Translators: Name of the default category
+#. in the Input Gestures dialog where scripts of this add-on are placed.
+#, fuzzy, python-brace-format
+msgid "{name} (DO NOT EDIT!)"
 msgstr "(NIE EDYTUJ!)"
 
 #. Translators: message when digit pressed exceed the columns number
@@ -53,6 +68,7 @@ msgstr "Od {start} do {end}"
 msgid "Cycles between a variable number of intervals of ten columns"
 msgstr "Cykle między zmienną liczbą interwałów dziesięciu kolumn"
 
+#. Translators: Reported when information about position on a list cannot be retrieved.
 msgid "No information available"
 msgstr "Brak dostępnych informacji"
 
@@ -64,9 +80,10 @@ msgstr "Ogłasza informacje o pozycji elementu listy"
 msgid "Provides a dialog for interactions with list column headers"
 msgstr "Zawiera okno dialogowe dla interakcji z nagłówkami kolumn listy"
 
-#. translators: message presented when get selected item count and names
-msgid "selected items"
-msgstr "wybranych elementów"
+#. Translators: message presented when get selected item count and names
+#, python-brace-format
+msgid "{selCount} selected items: {selNames}"
+msgstr ""
 
 #. Translators: documentation for script to know current selected items
 msgid "Reports current selected list items"
@@ -94,44 +111,28 @@ msgstr ""
 "Rozpoczyna czytanie wszystkich elementów listy rozpoczynających się od "
 "elementu z fokusem"
 
+#. Translators: message listing foreground over background colors
+#, python-brace-format
+msgid "{foregroundColors} over {backgroundColors}"
+msgstr ""
+
+#. Translators: Description of the keyboard command,
+#. which reports foreground and background color of the current list item.
+msgid "reports foreground and background colors of the current list item."
+msgstr ""
+
+#. Translators: Reported when it is impossible to report currently selected items.
 msgid "Current selection info not available"
 msgstr "Bieżące informacje o wyborze są niedostępne"
 
+#. Translators: Reported when current list does not support searching.
+msgid "Cannot search here."
+msgstr ""
+
+#. Translators: Label of the checkbox in the find dialog which, if checked, selects multiple
+#. items if they match the search query.
 msgid "Use multiple selection"
 msgstr "Używanie wielokrotnego zaznaczania"
-
-#. Translators: title of settings dialog
-#. Add-on summary, usually the user visible name of the addon.
-#. Translators: Summary for this add-on
-#. to be shown on installation and add-on information found in Add-ons Manager.
-msgid "Columns Review"
-msgstr "Przegląd kolumn"
-
-#. Translators: title of settings dialog
-msgid "Columns Review Settings"
-msgstr "Ustawienia przeglądania kolumn"
-
-#. Translators: Help message for group of comboboxes allowing to assign action to a keypress.
-msgid "When pressing combination to read column:"
-msgstr "Po naciśnięciu kombinacji, aby przeczytać kolumnę:"
-
-#. Translators: Help message for sub-sizer of keys choices
-msgid "Choose the keys you want to use with numbers:"
-msgstr "Wybierz, których chcesz używać z numerami:"
-
-#. Translators: label for numpad keys checkbox in settings
-msgid "Use numpad keys to navigate through the columns"
-msgstr "Używanie numerycznych do poruszania się po kolumnach"
-
-#. Translators: label for edit field in settings, visible if previous checkbox is disabled
-msgid ""
-"Insert the char after \"0\" in your keyboard layout, or another char as you "
-"like:"
-msgstr "Wstaw znak po \"0\" w układzie klawiatury lub inny znak, jak chcesz:"
-
-#. Translators: label for announce-empty-list checkbox in settings
-msgid "Announce empty list (not working in Win8/10 folders)"
-msgstr "Ogłaszaj pustą listę (nie działa w folderach Win8 /10)"
 
 #. Translators: Description of the action which simply ignores the pressed key
 msgid "Do nothing"
@@ -177,23 +178,67 @@ msgstr "Odczytywanie nagłówka kolumny"
 msgid "Copy the column header"
 msgstr "Kopiowanie nagłówka kolumny"
 
+#. Translators: title of settings dialog
+#. Add-on summary, usually the user visible name of the addon.
+#. Translators: Summary for this add-on
+#. to be shown on installation and add-on information found in Add-ons Manager.
+msgid "Columns Review"
+msgstr "Przegląd kolumn"
+
+#. Translators: title of settings dialog
+msgid "Columns Review Settings"
+msgstr "Ustawienia przeglądania kolumn"
+
+#. Translators: Help message for group of comboboxes allowing to assign action to a keypress.
+msgid "When pressing combination to read column:"
+msgstr "Po naciśnięciu kombinacji, aby przeczytać kolumnę:"
+
+#. Translators: Help message for sub-sizer of keys choices
+msgid "Choose the keys you want to use with numbers:"
+msgstr "Wybierz, których chcesz używać z numerami:"
+
+#. Translators: label for numpad keys checkbox in settings
+msgid "Use numpad keys to navigate through the columns"
+msgstr "Używanie numerycznych do poruszania się po kolumnach"
+
+#. Translators: label for edit field in settings, visible if previous checkbox is disabled
+msgid ""
+"Insert the char after \"0\" in your keyboard layout, or another char as you "
+"like:"
+msgstr "Wstaw znak po \"0\" w układzie klawiatury lub inny znak, jak chcesz:"
+
+#. Translators: label for announce-empty-list checkbox in settings
+msgid "Announce empty list"
+msgstr ""
+
+#. Translators: label for announce-list-bounds checkbox in settings
+msgid "Announce list bounds (voice only)"
+msgstr ""
+
+#. Translators: Title of the dialog which allows to perform actions on headers of the current list.
 msgid "Headers manager"
 msgstr "Menedżer nagłówków"
 
+#. Translators: Shown for a header which has no name.
 msgid "Unnamed header"
 msgstr "Nienazwany nagłówek"
 
+#. Translators: Label for a list containing names of all headers of the current list.
 msgid "Headers:"
 msgstr "Nagłówki:"
 
+#. Translators: Label for a button which clicks the given header with the left mouse button.
 msgid "Left click"
 msgstr "Lewy"
 
+#. Translators: Label for a button which clicks the given header with the right mouse button.
 msgid "Right click"
 msgstr "Prawy"
 
-#, python-format
-msgid "%s header clicked"
+#. Translators: Announced when the given header has been clicked, 'headerName' is replaced with the name of
+#. the  clicked object.
+#, fuzzy, python-brace-format
+msgid "{headerName} header clicked"
 msgstr "%s nagłówek kliknięty"
 
 #. Translators: the label of a message box dialog.
@@ -208,7 +253,25 @@ msgstr ""
 msgid "Add-on settings reset"
 msgstr "Resetowanie ustawień dodatku"
 
+#. Translators: the label of a message box dialog to uninstall another add-on
+#, python-brace-format
+msgid ""
+"You have installed {another_addon} by {another_author}, that causes problems "
+"with empty folder feature of ColumnsReview (if enabled); do you want to "
+"remove it now?"
+msgstr ""
+
+#. Translators: the title of a message box dialog.
+msgid "Warning!"
+msgstr ""
+
 #. Add-on description
 #. Translators: Long description to be shown for this add-on on add-on information from add-ons manager
 msgid "A better experience with lists"
 msgstr "Lepsze wrażenia z list"
+
+#~ msgid "selected items"
+#~ msgstr "wybranych elementów"
+
+#~ msgid "Announce empty list (not working in Win8/10 folders)"
+#~ msgstr "Ogłaszaj pustą listę (nie działa w folderach Win8 /10)"
