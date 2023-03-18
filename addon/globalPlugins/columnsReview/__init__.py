@@ -178,27 +178,22 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 
 	def reportListBounds(self, obj):
 			message = None
-			reportFunc = speech.speakMessage if configManager.ConfigFromObject(obj).announceListBoundsWith == "voice" else beep
-			if reportFunc is beep:
-				topBeep = configManager.ConfigFromObject(obj).topBeep
-				bottomBeep = configManager.ConfigFromObject(obj).bottomBeep
-				beepLen = configManager.ConfigFromObject(obj).beepLen
 			try:
 				index = obj.positionInfo["indexInGroup"]
 				similar = obj.positionInfo["similarItemsInGroup"]
 				if index == similar == 1:
 					# Translators: message when list contains one item only
-					message = (_("Mono-item list: "),) if reportFunc != beep else (abs(topBeep-bottomBeep), beepLen*2,)
+					message = _("Mono-item list: ")
 				elif index == similar:
 					# Translators: message when user lands on the last list item
-					message = (_("List bottom: "),) if reportFunc != beep else (topBeep, beepLen,)
+					message = _("List bottom: ")
 				elif index == 1:
 					# Translators: message when user lands on the first list item
-					message = (_("List top: "),) if reportFunc != beep else (bottomBeep, beepLen,)
+					message = _("List top: ")
 			except: # positionInfo absent or empty
 				pass
 			if message:
-				reportFunc(*message)
+				speech.speakMessage(message)
 
 	def createMenu(self):
 		# Dialog or the panel.
