@@ -61,6 +61,38 @@ class ConfigFromObject(object):
 				continue
 
 	@property
+	def announceListBoundsWith(self):
+		for profile in self.getApplicableProfiles():
+			try:
+				return profile["columnsReview"]["general"]["announceListBoundsWith"]
+			except KeyError:
+				continue
+
+	@property
+	def topBeep(self):
+		for profile in self.getApplicableProfiles():
+			try:
+				return int(profile["columnsReview"]["beep"]["topBeep"])
+			except KeyError:
+				continue
+
+	@property
+	def bottomBeep(self):
+		for profile in self.getApplicableProfiles():
+			try:
+				return int(profile["columnsReview"]["beep"]["bottomBeep"])
+			except KeyError:
+				continue
+
+	@property
+	def beepLen(self):
+		for profile in self.getApplicableProfiles():
+			try:
+				return int(profile["columnsReview"]["beep"]["beepLen"])
+			except KeyError:
+				continue
+
+	@property
 	def numpadUsedForColumnsNavigation(self):
 		for profile in self.getApplicableProfiles():
 			try:
