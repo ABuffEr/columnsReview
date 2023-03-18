@@ -191,42 +191,10 @@ class ColumnsReviewSettingsDialog(getattr(gui.settingsDialogs, "SettingsPanel", 
 		settingsSizer.Add(self._announceEmptyList)
 		self._announceListBounds = wx.CheckBox(
 			# Translators: label for announce-list-bounds checkbox in settings
-			self, label=_("Announce list bounds (top, mono-item, bottom)")
+			self, label=_("Announce list bounds (voice only)")
 		)
 		self._announceListBounds.SetValue(config.conf["columnsReview"]["general"]["announceListBounds"])
-		self._announceListBounds.Bind(wx.EVT_CHECKBOX, self.onCheck)
 		settingsSizer.Add(self._announceListBounds)
-		voiceOrBeep = [
-			# Translators: a choice in announce-list-bounds-with radio box
-			_("voice"),
-			# Translators: a choice in announce-list-bounds-with radio box
-			_("beep"),
-		]
-		self._announceListBoundsWith = wx.RadioBox(
-			# Translators: label for announce-list-bounds-with radio box in settings
-			self, label=_("Announce with:"), choices=voiceOrBeep
-		)
-		self._announceListBoundsWith.SetSelection(0 if config.conf["columnsReview"]["general"]["announceListBoundsWith"] == "voice" else 1)
-		self._announceListBoundsWith.Bind(wx.EVT_RADIOBOX, self.onRadioCheck)
-		settingsSizer.Add(self._announceListBoundsWith)
-		# Translators: a tooltip on beep values input box
-		self._beepInstructions=_("Please input a frequency for top beep, a frequency for bottom beep, and their duration in milliseconds (each of three values must be a positive number, separated by comma):")
-		self._beepSizer = wx.StaticBoxSizer(
-			wx.StaticBox(self, label=self._beepInstructions),
-			wx.HORIZONTAL
-		)
-		beepValues = ', '.join([str(x) for x in config.conf["columnsReview"]["beep"].dict().values()])
-		self._beepValues = wx.TextCtrl(
-			self, value=beepValues, name=_("Beep values")
-		)
-		self._beepValues.Bind(wx.EVT_KILL_FOCUS, self.evaluateBeepValues)
-		self._beepSizer.Add(self._beepValues)
-		settingsSizer.Add(self._beepSizer)
-		if not self._announceListBounds.IsChecked():
-			settingsSizer.Hide(self._announceListBoundsWith)
-			settingsSizer.Hide(self._beepSizer) #self._beepValues)
-		if self._announceListBoundsWith.GetSelection() != 1:
-			settingsSizer.Hide(self._beepSizer) #self._beepValues)
 
 	# for dialog only
 	def postInit(self):
@@ -238,36 +206,26 @@ class ColumnsReviewSettingsDialog(getattr(gui.settingsDialogs, "SettingsPanel", 
 	# shared between onOk and onSave
 	def saveConfig(self):
 		# Update Configuration
-		addonConf = config.conf["columnsReview"]
 		copyChkFound = readChkFound = False
-		actionsSection = addonConf["actions"]
+		actionsSection = config.conf["columnsReview"]["actions"]
 		for panel in self.panels:
 			if panel.IsEnabled():
 				selectedActionName = ACTIONS[panel.chooseActionCombo.GetSelection()].name
 				actionsSection["press{}".format(panel.panelNumber)] = selectedActionName
 				if not readChkFound and panel.readHeader.IsEnabled():
 					readChkFound = True
-					addonConf["general"]["readHeader"] = panel.readHeader.IsChecked()
+					config.conf["columnsReview"]["general"]["readHeader"] = panel.readHeader.IsChecked()
 				if not copyChkFound and panel.copyHeader.IsEnabled():
 					copyChkFound = True
-					addonConf["general"]["copyHeader"] = panel.copyHeader.IsChecked()
+					config.conf["columnsReview"]["general"]["copyHeader"] = panel.copyHeader.IsChecked()
 			else:
 				continue
+		config.conf["columnsReview"]["general"]["announceEmptyList"] = self._announceEmptyList.IsChecked()
+		config.conf["columnsReview"]["general"]["announceListBounds"] = self._announceListBounds.IsChecked()
 		for item in self.keysChks:
-			addonConf["gestures"][item[0]] = item[1].IsChecked()
-		addonConf["keyboard"]["useNumpadKeys"] = self._useNumpadKeys.IsChecked()
-		addonConf["keyboard"]["switchChar"] = self._switchChar.GetValue()
-		addonConf["general"]["announceEmptyList"] = self._announceEmptyList.IsChecked()
-		addonConf["general"]["announceListBounds"] = self._announceListBounds.IsChecked()
-		if self._announceListBounds.IsChecked():
-			mode = "beep" if self._announceListBoundsWith.GetSelection() else "voice"
-			addonConf["general"]["announceListBoundsWith"] = mode
-			if mode == "beep":
-				text = self._beepValues.GetValue()
-				topBeep, bottomBeep, beepLen = self.getBeepValues(text)
-				addonConf["beep"]["topBeep"] = topBeep
-				addonConf["beep"]["bottomBeep"] = bottomBeep
-				addonConf["beep"]["beepLen"] = beepLen
+			config.conf["columnsReview"]["gestures"][item[0]] = item[1].IsChecked()
+		config.conf["columnsReview"]["keyboard"]["useNumpadKeys"] = self._useNumpadKeys.IsChecked()
+		config.conf["columnsReview"]["keyboard"]["switchChar"] = self._switchChar.GetValue()
 
 	# for dialog only
 	def onOk(self, evt):
@@ -285,52 +243,8 @@ class ColumnsReviewSettingsDialog(getattr(gui.settingsDialogs, "SettingsPanel", 
 		else:
 			self.settingsSizer.Show(self._switchCharLabel)
 			self.settingsSizer.Show(self._switchChar)
-		if not self._announceListBounds.IsChecked():
-			self.settingsSizer.Hide(self._announceListBoundsWith)
-			self.settingsSizer.Hide(self._beepSizer) #self._beepValues)
-		else:
-			self.settingsSizer.Show(self._announceListBoundsWith)
-			if self._announceListBoundsWith.GetSelection() != 1:
-				self.settingsSizer.Hide(self._beepSizer) #self._beepValues)
-			else:
-				self.settingsSizer.Show(self._beepSizer) #self._beepValues)
 		self.Fit()
 
-	def onRadioCheck(self, evt):
-		if self._announceListBoundsWith.GetSelection() == 1:
-			self.settingsSizer.Show(self._beepSizer) #self._beepValues)
-		else:
-			self.settingsSizer.Hide(self._beepSizer) #self._beepValues)
-
-	def evaluateBeepValues(self, evt):
-		try:
-			text = self._beepValues.GetValue()
-			topBeep, bottomBeep, beepLen = self.getBeepValues(text)
-			from tones import beep
-			from time import sleep
-			beep(topBeep, beepLen)
-			sleep(0.3)
-			beep(abs(topBeep-bottomBeep), beepLen*2)
-			sleep(0.3)
-			beep(bottomBeep, beepLen)
-		except (ValueError, IndexError):
-			gui.messageBox(
-				# Translators: message when user inputs wrong values for beep
-				_("Please input valid values for beep."),
-				# Translators: Title of the dialog when user inputs wrong values for beep
-				_("Error!"),
-				wx.OK | wx.ICON_ERROR
-			)
-			self._beepValues.SetFocus()
-
-	def getBeepValues(self, text):
-		values = [int(x.strip()) for x in text.split(",")]
-		if len(values) != 3:
-			raise IndexError
-		for value in values:
-			if value <= 0:
-				raise ValueError
-		return values
 
 class HeaderDialog(wx.Dialog):
 	"""define dialog for column headers management."""

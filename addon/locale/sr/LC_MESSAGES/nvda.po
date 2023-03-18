@@ -1,257 +1,256 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the columnsReview package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
 msgid ""
 msgstr ""
-"Project-Id-Version: Sütun İncelemesi 5.1\n"
+"Project-Id-Version: columnsReview 3.0\n"
 "Report-Msgid-Bugs-To: nvda-translations@groups.io\n"
 "POT-Creation-Date: 2021-09-16 00:36+0000\n"
-"PO-Revision-Date: 2023-03-18 16:32+0300\n"
-"Last-Translator: Umut KORKMAZ <umutkork@gmail.com>\n"
-"Language-Team: cagrid@hotmail.com\n"
-"Language: tr_TR\n"
+"PO-Revision-Date: 2023-03-03 17:12+0100\n"
+"Last-Translator: Nikola Jović <wwenikola123@gmail.com>\n"
+"Language-Team: Serbian NVDA team <wwenikola123@gmail.com>\n"
+"Language: sr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Poedit-KeywordsList: _;gettext;gettext_noop\n"
-"X-Poedit-Basepath: .\n"
-"X-Poedit-SourceCharset: UTF-8\n"
-"X-Generator: Poedit 3.2.2\n"
-"X-Poedit-SearchPath-0: ../../../globalPlugins\n"
+"X-Generator: Poedit 1.6.10\n"
 
 #. Translators: message when list contains one item only
 msgid "Mono-item list: "
-msgstr "Tek öğe listesi: "
+msgstr "Lista sa jednom stavkom:"
 
 #. Translators: message when user lands on the last list item
 msgid "List bottom: "
-msgstr "Liste Sonu: "
+msgstr "Dno liste:"
 
 #. Translators: message when user lands on the first list item
 msgid "List top: "
-msgstr "Liste başı: "
+msgstr "Vrh liste:"
 
 #. Translators: menu item in preferences
 msgid "Columns Review Settings..."
-msgstr "Sütun İnceleme Ayarları ..."
+msgstr "Podešavanja pregleda kolona..."
 
 #. Translators: Name of the default category
 #. in the Input Gestures dialog where scripts of this add-on are placed.
 #, python-brace-format
 msgid "{name} (DO NOT EDIT!)"
-msgstr "{name} (DEĞİŞTİRME!)"
+msgstr "{name} (DO NOT EDIT!)"
 
 #. Translators: message when digit pressed exceed the columns number
 msgid "No more columns available"
-msgstr "Başka sütun yok"
+msgstr "Nema više dostupnih kolona"
 
 #. Translators: Announced when the column at the requested index is not visible.
 msgid "No more visible columns available"
-msgstr "Artık görünür sütun yok"
+msgstr "Nema više vidljivih dostupnih kolona"
 
 #. Translators: Presented for an empty column.
 msgid "Empty column"
-msgstr "Boş sütun"
+msgstr "Prazna kolona"
 
 #. Translators: documentation of script to read columns
 msgid ""
 "Returns the header and the content of the list column at the index "
 "corresponding to the number pressed"
 msgstr ""
-"Basılan numaraya karşılık gelen dizindeki liste sütununun başlığını ve "
-"içeriğini bildirir"
+"Prikazuje zaglavlje i sadržaj kolone liste koji odgovara pritisnutom broju"
 
 #. Translators: message when you change interval in a list with more ten columns
 #, python-brace-format
 msgid "From {start} to {end}"
-msgstr "{start}'tan {end}'e"
+msgstr "Od {start} do {end}"
 
 #. Translators: documentation for script to change interval
 msgid "Cycles between a variable number of intervals of ten columns"
-msgstr "On sütunun değişken aralık sayısı arasında döner"
+msgstr "Kruži kroz promenljive brojeve intervala od deset kolona"
 
 #. Translators: Reported when information about position on a list cannot be retrieved.
 msgid "No information available"
-msgstr "Bilgi bulunamadı"
+msgstr "Nema dostupnih informacija"
 
 #. Translators: documentation for script to announce list item info
 msgid "Announces list item position information"
-msgstr "Liste öğesi konum bilgisini duyurur"
+msgstr "Izgovara informacije o poziciji stavke liste"
 
 #. Translators: documentation for script to manage headers
 msgid "Provides a dialog for interactions with list column headers"
-msgstr "Liste sütun başlıklarıyla etkileşim için bir iletişim kutusu gösterir"
+msgstr "Pruža dijalog za interakciju sa zaglavljima za stavke liste"
 
 #. Translators: message presented when get selected item count and names
 #, python-brace-format
 msgid "{selCount} selected items: {selNames}"
-msgstr "{selCount} seçili öğe: {selNames}"
+msgstr "{selCount} izabrane stavke: {selNames}"
 
 #. Translators: documentation for script to know current selected items
 msgid "Reports current selected list items"
-msgstr "Geçerli seçili liste öğelerini bildirir"
+msgstr "Prijavljuje trenutne izabrane stavke"
 
 #. Translators: documentation for script to find in list
 msgid "Provides a dialog for searching in item list"
-msgstr "Öğe listesinde arama yapmak için bir iletişim kutusu gösterir"
+msgstr "Pruža dijalog za pretragu liste"
 
 #. Translators: Message presented when search is in progress.
 msgid "Searching..."
-msgstr "Aranıyor..."
+msgstr "Pretraživanje..."
 
 #. Translators: documentation for script to manage headers
 msgid "Goes to next result of current search"
-msgstr "Geçerli aramanın sonraki sonucuna gider"
+msgstr "Prebacuje se na sledeći rezultat pretrage"
 
 #. Translators: documentation for script to manage headers
 msgid "Goes to previous result of current search"
-msgstr "Geçerli aramanın önceki sonucuna gider"
+msgstr "Prebacuje se na prethodni rezultat pretrage"
 
 #. Translators: documentation for script to read all list items starting from the focused one.
 msgid "Starts reading all list items beginning at the item with focus"
-msgstr "Odaklanılan öğeden başlayarak tüm liste öğelerini okumaya başlar"
+msgstr "Započinje čitanje liste počevši od trenutno fokusirane stavke"
 
 #. Translators: message listing foreground over background colors
 #, python-brace-format
 msgid "{foregroundColors} over {backgroundColors}"
-msgstr "{backgroundColors} yerine {foregroundColors}"
+msgstr "{foregroundColors} preko {backgroundColors}"
 
 #. Translators: Description of the keyboard command,
 #. which reports foreground and background color of the current list item.
 msgid "reports foreground and background colors of the current list item."
-msgstr "geçerli liste öğesinin ön plan ve arka plan renklerini bildirir."
+msgstr "Prikazuje trenutne i pozadinske boje stavke liste."
 
 #. Translators: Reported when it is impossible to report currently selected items.
 msgid "Current selection info not available"
-msgstr "Geçerli seçim bilgisi mevcut değil"
+msgstr "Informacije o trenutnom izboru nisu dostupne"
 
 #. Translators: Reported when current list does not support searching.
 msgid "Cannot search here."
-msgstr "Burada arama yapılamıyor."
+msgstr "Nemoguće ovde pretražiti."
 
 #. Translators: Label of the checkbox in the find dialog which, if checked, selects multiple
 #. items if they match the search query.
 msgid "Use multiple selection"
-msgstr "Çoklu seçim kullan"
+msgstr "Koristi izbor više stavki"
 
 #. Translators: Description of the action which simply ignores the pressed key
 msgid "Do nothing"
-msgstr "Hiçbir şey yapma"
+msgstr "Ne radi ništa"
 
 #. Translators: Name of the action which reads given column.
 msgid "Read column"
-msgstr "Sütunu oku"
+msgstr "Pročitaj kolonu"
 
 #. Translators: Name of the action which copies given column.
 msgid "Copy column"
-msgstr "Sütunu kopyala"
+msgstr "Kopiraj kolonu"
 
 #. Translators: Name of the action which spells given column.
 msgid "Spell column"
-msgstr "Sütunu kodlayarak seslendir"
+msgstr "Čitaj kolonu slovo po slovo"
 
 #. Translators: Name of the action which displays content of the given column in the browseable message.
 msgid "Show column content in browse mode"
-msgstr "Sütun içeriğini tarama kipinde göster"
+msgstr "Prikaži sadržaj kolone u režimu pretraživanja"
 
 #. Translators: Label of a combobox in which action can be assigned to a first press of the shortcut.
 msgid "On first press:"
-msgstr "İlk basışta:"
+msgstr "Nakon prvog pritiskanja:"
 
 #. Translators: Label of a combobox in which action can be assigned to a second press of the shortcut.
 msgid "On second press:"
-msgstr "İkinci basışta:"
+msgstr "Nakon drugog pritiskanja:"
 
 #. Translators: Label of a combobox in which action can be assigned to a third press of the shortcut.
 msgid "On third press:"
-msgstr "Üçüncü basışta:"
+msgstr "Nakon trećeg pritiskanja:"
 
 #. Translators: Label of a combobox in which action can be assigned to a fourth press of the shortcut.
 msgid "On fourth press:"
-msgstr "Dördüncü basışta:"
+msgstr "Nakon četvrtog pritiskanja:"
 
 #. Translators: label for read-header checkbox in settings
 msgid "Read the column header"
-msgstr "Sütun başlığını oku"
+msgstr "Čitaj zaglavlje kolone"
 
 #. Translators: label for copy-header checkbox in settings
 msgid "Copy the column header"
-msgstr "Sütun başlığını kopyala"
+msgstr "Kopiraj zaglavlje kolone"
 
 #. Translators: title of settings dialog
 #. Add-on summary, usually the user visible name of the addon.
 #. Translators: Summary for this add-on
 #. to be shown on installation and add-on information found in Add-ons Manager.
 msgid "Columns Review"
-msgstr "Sütun İncelemesi"
+msgstr "Pregled kolona"
 
 #. Translators: title of settings dialog
 msgid "Columns Review Settings"
-msgstr "Sütun İnceleme Ayarları"
+msgstr "Podešavanja pregleda kolona"
 
 #. Translators: Help message for group of comboboxes allowing to assign action to a keypress.
 msgid "When pressing combination to read column:"
-msgstr "Sütunu okumak için ilgili kombinasyona basıldığında:"
+msgstr "Kada se pritisne kombinacija za čitanje kolone:"
 
 #. Translators: Help message for sub-sizer of keys choices
 msgid "Choose the keys you want to use with numbers:"
-msgstr "Numaralarla kullanmak istediğiniz tuşları seçin:"
+msgstr "Izaberite tastere koje želite da koristite sa brojevima:"
 
 #. Translators: label for numpad keys checkbox in settings
 msgid "Use numpad keys to navigate through the columns"
-msgstr "Sütunlar arasında gezinmek için sayısal tuş takımındaki tuşları kullan"
+msgstr "Koristite tastere numeričke tastature za navigaciju kroz kolone"
 
 #. Translators: label for edit field in settings, visible if previous checkbox is disabled
 msgid ""
 "Insert the char after \"0\" in your keyboard layout, or another char as you "
 "like:"
 msgstr ""
-"Klavye düzeninizde \"0\" dan sonraki karakteri veya seçtiğiniz başka bir "
-"karakteri girin:"
+"Upišite znak posle broja \"0\" na vašem rasporedu tastature, ili neki drugi "
+"znak ako želite:"
 
 #. Translators: label for announce-empty-list checkbox in settings
 msgid "Announce empty list"
-msgstr "Boş listeyi duyur"
+msgstr "Izgovori praznu listu"
 
 #. Translators: label for announce-list-bounds checkbox in settings
 msgid "Announce list bounds (voice only)"
-msgstr "Liste sınırlarını duyur (yalnızca ses)"
+msgstr "Izgovori granice liste (samo glasovno)"
 
 #. Translators: Title of the dialog which allows to perform actions on headers of the current list.
 msgid "Headers manager"
-msgstr "Üstbilgi yöneticisi"
+msgstr "Upravljač zaglavljima"
 
 #. Translators: Shown for a header which has no name.
 msgid "Unnamed header"
-msgstr "Adsız başlık"
+msgstr "Neimenovano zaglavlje"
 
 #. Translators: Label for a list containing names of all headers of the current list.
 msgid "Headers:"
-msgstr "Başlıklar:"
+msgstr "Zaglavlja:"
 
 #. Translators: Label for a button which clicks the given header with the left mouse button.
 msgid "Left click"
-msgstr "Sol tık"
+msgstr "Levi klik"
 
 #. Translators: Label for a button which clicks the given header with the right mouse button.
 msgid "Right click"
-msgstr "Sağ tık"
+msgstr "Desni klik"
 
 #. Translators: Announced when the given header has been clicked, 'headerName' is replaced with the name of
 #. the  clicked object.
 #, python-brace-format
 msgid "{headerName} header clicked"
-msgstr "{headerName} başlık tıklandı"
+msgstr "{headerName} kliknuto zaglavlje"
 
 #. Translators: the label of a message box dialog.
 msgid ""
 "Previous add-on settings will be lost. Please configure it again, from NVDA "
 "preferences."
 msgstr ""
-"Önceki eklenti ayarları kaybolacak. Lütfen NVDA tercihlerinden yeniden "
-"yapılandırın."
+"Prethodna podešavanja dodatka će biti izgubljena. Molimo podesite ih ponovo "
+"iz NVDA podešavanja."
 
 #. Translators: the title of a message box dialog.
 msgid "Add-on settings reset"
-msgstr "Eklenti ayarları sıfırlandı"
+msgstr "Vraćanje podešavanja dodatka"
 
 #. Translators: the label of a message box dialog to uninstall another add-on
 #, python-brace-format
@@ -260,21 +259,15 @@ msgid ""
 "with empty folder feature of ColumnsReview (if enabled); do you want to "
 "remove it now?"
 msgstr ""
-"{another_author} tarafından {another_addon} yüklediniz, bu ColumnsReview'ın "
-"(etkinleştirilmişse) boş klasör özelliğinde sorunlara neden oluyor; O "
-"nedenle kaldırmak istiyor musunuz?"
+"Instalirali ste {another_addon} od strane {another_author}, koji izaziva "
+"probleme sa opcijom praznih foldera dodatka pregled kolona (ako je "
+"omogućena); da li želite sada da ga uklonite?"
 
 #. Translators: the title of a message box dialog.
 msgid "Warning!"
-msgstr "Uyarı!"
+msgstr "Upozorenje!"
 
 #. Add-on description
 #. Translators: Long description to be shown for this add-on on add-on information from add-ons manager
 msgid "A better experience with lists"
-msgstr "Listelerle daha iyi bir deneyim"
-
-#~ msgid "selected items"
-#~ msgstr "seçilen öğeler"
-
-#~ msgid "Announce empty list (not working in Win8/10 folders)"
-#~ msgstr "Boş liste bildirimi (Win8/10 klasörlerinde çalışmıyor)"
+msgstr "Bolje iskustvo u listama"
