@@ -25,7 +25,7 @@ addon_info = {
 	# Translators: Long description to be shown for this add-on on add-on information from add-ons manager
 	"addon_description": _("""A better experience with lists"""),
 	# version
-	"addon_version": "5.1",
+	"addon_version": "5.2",
 	# Author(s)
 	"addon_author": u"Alberto Buffolino <a.buffolino@gmail.com>, Łukasz Golonka <lukasz.golonka@mailbox.org>, other contributors",
 	# URL for the add-on documentation support
