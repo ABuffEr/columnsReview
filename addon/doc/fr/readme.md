@@ -28,8 +28,8 @@ Ses fonctionnalités incluent :
 ## Gestes
 
 Les touches par défaut pour les colonnes, les en-têtes et la position sont
-NVDA+contrôle, mais vous pouvez les personnaliser à partir des paramètres du
-module complémentaire (pas du dialogue « Gestes de commandes » !).
+NVDA+contrôle, mais vous pouvez les personnaliser à partir des paramètres de
+l'extension (pas du dialogue « Gestes de commandes » !).
 
 Notez que votre clavier peut avoir des problèmes pour traiter certaines
 combinaisons de touches, alors essayez tous les gestes de l'extension et
