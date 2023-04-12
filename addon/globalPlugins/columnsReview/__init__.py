@@ -49,6 +49,7 @@ import watchdog
 import winUser
 import wx
 from _ctypes import COMError
+from queueHandler import queueFunction, eventQueue
 from .actions import ACTIONS, actionFromName, configuredActions
 from .commonFunc import NVDALocale, findAllDescendantWindows, getScriptGestures, getFolderListViaUIA, getFolderListViaHandle
 from .compat import CTWRAPPER, rangeFunc
@@ -60,6 +61,8 @@ from . import utils
 
 # rename for code clarity
 SysLV32List = sysListView32.List
+roles = CTWRAPPER.Role
+states = CTWRAPPER.State
 py3 = sys.version.startswith("3")
 config.conf.spec["columnsReview"] = configSpec.confspec
 
@@ -82,6 +85,7 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 		if globalVars.appArgs.secure:
 			return
 		self.createMenu()
+		self._obj = None
 		for extPointName in PROFILE_SWITCHED_NOTIFIERS:
 			try:
 				getattr(config, extPointName).register(self.handleConfigProfileSwitch)
@@ -89,61 +93,82 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 				continue
 
 	def chooseNVDAObjectOverlayClasses(self, obj, clsList):
-		if obj.role == CTWRAPPER.Role.LIST:
+		objRole = obj.role
+		objUIAElement = getattr(obj, "UIAElement", None)
+		objWindowClassName = obj.windowClassName
+		if objRole == roles.LIST:
 			if SysLV32List in clsList:
 				clsList.insert(0, CRList32)
 			# Windows 8/8.1/10 Start Screen tiles should not expose column info.
-			elif UIA in clsList and obj.UIAElement.cachedClassName == "UIItemsView":
+			elif UIA in clsList and objUIAElement.cachedClassName == "UIItemsView":
 				clsList.insert(0, CRList64)
 			return
 		# for Outlook
-		if(
-			obj.role == CTWRAPPER.Role.TABLE
+		if (
+			objRole == roles.TABLE
 			and UIA in clsList
-			and obj.UIAElement.cachedClassName == "SuperGrid"
+			and objUIAElement.cachedClassName == "SuperGrid"
 		):
 			clsList.insert(0, UIASuperGrid)
 			return
-		if(
-			obj.windowClassName == "MozillaWindowClass"
-			and obj.role in (CTWRAPPER.Role.TABLE, CTWRAPPER.Role.TREEVIEW)
+		if (
+			objRole in (roles.TABLE, roles.TREEVIEW)
+			and objWindowClassName == "MozillaWindowClass"
 			and not obj.treeInterceptor
 		):
 			clsList.insert(0, MozillaTable)
 			return
 		# found in RSSOwlnix, but may be in other software
 		if (
-			obj.role == CTWRAPPER.Role.TREEVIEW
-			and obj.parent
-			and obj.parent.previous
-			and obj.parent.previous.windowClassName == "SysHeader32"
+			objRole == roles.TREEVIEW
+			and getattr(obj.parent.previous, "windowClassName", "") == "SysHeader32"
+#			and obj.parent
+#			and obj.parent.previous
+#			and obj.parent.previous.windowClassName == "SysHeader32"
 		):
 			clsList.insert(0, CRTreeview)
 			return
 		# for opening an empty folder
 		# Note: windowText is to avoid problems with menubar (Ribbon disabled)
-		if hasattr(obj, "appModule") and obj.appModule.appName == "explorer" and obj.role == CTWRAPPER.Role.WINDOW and obj.windowClassName == "ToolbarWindow32" and obj.windowText:
-			# to avoid focus moving when tabbing among folder controls
-			focus = api.getFocusObject()
-			if focus.role != CTWRAPPER.Role.LISTITEM or focus.windowClassName not in ("DirectUIHWND", "MultitaskingViewFrame"):
-				return
-			# strange, but works better with pending events check
-			parObj = obj.simpleParent
-			if eventHandler.isPendingEvents(obj=parObj):
-				return
-			# Ribbon enabled, Ribbon disabled, UIA may be or not to be...
-			if hasattr(parObj, "UIAElement"):
-				curList = getFolderListViaUIA(parObj)
-			else:
-				curList = getFolderListViaHandle(parObj)
-			# ensure to remain in explorer and on an empty folder list
-			if hasattr(curList, "appModule") and curList.appModule.appName == "explorer" and hasattr(curList, "isEmptyList") and curList.isEmptyList():
-				# force the event that lacks
-				eventHandler.queueEvent("focusEntered", curList)
+		if (
+			objRole == roles.WINDOW
+			and objWindowClassName == "ToolbarWindow32"
+			and hasattr(obj, "appModule")
+			and obj.appModule.appName == "explorer"
+			and obj.windowText
+		):
+			queueFunction(eventQueue, self.catchEmptyFolder, obj, _immediate=True)
 		# uncomment and set DEBUG to True for investigating
 #		if hasattr(obj, "appModule") and obj.appModule.appName == "explorer":
 #			fg = api.getForegroundObject()
-#			debugLog(f"{fg.name}: {obj.name}, {repr(obj.role)}, {obj.windowClassName}")
+#			debugLog(f"{fg.name}: {obj.name}, {repr(objRole)}, {objWindowClassName}")
+
+	def catchEmptyFolder(self, obj):
+		if obj == self._obj or (getattr(self._obj, "windowThreadID", None) == obj.windowThreadID):
+			return
+		# to avoid focus moving when tabbing among folder controls
+		focus = api.getFocusObject()
+		if focus.role != roles.LISTITEM or focus.windowClassName not in ("DirectUIHWND", "MultitaskingViewFrame"):
+			return
+		# strange, but works better with pending events check
+		parObj = obj.simpleParent
+		if eventHandler.isPendingEvents(obj=parObj):
+			return
+		# Ribbon enabled, Ribbon disabled, UIA may be or not to be...
+		if hasattr(parObj, "UIAElement"):
+			curList = getFolderListViaUIA(parObj)
+		else:
+			curList = getFolderListViaHandle(parObj)
+		# ensure to remain in explorer and on an empty folder list
+		if (
+			hasattr(curList, "appModule")
+			and curList.appModule.appName == "explorer"
+			and hasattr(curList, "isEmptyList")
+			and curList.isEmptyList()
+		):
+			# force the event that lacks
+			eventHandler.queueEvent("focusEntered", curList)
+			self._obj = obj
 
 	def event_gainFocus(self, obj, nextHandler):
 		# speedup: nothing for web
@@ -151,24 +176,34 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 			nextHandler()
 			return
 		if (
-			(obj.role == CTWRAPPER.Role.LISTITEM
-				or (obj.role == CTWRAPPER.Role.TABLEROW and obj.windowClassName == "MozillaWindowClass")
+			(obj.role == roles.LISTITEM
+				or (obj.role == roles.TABLEROW and obj.windowClassName == "MozillaWindowClass")
 			# delay config check, that seems slower
 			) and configManager.ConfigFromObject(obj).announceListBounds
 		):
 			self.reportListBounds(obj)
 		elif hasattr(obj, "appModule") and obj.appModule.appName == "explorer":
 			# for focusing a previously opened empty folder
-			if obj.name and obj.windowClassName == "CabinetWClass" and obj.role == CTWRAPPER.Role.PANE:
+			if obj.name and obj.windowClassName == "CabinetWClass" and obj.role == roles.PANE:
 				# unusually, focus is on a pane
 				# containing the folder and other controls
 				curList = getFolderListViaHandle(obj)
 				# ensure to remain in explorer and on an empty folder list
-				if hasattr(curList, "appModule") and curList.appModule.appName == "explorer" and hasattr(curList, "isEmptyList") and curList.isEmptyList():
+				if (
+					hasattr(curList, "appModule")
+					and curList.appModule.appName == "explorer"
+					and hasattr(curList, "isEmptyList")
+					and curList.isEmptyList()
+				):
 					# force the event that lacks
 					eventHandler.queueEvent("focusEntered", curList)
 			# closing menu (Ribbon disabled) return a unexpected IAccessible version of folder list
-			elif obj.role == CTWRAPPER.Role.LIST and obj.hasFocus and obj.windowClassName == "DirectUIHWND" and not isinstance(obj, UIA): #and obj.isFocusable and CTWRAPPER.State.READONLY in obj.states:
+			elif (
+				obj.role == roles.LIST
+				and obj.windowClassName == "DirectUIHWND"
+				and obj.hasFocus
+				and not isinstance(obj, UIA)
+			):
 				# so, normalize getting the usual UIA version
 				newObj = getFolderListViaHandle(obj.simpleParent)
 				# ensure to remain in same application (explorer)
@@ -436,7 +471,7 @@ class CRList(object):
 			number = curItem.positionInfo["indexInGroup"]
 			total = curItem.positionInfo["similarItemsInGroup"]
 		except (AttributeError, KeyError):
-			tempList = [i for i in self.children if i.role == CTWRAPPER.Role.LISTITEM]
+			tempList = [i for i in self.children if i.role == roles.LISTITEM]
 			if tempList:
 				number = tempList.index(curItem)
 				total = len(tempList)
@@ -454,7 +489,7 @@ class CRList(object):
 	)
 
 	def script_manageHeaders(self, gesture):
-		headers = [h for h in self.getHeaderParent().children if CTWRAPPER.State.INVISIBLE not in h.states]
+		headers = [h for h in self.getHeaderParent().children if states.INVISIBLE not in h.states]
 		wx.CallAfter(
 			dialogs.HeaderDialog.Run,
 			title=self.appModule.appName,
@@ -480,7 +515,7 @@ class CRList(object):
 		items = []
 		item = self.firstChild
 		while (item and item.role == curItem.role):
-			if CTWRAPPER.State.SELECTED in item.states:
+			if states.SELECTED in item.states:
 				itemChild = item.getChild(0)
 				itemName = itemChild.name if itemChild else item.name
 				if itemName:
@@ -771,7 +806,7 @@ class CRList32(CRList):
 			child = child.next
 			if not child:
 				break
-			if CTWRAPPER.State.INVISIBLE not in child.states:
+			if states.INVISIBLE not in child.states:
 				counter += 1
 			if counter == num:
 				stop = True
@@ -870,7 +905,7 @@ class CRList32(CRList):
 				(not self.rowCount)
 				# usual condition for SysListView32
 				# (the unique child should be the header list, that usually follows items)
-				or (self.firstChild.role != CTWRAPPER.Role.LISTITEM and self.firstChild == self.lastChild)
+				or (self.firstChild.role != roles.LISTITEM and self.firstChild == self.lastChild)
 				# condition for possible strange cases
 				or (self.childCount <= 1)
 			):
@@ -916,7 +951,7 @@ class CRList64(CRList):
 		# otherwise individually visible as first list children
 		curItem = api.getFocusObject()
 		headerParent = curItem.simpleParent.simpleFirstChild
-		if headerParent.parent.role == CTWRAPPER.Role.HEADER:
+		if headerParent.parent.role == roles.HEADER:
 			return headerParent.parent
 		else:
 			return headerParent.next
@@ -1244,7 +1279,7 @@ class UIASuperGrid(CRList):
 				return not bool(childCount)
 			except:
 				pass
-		if self.childCount == 1 and self.firstChild.role == CTWRAPPER.Role.PANE:
+		if self.childCount == 1 and self.firstChild.role == roles.PANE:
 			# it's an empty list with header objs, so...
 			return True
 		else:
@@ -1261,7 +1296,7 @@ class MozillaTable(CRList32):
 		"""Returns the column header in Mozilla applications"""
 		# get the list with headers, excluding these
 		# which are not header (i.e. for settings, in Thunderbird)
-		headers = [i for i in self.getHeaderParent().children if i.role == CTWRAPPER.Role.TABLECOLUMNHEADER]
+		headers = [i for i in self.getHeaderParent().children if i.role == roles.TABLECOLUMNHEADER]
 		# now, headers are not ordered as on screen,
 		# but we deduce the order thanks to top location of each header
 		headers.sort(key=lambda i: i.location)
@@ -1493,7 +1528,7 @@ class CRTreeview(CRList32):
 		items = []
 		item = self.firstChild
 		while (item and item.role == curItem.role):
-			if CTWRAPPER.State.SELECTED in item.states:
+			if states.SELECTED in item.states:
 				itemName = ' '.join([item.name, item.description])
 				if itemName:
 					items.append(itemName)
