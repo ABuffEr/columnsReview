@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: columnsReview 3.0\n"
 "Report-Msgid-Bugs-To: nvda-translations@groups.io\n"
 "POT-Creation-Date: 2021-09-16 00:36+0000\n"
-"PO-Revision-Date: 2023-03-16 23:23+0100\n"
+"PO-Revision-Date: 2023-04-05 20:34+0200\n"
 "Last-Translator: Karl-Otto Rosenqvist <karl-otto@mawingu.se>\n"
 "Language-Team: \n"
 "Language: sv\n"
@@ -31,7 +31,7 @@ msgstr "Listans överkant"
 
 #. Translators: menu item in preferences
 msgid "Columns Review Settings..."
-msgstr "Inställningar för Kolumngranskning"
+msgstr "Inställningar för Columns Review"
 
 #. Translators: Name of the default category
 #. in the Input Gestures dialog where scripts of this add-on are placed.
@@ -181,11 +181,11 @@ msgstr "Kopiera kolumnrubriken"
 #. Translators: Summary for this add-on
 #. to be shown on installation and add-on information found in Add-ons Manager.
 msgid "Columns Review"
-msgstr "Kolumngranskning"
+msgstr "Columns Review"
 
 #. Translators: title of settings dialog
 msgid "Columns Review Settings"
-msgstr "Inställningar för Kolumngranskning"
+msgstr "Inställningar för Columns Review"
 
 #. Translators: Help message for group of comboboxes allowing to assign action to a keypress.
 msgid "When pressing combination to read column:"
@@ -213,7 +213,7 @@ msgstr "Meddela tom lista"
 
 #. Translators: label for announce-list-bounds checkbox in settings
 msgid "Announce list bounds (voice only)"
-msgstr "Meddela listors kanter (endast röst)"
+msgstr "Meddela listors ytterlägen (endast röst)"
 
 #. Translators: Title of the dialog which allows to perform actions on headers of the current list.
 msgid "Headers manager"
