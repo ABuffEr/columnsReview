@@ -91,6 +91,6 @@ Las listas soportadas son:
 [[!tag dev stable]]
 
 
-[stable]: https://addons.nvda-project.org/files/get.php?file=cr
+[stable]: https://www.nvaccess.org/addonStore/legacy?file=cr
 
-[dev]: https://addons.nvda-project.org/files/get.php?file=cr-dev
+[dev]: https://www.nvaccess.org/addonStore/legacy?file=cr-dev
