@@ -51,7 +51,7 @@ import wx
 from _ctypes import COMError
 from queueHandler import queueFunction, eventQueue
 from .actions import ACTIONS, actionFromName, configuredActions
-from .commonFunc import NVDALocale, findAllDescendantWindows, getScriptGestures, getFolderListViaUIA, getFolderListViaHandle
+from .commonFunc import NVDALocale, findAllDescendantWindows, getScriptGestures
 from .compat import CTWRAPPER, rangeFunc
 from . import configManager
 from . import configSpec
@@ -85,7 +85,7 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 		if globalVars.appArgs.secure:
 			return
 		self.createMenu()
-		self._obj = None
+		self.proceedWithBounds = False
 		for extPointName in PROFILE_SWITCHED_NOTIFIERS:
 			try:
 				getattr(config, extPointName).register(self.handleConfigProfileSwitch)
@@ -94,20 +94,19 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 
 	def chooseNVDAObjectOverlayClasses(self, obj, clsList):
 		objRole = obj.role
-		objUIAElement = getattr(obj, "UIAElement", None)
 		objWindowClassName = obj.windowClassName
 		if objRole == roles.LIST:
 			if SysLV32List in clsList:
 				clsList.insert(0, CRList32)
 			# Windows 8/8.1/10 Start Screen tiles should not expose column info.
-			elif UIA in clsList and objUIAElement.cachedClassName == "UIItemsView":
+			elif UIA in clsList and obj.UIAElement.cachedClassName == "UIItemsView":
 				clsList.insert(0, CRList64)
 			return
 		# for Outlook
 		if (
 			objRole == roles.TABLE
 			and UIA in clsList
-			and objUIAElement.cachedClassName == "SuperGrid"
+			and obj.UIAElement.cachedClassName == "SuperGrid"
 		):
 			clsList.insert(0, UIASuperGrid)
 			return
@@ -119,56 +118,22 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 			clsList.insert(0, MozillaTable)
 			return
 		# found in RSSOwlnix, but may be in other software
-		if (
-			objRole == roles.TREEVIEW
-			and getattr(obj.parent.previous, "windowClassName", "") == "SysHeader32"
-#			and obj.parent
-#			and obj.parent.previous
-#			and obj.parent.previous.windowClassName == "SysHeader32"
-		):
-			clsList.insert(0, CRTreeview)
-			return
-		# for opening an empty folder
-		# Note: windowText is to avoid problems with menubar (Ribbon disabled)
-		if (
-			objRole == roles.WINDOW
-			and objWindowClassName == "ToolbarWindow32"
-			and hasattr(obj, "appModule")
-			and obj.appModule.appName == "explorer"
-			and obj.windowText
-		):
-			queueFunction(eventQueue, self.catchEmptyFolder, obj, _immediate=True)
-		# uncomment and set DEBUG to True for investigating
-#		if hasattr(obj, "appModule") and obj.appModule.appName == "explorer":
-#			fg = api.getForegroundObject()
-#			debugLog(f"{fg.name}: {obj.name}, {repr(objRole)}, {objWindowClassName}")
+		if objRole == roles.TREEVIEW:
+			try:
+				if obj.parent.previous.windowClassName == "SysHeader32":
+					clsList.insert(0, CRTreeview)
+			except AttributeError:
+				pass
 
-	def catchEmptyFolder(self, obj):
-		if obj == self._obj or (getattr(self._obj, "windowThreadID", None) == obj.windowThreadID):
-			return
-		# to avoid focus moving when tabbing among folder controls
-		focus = api.getFocusObject()
-		if focus.role != roles.LISTITEM or focus.windowClassName not in ("DirectUIHWND", "MultitaskingViewFrame"):
-			return
-		# strange, but works better with pending events check
-		parObj = obj.simpleParent
-		if eventHandler.isPendingEvents(obj=parObj):
-			return
-		# Ribbon enabled, Ribbon disabled, UIA may be or not to be...
-		if hasattr(parObj, "UIAElement"):
-			curList = getFolderListViaUIA(parObj)
-		else:
-			curList = getFolderListViaHandle(parObj)
-		# ensure to remain in explorer and on an empty folder list
+	def event_focusEntered(self, obj, nextHandler):
 		if (
-			hasattr(curList, "appModule")
-			and curList.appModule.appName == "explorer"
-			and hasattr(curList, "isEmptyList")
-			and curList.isEmptyList()
+			obj.role == roles.LIST
+			or (obj.role == roles.TABLE and obj.windowClassName == "MozillaWindowClass")
 		):
-			# force the event that lacks
-			eventHandler.queueEvent("focusEntered", curList)
-			self._obj = obj
+			self.proceedWithBounds = True
+		else:
+			self.proceedWithBounds = False
+		nextHandler()
 
 	def event_gainFocus(self, obj, nextHandler):
 		# speedup: nothing for web
@@ -176,64 +141,44 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 			nextHandler()
 			return
 		if (
-			(obj.role == roles.LISTITEM
+			self.proceedWithBounds
+			and (obj.role == roles.LISTITEM
 				or (obj.role == roles.TABLEROW and obj.windowClassName == "MozillaWindowClass")
-			# delay config check, that seems slower
-			) and configManager.ConfigFromObject(obj).announceListBounds
+			)
 		):
 			self.reportListBounds(obj)
-		elif hasattr(obj, "appModule") and obj.appModule.appName == "explorer":
-			# for focusing a previously opened empty folder
-			if obj.name and obj.windowClassName == "CabinetWClass" and obj.role == roles.PANE:
-				# unusually, focus is on a pane
-				# containing the folder and other controls
-				curList = getFolderListViaHandle(obj)
-				# ensure to remain in explorer and on an empty folder list
-				if (
-					hasattr(curList, "appModule")
-					and curList.appModule.appName == "explorer"
-					and hasattr(curList, "isEmptyList")
-					and curList.isEmptyList()
-				):
-					# force the event that lacks
-					eventHandler.queueEvent("focusEntered", curList)
-			# closing menu (Ribbon disabled) return a unexpected IAccessible version of folder list
-			elif (
-				obj.role == roles.LIST
-				and obj.windowClassName == "DirectUIHWND"
-				and obj.hasFocus
-				and not isinstance(obj, UIA)
-			):
-				# so, normalize getting the usual UIA version
-				newObj = getFolderListViaHandle(obj.simpleParent)
-				# ensure to remain in same application (explorer)
-				if hasattr(newObj, "appModule") and newObj.appModule.appName == obj.appModule.appName:
-					eventHandler.queueEvent("focusEntered", newObj)
 		nextHandler()
 
 	def reportListBounds(self, obj):
-			message = None
-			reportFunc = speech.speakMessage if configManager.ConfigFromObject(obj).announceListBoundsWith == "voice" else beep
-			if reportFunc is beep:
-				topBeep = configManager.ConfigFromObject(obj).topBeep
-				bottomBeep = configManager.ConfigFromObject(obj).bottomBeep
-				beepLen = configManager.ConfigFromObject(obj).beepLen
-			try:
-				index = obj.positionInfo["indexInGroup"]
-				similar = obj.positionInfo["similarItemsInGroup"]
-				if index == similar == 1:
-					# Translators: message when list contains one item only
-					message = (_("Mono-item list: "),) if reportFunc != beep else (abs(topBeep-bottomBeep), beepLen*2,)
-				elif index == similar:
-					# Translators: message when user lands on the last list item
-					message = (_("List bottom: "),) if reportFunc != beep else (topBeep, beepLen,)
-				elif index == 1:
-					# Translators: message when user lands on the first list item
-					message = (_("List top: "),) if reportFunc != beep else (bottomBeep, beepLen,)
-			except: # positionInfo absent or empty
-				pass
-			if message:
-				reportFunc(*message)
+		pos = None
+		try:
+			index = obj.positionInfo["indexInGroup"]
+			similar = obj.positionInfo["similarItemsInGroup"]
+			if index == similar == 1:
+				pos = "mono"
+			elif index == similar:
+				pos = "bottom"
+			elif index == 1:
+				pos = "top"
+		except: # positionInfo absent or empty
+			pass
+		if not pos:
+			return
+		reportFunc = speech.speakMessage if configManager.ConfigFromObject(obj).announceListBoundsWith == "voice" else beep
+		if reportFunc is beep:
+			topBeep = configManager.ConfigFromObject(obj).topBeep
+			bottomBeep = configManager.ConfigFromObject(obj).bottomBeep
+			beepLen = configManager.ConfigFromObject(obj).beepLen
+		if pos == "mono":
+			# Translators: message when list contains one item only
+			message = (_("Mono-item list: "),) if reportFunc != beep else (abs(topBeep-bottomBeep), beepLen*2,)
+		elif pos == "bottom":
+			# Translators: message when user lands on the last list item
+			message = (_("List bottom: "),) if reportFunc != beep else (topBeep, beepLen,)
+		elif pos == "top":
+			# Translators: message when user lands on the first list item
+			message = (_("List top: "),) if reportFunc != beep else (bottomBeep, beepLen,)
+		reportFunc(*message)
 
 	def createMenu(self):
 		# Dialog or the panel.
@@ -307,6 +252,11 @@ class CRList(object):
 	# Don't forget to implement `isEmptyList` for the class if this is set to `True`.
 	supportsEmptyListAnnouncements = False
 
+	def initOverlayClass(self):
+		"""maps the correct gestures and adds the new objects to the list of existing instances"""
+		self.__class__._instances.add(self)
+		self.bindCRGestures()
+
 	def bindCRGestures(self, reinitializeObj=False):
 		if reinitializeObj:
 			self.clearGestureBindings()
@@ -355,11 +305,6 @@ class CRList(object):
 			self.bindGesture("kb:{0}+{1}".format(enabledModifiers, confFromObj.nextColumnsGroupKey), "changeInterval")
 			self.bindGesture("kb:{0}+delete".format(enabledModifiers), "itemInfo")
 			self.bindGesture("kb:{0}+enter".format(enabledModifiers), "manageHeaders")
-
-	def initOverlayClass(self):
-		"""maps the correct gestures and adds the new objects to the list of existing instances"""
-		self.__class__._instances.add(self)
-		self.bindCRGestures()
 
 	def getColumnData(self, colNumber):
 		"""Returs information about the column at the index given as  parameter.
@@ -920,8 +865,11 @@ class CRList64(CRList):
 	see CRList32 class for more comments"""
 
 	THREAD_SUPPORTED = True
+	# see reportEmptyFolder add-on
 	supportsEmptyListAnnouncements = True
 
+	# shell object
+	shell = CreateObject("shell.application")
 	# window shell variable
 	curWindow = None
 
@@ -959,9 +907,8 @@ class CRList64(CRList):
 	def preCheck(self, onFailureMsg=None):
 		# check to ensure shell32 method will work
 		# (not available in all context, as open dialog)
-		shell = CreateObject("shell.application")
 		fg = api.getForegroundObject()
-		for window in shell.Windows():
+		for window in self.shell.Windows():
 			try:
 				if window.hwnd and window.hwnd == fg.windowHandle:
 					self.curWindow = window
