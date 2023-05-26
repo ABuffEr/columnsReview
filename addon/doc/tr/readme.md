@@ -82,6 +82,6 @@ Desteklenen listeler :
 [[!tag dev stable]]
 
 
-[stable]: https://www.nvaccess.org/addonStore/legacy?file=cr
+[Kararlı]: https://www.nvaccess.org/addonStore/legacy?file=cr
 
-[dev]: https://www.nvaccess.org/addonStore/legacy?file=cr-dev
+[geliştirici]: https://www.nvaccess.org/addonStore/legacy?file=cr-dev

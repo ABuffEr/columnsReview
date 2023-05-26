@@ -3,31 +3,31 @@ msgstr ""
 "Project-Id-Version: ColumnsReview 1.0\n"
 "Report-Msgid-Bugs-To: nvda-translations@groups.io\n"
 "POT-Creation-Date: 2021-09-16 00:36+0000\n"
-"PO-Revision-Date: 2021-10-22 09:03+0300\n"
-"Last-Translator: Çağrı Doğan <cagrid@hotmail.com>\n"
+"PO-Revision-Date: 2023-05-20 16:42+0300\n"
+"Last-Translator: Umut KORKMAZ <umutkork@gmail.com>\n"
 "Language-Team: cagrid@hotmail.com\n"
-"Language: tr\n"
+"Language: tr_TR\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Poedit-KeywordsList: _;gettext;gettext_noop\n"
 "X-Poedit-Basepath: .\n"
 "X-Poedit-SourceCharset: UTF-8\n"
-"X-Generator: Poedit 3.0\n"
-"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 3.3.1\n"
 "X-Poedit-SearchPath-0: ../../../globalPlugins\n"
 
 #. Translators: message when list contains one item only
 msgid "Mono-item list: "
-msgstr ""
+msgstr "Tek öğeli liste: "
 
 #. Translators: message when user lands on the last list item
 msgid "List bottom: "
-msgstr ""
+msgstr "Liste sonu: "
 
 #. Translators: message when user lands on the first list item
 msgid "List top: "
-msgstr ""
+msgstr "Liste başı: "
 
 #. Translators: menu item in preferences
 msgid "Columns Review Settings..."
@@ -35,9 +35,9 @@ msgstr "Sütun İnceleme Ayarları ..."
 
 #. Translators: Name of the default category
 #. in the Input Gestures dialog where scripts of this add-on are placed.
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "{name} (DO NOT EDIT!)"
-msgstr "(DEĞİŞTİRME!)"
+msgstr "{name} (Düzenlemeyin!)"
 
 #. Translators: message when digit pressed exceed the columns number
 msgid "No more columns available"
@@ -83,7 +83,7 @@ msgstr "Liste sütun başlıklarıyla etkileşim için bir iletişim kutusu gös
 #. Translators: message presented when get selected item count and names
 #, python-brace-format
 msgid "{selCount} selected items: {selNames}"
-msgstr ""
+msgstr "{selCount} seçili öğeler: {selNames}"
 
 #. Translators: documentation for script to know current selected items
 msgid "Reports current selected list items"
@@ -112,12 +112,12 @@ msgstr "Odaklanılan öğeden başlayarak tüm liste öğelerini okumaya başlar
 #. Translators: message listing foreground over background colors
 #, python-brace-format
 msgid "{foregroundColors} over {backgroundColors}"
-msgstr ""
+msgstr "{backgroundColors} üzerinde {foregroundColors}"
 
 #. Translators: Description of the keyboard command,
 #. which reports foreground and background color of the current list item.
 msgid "reports foreground and background colors of the current list item."
-msgstr ""
+msgstr "geçerli liste öğesinin ön plan ve arka plan renklerini bildirir."
 
 #. Translators: Reported when it is impossible to report currently selected items.
 msgid "Current selection info not available"
@@ -125,7 +125,7 @@ msgstr "Geçerli seçim bilgisi mevcut değil"
 
 #. Translators: Reported when current list does not support searching.
 msgid "Cannot search here."
-msgstr ""
+msgstr "Burada arama yapılamıyor."
 
 #. Translators: Label of the checkbox in the find dialog which, if checked, selects multiple
 #. items if they match the search query.
@@ -204,16 +204,16 @@ msgid ""
 "Insert the char after \"0\" in your keyboard layout, or another char as you "
 "like:"
 msgstr ""
-"Klavye düzeninizde \"0\" dan sonraki karakteri veya seçtiğiniz başka bir "
-"karakteri girin"
+"Klavye düzeninizde \"0\"dan sonra gelen karakteri veya istediğiniz gibi "
+"başka bir karakteri girin:"
 
 #. Translators: label for announce-empty-list checkbox in settings
 msgid "Announce empty list"
-msgstr ""
+msgstr "Boş listeyi duyur"
 
 #. Translators: label for announce-list-bounds checkbox in settings
 msgid "Announce list bounds (voice only)"
-msgstr ""
+msgstr "Liste sınırlarını duyur (yalnızca ses)"
 
 #. Translators: Title of the dialog which allows to perform actions on headers of the current list.
 msgid "Headers manager"
@@ -237,9 +237,9 @@ msgstr "Sağ tık"
 
 #. Translators: Announced when the given header has been clicked, 'headerName' is replaced with the name of
 #. the  clicked object.
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "{headerName} header clicked"
-msgstr "%s başlık tıklandı"
+msgstr "{headerName} başlık tıklandı"
 
 #. Translators: the label of a message box dialog.
 msgid ""
@@ -260,10 +260,13 @@ msgid ""
 "with empty folder feature of ColumnsReview (if enabled); do you want to "
 "remove it now?"
 msgstr ""
+"{another_author} tarafından {another_addon} eklentisini yüklediniz, bu Sütun "
+"bilgisi (etkinleştirilmişse) boş klasör özelliğinde sorunlara neden oluyor; "
+"onu şimdi kaldırmak istiyor musun?"
 
 #. Translators: the title of a message box dialog.
 msgid "Warning!"
-msgstr ""
+msgstr "Uyarı!"
 
 #. Add-on description
 #. Translators: Long description to be shown for this add-on on add-on information from add-ons manager
