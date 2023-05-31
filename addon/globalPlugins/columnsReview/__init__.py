@@ -49,7 +49,8 @@ import watchdog
 import winUser
 import wx
 from _ctypes import COMError
-from queueHandler import queueFunction, eventQueue
+import inspect
+
 from .actions import ACTIONS, actionFromName, configuredActions
 from .commonFunc import NVDALocale, findAllDescendantWindows, getScriptGestures
 from .compat import CTWRAPPER, rangeFunc
@@ -113,13 +114,14 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 		if (
 			objRole in (roles.TABLE, roles.TREEVIEW)
 			and objWindowClassName == "MozillaWindowClass"
-			and not obj.treeInterceptor
+			and "id:threadTree" in obj.IAccessibleObject.attributes
 		):
 			clsList.insert(0, MozillaTable)
 			return
 		# found in RSSOwlnix, but may be in other software
 		if objRole == roles.TREEVIEW:
 			try:
+				watchdog.alive()
 				if obj.parent.previous.windowClassName == "SysHeader32":
 					clsList.insert(0, CRTreeview)
 			except AttributeError:
@@ -147,28 +149,31 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 			)
 		):
 			self.reportListBounds(obj)
+#		debugLog("Running event_gainFocus nextHandler")
 		nextHandler()
+#		debugLog("Finished Running event_gainFocus nextHandler")
 
 	def reportListBounds(self, obj):
+		positionInfo = obj._get_positionInfo()
+		if not positionInfo:
+			return
 		pos = None
-		try:
-			index = obj.positionInfo["indexInGroup"]
-			similar = obj.positionInfo["similarItemsInGroup"]
-			if index == similar == 1:
-				pos = "mono"
-			elif index == similar:
-				pos = "bottom"
-			elif index == 1:
-				pos = "top"
-		except: # positionInfo absent or empty
-			pass
+		index = positionInfo.get("indexInGroup")
+		similar = positionInfo.get("similarItemsInGroup")
+		if index == similar == 1:
+			pos = "mono"
+		elif index == similar != None:
+			pos = "bottom"
+		elif index == 1:
+			pos = "top"
 		if not pos:
 			return
-		reportFunc = speech.speakMessage if configManager.ConfigFromObject(obj).announceListBoundsWith == "voice" else beep
+		confFromObj = configManager.ConfigFromObject(obj)
+		reportFunc = speech.speakMessage if confFromObj.announceListBoundsWith == "voice" else beep
 		if reportFunc is beep:
-			topBeep = configManager.ConfigFromObject(obj).topBeep
-			bottomBeep = configManager.ConfigFromObject(obj).bottomBeep
-			beepLen = configManager.ConfigFromObject(obj).beepLen
+			topBeep = confFromObj.topBeep
+			bottomBeep = confFromObj.bottomBeep
+			beepLen = confFromObj.beepLen
 		if pos == "mono":
 			# Translators: message when list contains one item only
 			message = (_("Mono-item list: "),) if reportFunc != beep else (abs(topBeep-bottomBeep), beepLen*2,)
@@ -211,6 +216,10 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 				self.prefsMenu.RemoveItem(self.ColumnsReviewItem)
 			except wx.PyDeadObjectError:
 				pass
+		# release COM object
+		if CRList64.shell:
+			CRList64.shell.Release()
+			del CRList64.shell
 
 	def handleConfigProfileSwitch(self):
 		# We cannot iterate through original set of instances
@@ -253,8 +262,11 @@ class CRList(object):
 	supportsEmptyListAnnouncements = False
 
 	def initOverlayClass(self):
-		"""maps the correct gestures and adds the new objects to the list of existing instances"""
+		"""adds the new objects to the list of existing instances"""
 		self.__class__._instances.add(self)
+
+	def event_focusEntered(self):
+		super(CRList, self).event_focusEntered()
 		self.bindCRGestures()
 
 	def bindCRGestures(self, reinitializeObj=False):
@@ -267,21 +279,21 @@ class CRList(object):
 		self.bindGesture("kb:NVDA+control+f", "find")
 		self.bindGesture("kb:NVDA+f3", "findNext")
 		self.bindGesture("kb:NVDA+shift+f3", "findPrevious")
-		# for color reporting
-		scriptGestures = getScriptGestures(
-			getattr(commands, "script_reportOrShowFormattingAtCaret", commands.script_reportFormatting)
-		)
-		for gesture in scriptGestures:
-			self.bindGesture(gesture, "reportOrShowFormattingAtCaret")
-		# for current selection
-		scriptGestures = getScriptGestures(commands.script_reportCurrentSelection)
-		for gesture in scriptGestures:
-			self.bindGesture(gesture, "reportCurrentSelection")
+		# other useful gesture to remap
+		scriptMap = {
+			# for color reporting
+			getattr(commands, "script_reportOrShowFormattingAtCaret", commands.script_reportFormatting): "reportOrShowFormattingAtCaret",
+			# for current selection
+			commands.script_reportCurrentSelection: "reportCurrentSelection",
+		}
 		# for say all - bind only if it is actually supported
 		if utils._RowsReader.isSupported():
-			scriptGestures = getScriptGestures(commands.script_sayAll)
-			for gesture in scriptGestures:
-				self.bindGesture(gesture, "readListItems")
+			scriptMap[commands.script_sayAll] = "readListItems"
+		scriptFuncs = scriptMap.keys()
+		scriptGesturesMap = getScriptGestures(*scriptFuncs)
+		for scriptFunc, gestures in scriptGesturesMap.items():
+			for gesture in gestures:
+				self.bindGesture(gesture, scriptMap[scriptFunc])
 		confFromObj = configManager.ConfigFromObject(self)
 		numpadUsedForColumnNav = confFromObj.numpadUsedForColumnsNavigation
 		enabledModifiers = confFromObj.enabledModifiers
@@ -453,7 +465,8 @@ class CRList(object):
 
 	def getSelectedItems(self):
 		"""Returns names of currently selected list items as a list of strings
-		or None if selected items cannot be retrieved."""
+		or None if selected items cannot be retrieved.
+		"""
 		# generic (slow) implementation
 		# (actually not used by any subclass)
 		curItem = api.getFocusObject()
@@ -627,7 +640,7 @@ class CRList(object):
 		raise NotImplementedError
 
 	def handleEmpty(self):
-		if configManager.ConfigFromObject(self).announceEmptyLists and self.isEmptyList():
+		if configManager.ConfigFromObject(self).announceEmptyLists:
 			self.bindGesturesForEmpty()
 			self.isEmpty = True
 
@@ -644,7 +657,10 @@ class CRList(object):
 		braille.handler.update()
 
 	def event_gainFocus(self):
+		# call super to get list type/name reporting
 		super(CRList, self).event_gainFocus()
+		if self.supportsEmptyListAnnouncements and self.isEmptyList():
+			self.handleEmpty()
 		if hasattr(self, "isEmpty") and self.isEmpty:
 			self.reportEmpty()
 
@@ -660,18 +676,15 @@ class CRList(object):
 		for item in ["Up", "Down", "Left", "Right"]:
 			self.bindGesture("kb:{0}Arrow".format(item), "reportEmpty")
 		# other useful gesture to remap
-		# script_reportCurrentFocus
-		scriptGestures = getScriptGestures(commands.script_reportCurrentFocus)
-		for gesture in scriptGestures:
-			self.bindGesture(gesture, "reportEmpty")
-		# script_reportCurrentLine
-		scriptGestures = getScriptGestures(commands.script_reportCurrentLine)
-		for gesture in scriptGestures:
-			self.bindGesture(gesture, "reportEmpty")
-		# script_reportCurrentSelection
-		scriptGestures = getScriptGestures(commands.script_reportCurrentSelection)
-		for gesture in scriptGestures:
-			self.bindGesture(gesture, "reportEmpty")
+		scriptFuncs = (
+			commands.script_reportCurrentFocus,
+			commands.script_reportCurrentLine,
+			commands.script_reportCurrentSelection
+		)
+		scriptDict = getScriptGestures(*scriptFuncs)
+		for script, gestures in scriptDict.items():
+			for gesture in gestures:
+				self.bindGesture(gesture, "reportEmpty")
 
 	def script_reportOrShowFormattingAtCaret(self, gesture):
 		item = api.getFocusObject()
@@ -862,14 +875,15 @@ class CRList32(CRList):
 
 class CRList64(CRList):
 	"""for 64-bit systems (DirectUIHWND window class)
-	see CRList32 class for more comments"""
+	see CRList32 class for more comments
+	"""
 
 	THREAD_SUPPORTED = True
 	# see reportEmptyFolder add-on
 	supportsEmptyListAnnouncements = True
 
-	# shell object
-	shell = CreateObject("shell.application")
+	# class-shared shell object
+	shell = None
 	# window shell variable
 	curWindow = None
 
@@ -905,10 +919,13 @@ class CRList64(CRList):
 			return headerParent.next
 
 	def preCheck(self, onFailureMsg=None):
+		# create shared COM object if needed
+		if not CRList64.shell:
+			CRList64.shell = CreateObject("shell.application")
 		# check to ensure shell32 method will work
 		# (not available in all context, as open dialog)
 		fg = api.getForegroundObject()
-		for window in self.shell.Windows():
+		for window in CRList64.shell.Windows():
 			try:
 				if window.hwnd and window.hwnd == fg.windowHandle:
 					self.curWindow = window
@@ -1064,17 +1081,28 @@ class CRList64(CRList):
 	def isEmptyList(self):
 		# use UIA to avoid recursion error getting lastChild
 		try:
-			childCount = self.UIAGridPattern.CurrentRowCount
+			watchdog.alive()
+#			childCount = watchdog.cancellableExecute(self._get_rowCount)
+			childCount = self._get_UIAGridPattern().CurrentRowCount
 		except:
 			# assume not empty
 			childCount = 1
 		return not bool(childCount)
 
 	def event_focusEntered(self):
-		if self.isEmptyList():
+		# to get "0 items" alert e.g. choosing
+		# an empty folder in notepad open window
+		super(CRList64, self).event_focusEntered()
+		if hasattr(self, "isEmpty") and self.isEmpty:
 			eventHandler.queueEvent("gainFocus", self)
-		else:
-			super(CRList64, self).event_focusEntered()
+
+	def event_gainFocus(self):
+	# as in CRList, but without call to super
+	# to avoid duplicate list type reporting
+		if self.supportsEmptyListAnnouncements and self.isEmptyList():
+			self.handleEmpty()
+		if hasattr(self, "isEmpty") and self.isEmpty:
+			self.reportEmpty()
 
 
 class UIASuperGrid(CRList):
