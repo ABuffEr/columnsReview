@@ -8,26 +8,26 @@ msgstr ""
 "Project-Id-Version: columnsReview 3.0\n"
 "Report-Msgid-Bugs-To: nvda-translations@groups.io\n"
 "POT-Creation-Date: 2021-09-16 00:36+0000\n"
-"PO-Revision-Date: 2021-10-29 11:51+0200\n"
+"PO-Revision-Date: 2023-02-27 19:52+0100\n"
 "Last-Translator: Iván Novegil Cancelas <ivan.novegil.cancelas@gmail.com>\n"
 "Language-Team: \n"
 "Language: gl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 3.0\n"
+"X-Generator: Poedit 3.2.2\n"
 
 #. Translators: message when list contains one item only
 msgid "Mono-item list: "
-msgstr ""
+msgstr "Lista dun só elemento: "
 
 #. Translators: message when user lands on the last list item
 msgid "List bottom: "
-msgstr ""
+msgstr "Fin de lista: "
 
 #. Translators: message when user lands on the first list item
 msgid "List top: "
-msgstr ""
+msgstr "Inicio de lista:"
 
 #. Translators: menu item in preferences
 msgid "Columns Review Settings..."
@@ -35,9 +35,9 @@ msgstr "Opcións de Columns Review..."
 
 #. Translators: Name of the default category
 #. in the Input Gestures dialog where scripts of this add-on are placed.
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "{name} (DO NOT EDIT!)"
-msgstr "(NON EDITAR!)"
+msgstr "{name} (non editar!)"
 
 #. Translators: message when digit pressed exceed the columns number
 msgid "No more columns available"
@@ -84,7 +84,7 @@ msgstr ""
 #. Translators: message presented when get selected item count and names
 #, python-brace-format
 msgid "{selCount} selected items: {selNames}"
-msgstr ""
+msgstr "{selCount} elementos seleccionados: {selNames}"
 
 #. Translators: documentation for script to know current selected items
 msgid "Reports current selected list items"
@@ -113,12 +113,12 @@ msgstr "Comeza a ler todos os elementos de lista dende o elemento co foco"
 #. Translators: message listing foreground over background colors
 #, python-brace-format
 msgid "{foregroundColors} over {backgroundColors}"
-msgstr ""
+msgstr "{foregroundColors} sobre {backgroundColors}"
 
 #. Translators: Description of the keyboard command,
 #. which reports foreground and background color of the current list item.
 msgid "reports foreground and background colors of the current list item."
-msgstr ""
+msgstr "anuncia as cores de texto e fondo do elemento de lista actual."
 
 #. Translators: Reported when it is impossible to report currently selected items.
 msgid "Current selection info not available"
@@ -126,7 +126,7 @@ msgstr "Información sobre a selección actual non dispoñible"
 
 #. Translators: Reported when current list does not support searching.
 msgid "Cannot search here."
-msgstr ""
+msgstr "Non se pode procurar aquí."
 
 #. Translators: Label of the checkbox in the find dialog which, if checked, selects multiple
 #. items if they match the search query.
@@ -210,11 +210,11 @@ msgstr ""
 
 #. Translators: label for announce-empty-list checkbox in settings
 msgid "Announce empty list"
-msgstr ""
+msgstr "Anunciar lista baleira"
 
 #. Translators: label for announce-list-bounds checkbox in settings
 msgid "Announce list bounds (voice only)"
-msgstr ""
+msgstr "Anunciar límites da lista (só voz)"
 
 #. Translators: Title of the dialog which allows to perform actions on headers of the current list.
 msgid "Headers manager"
@@ -238,9 +238,9 @@ msgstr "Click dereito"
 
 #. Translators: Announced when the given header has been clicked, 'headerName' is replaced with the name of
 #. the  clicked object.
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "{headerName} header clicked"
-msgstr "Click en cabeceira %s"
+msgstr "Click en cabeceira {headerName}"
 
 #. Translators: the label of a message box dialog.
 msgid ""
@@ -261,10 +261,13 @@ msgid ""
 "with empty folder feature of ColumnsReview (if enabled); do you want to "
 "remove it now?"
 msgstr ""
+"Tes instalado {another_addon} by {another_author}, que causa problemas coa "
+"característica cartafol baleiro de ColumnsReview (se está habilitada); "
+"desexas eliminalo?"
 
 #. Translators: the title of a message box dialog.
 msgid "Warning!"
-msgstr ""
+msgstr "¡Aviso!"
 
 #. Add-on description
 #. Translators: Long description to be shown for this add-on on add-on information from add-ons manager
