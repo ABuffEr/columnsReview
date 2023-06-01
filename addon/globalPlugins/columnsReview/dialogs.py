@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 # GUI dialogs for the Columns Review add-on
 
 import wx

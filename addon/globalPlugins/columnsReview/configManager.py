@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 import config
 try:
 	from configobj.validate import is_boolean

@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 # Utility functions for the Columns Review add-on
 
 from .compat import CTWRAPPER

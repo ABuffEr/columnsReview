@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 # Defines actions for the columns Review add-on
 
 import addonHandler

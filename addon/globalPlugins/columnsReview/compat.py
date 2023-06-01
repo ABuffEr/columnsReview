@@ -1,4 +1,5 @@
-"""Provides various stuff used to preserve compatibility with older releases of NVDA."""
+# -*- coding: UTF-8 -*-
+# Provides various stuff used to preserve compatibility with older releases of NVDA.
 
 import controlTypes
 

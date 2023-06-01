@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 # Config specification for the Columns Review add-on
 
 try:

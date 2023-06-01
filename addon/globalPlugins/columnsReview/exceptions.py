@@ -1,3 +1,4 @@
+# -*- coding: UTF-8 -*-
 # Custom exceptions for the Columns Review add-on
 
 
