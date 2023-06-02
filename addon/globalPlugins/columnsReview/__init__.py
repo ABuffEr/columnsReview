@@ -169,6 +169,8 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 		if not pos:
 			return
 		confFromObj = configManager.ConfigFromObject(obj)
+		if not confFromObj.announceListBounds:
+			return
 		reportFunc = speech.speakMessage if confFromObj.announceListBoundsWith == "voice" else beep
 		if reportFunc is beep:
 			topBeep = confFromObj.topBeep
@@ -268,6 +270,7 @@ class CRList(object):
 	def event_focusEntered(self):
 		super(CRList, self).event_focusEntered()
 		self.bindCRGestures()
+		beep(120, 100)
 
 	def bindCRGestures(self, reinitializeObj=False):
 		if reinitializeObj:
