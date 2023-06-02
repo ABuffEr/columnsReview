@@ -270,7 +270,6 @@ class CRList(object):
 	def event_focusEntered(self):
 		super(CRList, self).event_focusEntered()
 		self.bindCRGestures()
-		beep(120, 100)
 
 	def bindCRGestures(self, reinitializeObj=False):
 		if reinitializeObj:
