@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: 'columnsReview' '5.2'\n"
 "Report-Msgid-Bugs-To: 'nvda-translations@groups.io'\n"
 "POT-Creation-Date: 2023-05-27 21:22+0300\n"
-"PO-Revision-Date: 2023-05-28 12:55+0300\n"
+"PO-Revision-Date: 2023-06-09 08:50+0300\n"
 "Last-Translator: Heorhii <nvda.translation.uk@gmail.com>\n"
 "Language-Team: \n"
 "Language: uk_UA\n"
@@ -16,7 +16,6 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Poedit 3.3.1\n"
-"X-Poedit-Bookmarks: -1,-1,60,-1,-1,-1,-1,-1,-1,-1\n"
 
 #. Translators: message when list contains one item only
 msgid "Mono-item list: "
@@ -213,9 +212,8 @@ msgid "Announce empty list"
 msgstr "Оголосити порожній список"
 
 #. Translators: label for announce-list-bounds checkbox in settings
-#, fuzzy
 msgid "Announce list bounds (voice only)"
-msgstr "Оголосити межі списку (верхня, одноелементна, нижня)"
+msgstr "Оголосити межі списку (лише голос)"
 
 #. Translators: Title of the dialog which allows to perform actions on headers of the current list.
 msgid "Headers manager"

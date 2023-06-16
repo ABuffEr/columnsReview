@@ -8,26 +8,26 @@ msgstr ""
 "Project-Id-Version: columnsReview 3.0\n"
 "Report-Msgid-Bugs-To: nvda-translations@groups.io\n"
 "POT-Creation-Date: 2021-09-16 00:36+0000\n"
-"PO-Revision-Date: 2022-05-29 11:13+0200\n"
+"PO-Revision-Date: 2023-06-11 11:36+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: pl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 3.0.1\n"
+"X-Generator: Poedit 3.3.1\n"
 
 #. Translators: message when list contains one item only
 msgid "Mono-item list: "
-msgstr ""
+msgstr "Lista z jednym elementem"
 
 #. Translators: message when user lands on the last list item
 msgid "List bottom: "
-msgstr ""
+msgstr "koniec listy: "
 
 #. Translators: message when user lands on the first list item
 msgid "List top: "
-msgstr ""
+msgstr "początek listy: "
 
 #. Translators: menu item in preferences
 msgid "Columns Review Settings..."
@@ -35,9 +35,9 @@ msgstr "Ustawienia przeglądania kolumn..."
 
 #. Translators: Name of the default category
 #. in the Input Gestures dialog where scripts of this add-on are placed.
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "{name} (DO NOT EDIT!)"
-msgstr "(NIE EDYTUJ!)"
+msgstr "{name} (Nie edytuj)"
 
 #. Translators: message when digit pressed exceed the columns number
 msgid "No more columns available"
@@ -57,7 +57,7 @@ msgid ""
 "corresponding to the number pressed"
 msgstr ""
 "Zwraca nagłówek i zawartość kolumny listy w indeksie odpowiadającym "
-"naciśniętej liczbie."
+"naciśniętej liczbie"
 
 #. Translators: message when you change interval in a list with more ten columns
 #, python-brace-format
@@ -83,7 +83,7 @@ msgstr "Zawiera okno dialogowe dla interakcji z nagłówkami kolumn listy"
 #. Translators: message presented when get selected item count and names
 #, python-brace-format
 msgid "{selCount} selected items: {selNames}"
-msgstr ""
+msgstr "zaznaczono elementów {selCount}: {selNames}"
 
 #. Translators: documentation for script to know current selected items
 msgid "Reports current selected list items"
@@ -114,12 +114,12 @@ msgstr ""
 #. Translators: message listing foreground over background colors
 #, python-brace-format
 msgid "{foregroundColors} over {backgroundColors}"
-msgstr ""
+msgstr "{foregroundColors} nad {backgroundColors}"
 
 #. Translators: Description of the keyboard command,
 #. which reports foreground and background color of the current list item.
 msgid "reports foreground and background colors of the current list item."
-msgstr ""
+msgstr "Odczytuje kolory pierwszego planu i tłą."
 
 #. Translators: Reported when it is impossible to report currently selected items.
 msgid "Current selection info not available"
@@ -127,7 +127,7 @@ msgstr "Bieżące informacje o wyborze są niedostępne"
 
 #. Translators: Reported when current list does not support searching.
 msgid "Cannot search here."
-msgstr ""
+msgstr "Nie można wyszukiwać tutaj."
 
 #. Translators: Label of the checkbox in the find dialog which, if checked, selects multiple
 #. items if they match the search query.
@@ -209,11 +209,11 @@ msgstr "Wstaw znak po \"0\" w układzie klawiatury lub inny znak, jak chcesz:"
 
 #. Translators: label for announce-empty-list checkbox in settings
 msgid "Announce empty list"
-msgstr ""
+msgstr "Odczytuj pustą listę"
 
 #. Translators: label for announce-list-bounds checkbox in settings
 msgid "Announce list bounds (voice only)"
-msgstr ""
+msgstr "Odczytuj granice listy (tylko mową)"
 
 #. Translators: Title of the dialog which allows to perform actions on headers of the current list.
 msgid "Headers manager"
@@ -237,9 +237,9 @@ msgstr "Prawy"
 
 #. Translators: Announced when the given header has been clicked, 'headerName' is replaced with the name of
 #. the  clicked object.
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "{headerName} header clicked"
-msgstr "%s nagłówek kliknięty"
+msgstr "Kliknięto nagłówek {headerName}"
 
 #. Translators: the label of a message box dialog.
 msgid ""
@@ -260,10 +260,13 @@ msgid ""
 "with empty folder feature of ColumnsReview (if enabled); do you want to "
 "remove it now?"
 msgstr ""
+"Zainstalowałeś {another_addon} napisany przez {another_author}, który "
+"powoduje problemy z funkcją wymowy pustego folderu dodatku ColumnsReview. "
+"Jeżeli dodatek jest włączony, czy chcesz go usunąć teraz?"
 
 #. Translators: the title of a message box dialog.
 msgid "Warning!"
-msgstr ""
+msgstr "Uwaga!"
 
 #. Add-on description
 #. Translators: Long description to be shown for this add-on on add-on information from add-ons manager
