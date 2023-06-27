@@ -15,7 +15,6 @@
 # for feedback and comments
 
 from __future__ import unicode_literals
-
 from displayModel import DisplayModelTextInfo
 import textInfos
 from logHandler import log
