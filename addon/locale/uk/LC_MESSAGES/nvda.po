@@ -1,17 +1,17 @@
 # SOME DESCRIPTIVE TITLE.
 # Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the columnsReview package.
+# This file is distributed under the same license as the 'columnsReview' package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: columnsReview 3.0\n"
-"Report-Msgid-Bugs-To: nvda-translations@groups.io\n"
-"POT-Creation-Date: 2021-09-16 00:36+0000\n"
-"PO-Revision-Date: 2023-06-11 11:36+0200\n"
-"Last-Translator: \n"
+"Project-Id-Version: 'columnsReview' '5.2'\n"
+"Report-Msgid-Bugs-To: 'nvda-translations@groups.io'\n"
+"POT-Creation-Date: 2023-05-27 21:22+0300\n"
+"PO-Revision-Date: 2023-06-09 08:50+0300\n"
+"Last-Translator: Heorhii <nvda.translation.uk@gmail.com>\n"
 "Language-Team: \n"
-"Language: pl\n"
+"Language: uk_UA\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -19,239 +19,239 @@ msgstr ""
 
 #. Translators: message when list contains one item only
 msgid "Mono-item list: "
-msgstr "Lista z jednym elementem"
+msgstr "Список з одного елемента: "
 
 #. Translators: message when user lands on the last list item
 msgid "List bottom: "
-msgstr "koniec listy: "
+msgstr "Кінець списку: "
 
 #. Translators: message when user lands on the first list item
 msgid "List top: "
-msgstr "początek listy: "
+msgstr "Початок списку: "
 
 #. Translators: menu item in preferences
 msgid "Columns Review Settings..."
-msgstr "Ustawienia przeglądania kolumn..."
+msgstr "Налаштування перегляду стовпців..."
 
 #. Translators: Name of the default category
 #. in the Input Gestures dialog where scripts of this add-on are placed.
 #, python-brace-format
 msgid "{name} (DO NOT EDIT!)"
-msgstr "{name} (Nie edytuj)"
+msgstr "{name}"
 
 #. Translators: message when digit pressed exceed the columns number
 msgid "No more columns available"
-msgstr "Brak dostępnych kolumn"
+msgstr "Більше немає доступних стовпців"
 
 #. Translators: Announced when the column at the requested index is not visible.
 msgid "No more visible columns available"
-msgstr "Brak widocznych kolumn"
+msgstr "Більше немає доступних видимих стовпців"
 
 #. Translators: Presented for an empty column.
 msgid "Empty column"
-msgstr "Pusta kolumna"
+msgstr "Порожній стовпець"
 
 #. Translators: documentation of script to read columns
 msgid ""
 "Returns the header and the content of the list column at the index "
 "corresponding to the number pressed"
 msgstr ""
-"Zwraca nagłówek i zawartość kolumny listy w indeksie odpowiadającym "
-"naciśniętej liczbie"
+"Повертає заголовок і вміст стовпця списку за індексом, що відповідає "
+"натиснутому номеру"
 
 #. Translators: message when you change interval in a list with more ten columns
 #, python-brace-format
 msgid "From {start} to {end}"
-msgstr "Od {start} do {end}"
+msgstr "Від {start} до {end}"
 
 #. Translators: documentation for script to change interval
 msgid "Cycles between a variable number of intervals of ten columns"
-msgstr "Cykle między zmienną liczbą interwałów dziesięciu kolumn"
+msgstr "Циклічно переходить між змінною кількістю інтервалів з десяти стовпців"
 
 #. Translators: Reported when information about position on a list cannot be retrieved.
 msgid "No information available"
-msgstr "Brak dostępnych informacji"
+msgstr "Інформація відсутня"
 
 #. Translators: documentation for script to announce list item info
 msgid "Announces list item position information"
-msgstr "Ogłasza informacje o pozycji elementu listy"
+msgstr "Оголошує інформацію про позицію елемента списку"
 
 #. Translators: documentation for script to manage headers
 msgid "Provides a dialog for interactions with list column headers"
-msgstr "Zawiera okno dialogowe dla interakcji z nagłówkami kolumn listy"
+msgstr "Надає діалог для взаємодії із заголовками стовпців списку"
 
 #. Translators: message presented when get selected item count and names
 #, python-brace-format
 msgid "{selCount} selected items: {selNames}"
-msgstr "zaznaczono elementów {selCount}: {selNames}"
+msgstr "{selCount} вибраних елементів: {selNames}"
 
 #. Translators: documentation for script to know current selected items
 msgid "Reports current selected list items"
-msgstr "Raportuje bieżące wybrane elementy listy"
+msgstr "Повідомляє про поточні вибрані елементи списку"
 
 #. Translators: documentation for script to find in list
 msgid "Provides a dialog for searching in item list"
-msgstr "Udostępnia okno dialogowe do wyszukiwania na liście elementów"
+msgstr "Надає діалог для пошуку у списку елементів"
 
 #. Translators: Message presented when search is in progress.
 msgid "Searching..."
-msgstr "Szukam ..."
+msgstr "Пошук..."
 
 #. Translators: documentation for script to manage headers
 msgid "Goes to next result of current search"
-msgstr "Przechodzi do następnego wyniku bieżącego wyszukiwania"
+msgstr "Переходить до наступного результату поточного пошуку"
 
 #. Translators: documentation for script to manage headers
 msgid "Goes to previous result of current search"
-msgstr "Przechodzi do poprzedniego wyniku bieżącego wyszukiwania"
+msgstr "Переходить до попереднього результату поточного пошуку"
 
 #. Translators: documentation for script to read all list items starting from the focused one.
 msgid "Starts reading all list items beginning at the item with focus"
-msgstr ""
-"Rozpoczyna czytanie wszystkich elementów listy rozpoczynających się od "
-"elementu z fokusem"
+msgstr "Читає всі елементи списку, починаючи з елемента у фокусі"
 
 #. Translators: message listing foreground over background colors
 #, python-brace-format
 msgid "{foregroundColors} over {backgroundColors}"
-msgstr "{foregroundColors} nad {backgroundColors}"
+msgstr "{foregroundColors} над {backgroundColors}"
 
 #. Translators: Description of the keyboard command,
 #. which reports foreground and background color of the current list item.
 msgid "reports foreground and background colors of the current list item."
-msgstr "Odczytuje kolory pierwszego planu i tłą."
+msgstr "повідомляє кольори переднього плану та фону поточного елемента списку."
 
 #. Translators: Reported when it is impossible to report currently selected items.
 msgid "Current selection info not available"
-msgstr "Bieżące informacje o wyborze są niedostępne"
+msgstr "Інформація про поточний вибір недоступна"
 
 #. Translators: Reported when current list does not support searching.
 msgid "Cannot search here."
-msgstr "Nie można wyszukiwać tutaj."
+msgstr "Тут неможливо шукати."
 
 #. Translators: Label of the checkbox in the find dialog which, if checked, selects multiple
 #. items if they match the search query.
 msgid "Use multiple selection"
-msgstr "Używanie wielokrotnego zaznaczania"
+msgstr "Використовувати множинний вибір"
 
 #. Translators: Description of the action which simply ignores the pressed key
 msgid "Do nothing"
-msgstr "Nic nie rób"
+msgstr "Нічого не робити"
 
 #. Translators: Name of the action which reads given column.
 msgid "Read column"
-msgstr "Przeczytaj kolumnę"
+msgstr "Прочитати стовпець"
 
 #. Translators: Name of the action which copies given column.
 msgid "Copy column"
-msgstr "Kopiuj kolumnę"
+msgstr "Копіювати стовпець"
 
 #. Translators: Name of the action which spells given column.
 msgid "Spell column"
-msgstr "Kolumna zaklęcia"
+msgstr "Посимвольне читання стовпця"
 
 #. Translators: Name of the action which displays content of the given column in the browseable message.
 msgid "Show column content in browse mode"
-msgstr "Pokazywanie zawartości kolumny w trybie przeglądania"
+msgstr "Показати вміст стовпця в режимі огляду"
 
 #. Translators: Label of a combobox in which action can be assigned to a first press of the shortcut.
 msgid "On first press:"
-msgstr "Przy pierwszym naciśnięciu:"
+msgstr "При першому натисканні:"
 
 #. Translators: Label of a combobox in which action can be assigned to a second press of the shortcut.
 msgid "On second press:"
-msgstr "Przy drugim naciśnięciu:"
+msgstr "При другому натисканні:"
 
 #. Translators: Label of a combobox in which action can be assigned to a third press of the shortcut.
 msgid "On third press:"
-msgstr "Na trzeciej prasie:"
+msgstr "При третьому натисканні:"
 
 #. Translators: Label of a combobox in which action can be assigned to a fourth press of the shortcut.
 msgid "On fourth press:"
-msgstr "Na czwartej prasie:"
+msgstr "При четвертому натисканні:"
 
 #. Translators: label for read-header checkbox in settings
 msgid "Read the column header"
-msgstr "Odczytywanie nagłówka kolumny"
+msgstr "Прочитати заголовок стовпця"
 
 #. Translators: label for copy-header checkbox in settings
 msgid "Copy the column header"
-msgstr "Kopiowanie nagłówka kolumny"
+msgstr "Скопіювати заголовок стовпця"
 
 #. Translators: title of settings dialog
 #. Add-on summary, usually the user visible name of the addon.
 #. Translators: Summary for this add-on
 #. to be shown on installation and add-on information found in Add-ons Manager.
 msgid "Columns Review"
-msgstr "Przegląd kolumn"
+msgstr "Перегляд Стовпців"
 
 #. Translators: title of settings dialog
 msgid "Columns Review Settings"
-msgstr "Ustawienia przeglądania kolumn"
+msgstr "Налаштування перегляду стовпців"
 
 #. Translators: Help message for group of comboboxes allowing to assign action to a keypress.
 msgid "When pressing combination to read column:"
-msgstr "Po naciśnięciu kombinacji, aby przeczytać kolumnę:"
+msgstr "При натисканні комбінації для читання стовпця:"
 
 #. Translators: Help message for sub-sizer of keys choices
 msgid "Choose the keys you want to use with numbers:"
-msgstr "Wybierz, których chcesz używać z numerami:"
+msgstr "Виберіть клавіші, які ви хочете використовувати з цифрами:"
 
 #. Translators: label for numpad keys checkbox in settings
 msgid "Use numpad keys to navigate through the columns"
-msgstr "Używanie numerycznych do poruszania się po kolumnach"
+msgstr "Використовувати цифрові клавіші для навігації по стовпцях"
 
 #. Translators: label for edit field in settings, visible if previous checkbox is disabled
 msgid ""
 "Insert the char after \"0\" in your keyboard layout, or another char as you "
 "like:"
-msgstr "Wstaw znak po \"0\" w układzie klawiatury lub inny znak, jak chcesz:"
+msgstr ""
+"Вставте символ після \"0\" у вашій розкладці клавіатури або інший символ за "
+"вашим бажанням:"
 
 #. Translators: label for announce-empty-list checkbox in settings
 msgid "Announce empty list"
-msgstr "Odczytuj pustą listę"
+msgstr "Оголосити порожній список"
 
 #. Translators: label for announce-list-bounds checkbox in settings
 msgid "Announce list bounds (voice only)"
-msgstr "Odczytuj granice listy (tylko mową)"
+msgstr "Оголосити межі списку (лише голос)"
 
 #. Translators: Title of the dialog which allows to perform actions on headers of the current list.
 msgid "Headers manager"
-msgstr "Menedżer nagłówków"
+msgstr "Менеджер заголовків"
 
 #. Translators: Shown for a header which has no name.
 msgid "Unnamed header"
-msgstr "Nienazwany nagłówek"
+msgstr "Заголовок без назви"
 
 #. Translators: Label for a list containing names of all headers of the current list.
 msgid "Headers:"
-msgstr "Nagłówki:"
+msgstr "Заголовки:"
 
 #. Translators: Label for a button which clicks the given header with the left mouse button.
 msgid "Left click"
-msgstr "Lewy"
+msgstr "Лівий клік"
 
 #. Translators: Label for a button which clicks the given header with the right mouse button.
 msgid "Right click"
-msgstr "Prawy"
+msgstr "Правий клік"
 
 #. Translators: Announced when the given header has been clicked, 'headerName' is replaced with the name of
 #. the  clicked object.
 #, python-brace-format
 msgid "{headerName} header clicked"
-msgstr "Kliknięto nagłówek {headerName}"
+msgstr "Натиснуто заголовок {headerName}"
 
 #. Translators: the label of a message box dialog.
 msgid ""
 "Previous add-on settings will be lost. Please configure it again, from NVDA "
 "preferences."
 msgstr ""
-"Poprzednie ustawienia dodatku zostaną utracone. Skonfiguruj go ponownie, z "
-"preferencji NVDA."
+"Попередні налаштування додатка буде втрачено. Будь ласка, налаштуйте його ще "
+"раз у налаштуваннях NVDA."
 
 #. Translators: the title of a message box dialog.
 msgid "Add-on settings reset"
-msgstr "Resetowanie ustawień dodatku"
+msgstr "Скидання налаштувань додатка"
 
 #. Translators: the label of a message box dialog to uninstall another add-on
 #, python-brace-format
@@ -260,21 +260,42 @@ msgid ""
 "with empty folder feature of ColumnsReview (if enabled); do you want to "
 "remove it now?"
 msgstr ""
-"Zainstalowałeś {another_addon} napisany przez {another_author}, który "
-"powoduje problemy z funkcją wymowy pustego folderu dodatku ColumnsReview. "
-"Jeżeli dodatek jest włączony, czy chcesz go usunąć teraz?"
+"Ви встановили {another_addon} від {another_author}, який спричиняє проблеми "
+"з функцією порожніх папок у ColumnsReview (якщо її увімкнено); ви бажаєте "
+"видалити його зараз?"
 
 #. Translators: the title of a message box dialog.
 msgid "Warning!"
-msgstr "Uwaga!"
+msgstr "УВАГА!"
 
 #. Add-on description
 #. Translators: Long description to be shown for this add-on on add-on information from add-ons manager
 msgid "A better experience with lists"
-msgstr "Lepsze wrażenia z list"
+msgstr "Кращий досвід роботи зі списками"
 
-#~ msgid "selected items"
-#~ msgstr "wybranych elementów"
+#~ msgid "voice"
+#~ msgstr "голос"
 
-#~ msgid "Announce empty list (not working in Win8/10 folders)"
-#~ msgstr "Ogłaszaj pustą listę (nie działa w folderach Win8 /10)"
+#~ msgid "beep"
+#~ msgstr "звуковий сигнал"
+
+#~ msgid "Announce with:"
+#~ msgstr "Оголосити з:"
+
+#~ msgid ""
+#~ "Please input a frequency for top beep, a frequency for bottom beep, and "
+#~ "their duration in milliseconds (each of three values must be a positive "
+#~ "number, separated by comma):"
+#~ msgstr ""
+#~ "Будь ласка, введіть частоту верхнього звукового сигналу, частоту нижнього "
+#~ "звукового сигналу та їх тривалість у мілісекундах (кожне з трьох значень "
+#~ "має бути додатнім числом, відокремленим комою):"
+
+#~ msgid "Beep values"
+#~ msgstr "Значення звукових сигналів"
+
+#~ msgid "Please input valid values for beep."
+#~ msgstr "Будь ласка, введіть правильні значення для звукового сигналу."
+
+#~ msgid "Error!"
+#~ msgstr "Помилка!"
