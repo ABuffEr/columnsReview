@@ -97,6 +97,8 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 	def chooseNVDAObjectOverlayClasses(self, obj, clsList):
 		objRole = obj.role
 		objWindowClassName = obj.windowClassName
+		if objWindowClassName == "TaskListThumbnailWnd":
+			return
 		if objRole == roles.LIST:
 			if SysLV32List in clsList:
 				clsList.insert(0, CRList32)
@@ -129,9 +131,10 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 				pass
 
 	def event_focusEntered(self, obj, nextHandler):
+		objRole = obj.role
 		if (
-			obj.role == roles.LIST
-			or (obj.role == roles.TABLE and obj.windowClassName == "MozillaWindowClass")
+			objRole == roles.LIST
+			or (objRole == roles.TABLE and obj.windowClassName == "MozillaWindowClass")
 		):
 			self.proceedWithBounds = True
 		else:
@@ -139,20 +142,22 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 		nextHandler()
 
 	def event_gainFocus(self, obj, nextHandler):
+		if not obj:
+			return
 		# speedup: nothing for web
 		if obj.treeInterceptor:
 			nextHandler()
 			return
+		objRole = obj.role
 		if (
 			self.proceedWithBounds
-			and (obj.role == roles.LISTITEM
-				or (obj.role == roles.TABLEROW and obj.windowClassName == "MozillaWindowClass")
+			and (objRole == roles.LISTITEM
+				or (objRole == roles.TABLEROW and obj.windowClassName == "MozillaWindowClass")
 			)
 		):
 			self.reportListBounds(obj)
 #		debugLog("Running event_gainFocus nextHandler")
 		nextHandler()
-#		debugLog("Finished Running event_gainFocus nextHandler")
 
 	def reportListBounds(self, obj):
 		positionInfo = obj._get_positionInfo()
@@ -275,9 +280,11 @@ class CRList(object):
 	def bindCRGestures(self, reinitializeObj=False):
 		if reinitializeObj:
 			self.clearGestureBindings()
-		if self.supportsEmptyListAnnouncements and self.isEmptyList():
-			self.handleEmpty()
-			return
+		if self.supportsEmptyListAnnouncements:
+			self.isEmpty = self.isEmptyList()
+			if self.isEmpty:
+				self.handleEmpty()
+				return
 		# find gestures
 		self.bindGesture("kb:NVDA+control+f", "find")
 		self.bindGesture("kb:NVDA+f3", "findNext")
@@ -566,7 +573,7 @@ class CRList(object):
 			else:
 				wx.CallAfter(gui.messageBox, NVDALocale('text "%s" not found')%text, NVDALocale("Find Error"), wx.OK|wx.ICON_ERROR)
 		else:
-			core.callLater(0, beep, 220, 150 )
+			core.callLater(0, beep, 220, 150)
 		finder = None
 
 	def findInList(self, text, reverse, caseSensitive, stopCheck=lambda:False):
@@ -645,7 +652,7 @@ class CRList(object):
 	def handleEmpty(self):
 		if configManager.ConfigFromObject(self).announceEmptyLists:
 			self.bindGesturesForEmpty()
-			self.isEmpty = True
+			self.reportEmpty()
 
 	def reportEmpty(self):
 		# brailled and spoken the "0 items" message
@@ -662,14 +669,14 @@ class CRList(object):
 	def event_gainFocus(self):
 		# call super to get list type/name reporting
 		super(CRList, self).event_gainFocus()
-		if self.supportsEmptyListAnnouncements and self.isEmptyList():
-			self.handleEmpty()
-		if hasattr(self, "isEmpty") and self.isEmpty:
-			self.reportEmpty()
+		if self.supportsEmptyListAnnouncements:
+			self.isEmpty = self.isEmptyList()
+			if self.isEmpty:
+				log.info("Calling binding on %s"%self.windowClassName)
+				core.callLater(100, self.bindCRGestures)
 
 	def script_reportEmpty(self, gesture):
 		if not self.isEmptyList():
-			self.isEmpty = False
 			self.bindCRGestures(reinitializeObj=True)
 			return
 		self.reportEmpty()
@@ -887,7 +894,7 @@ class CRList64(CRList):
 
 	# class-shared shell object
 	shell = None
-	# window shell variable
+	# current window shell variable
 	curWindow = None
 
 	def getColumnData(self, colNumber):
@@ -1100,12 +1107,10 @@ class CRList64(CRList):
 			eventHandler.queueEvent("gainFocus", self)
 
 	def event_gainFocus(self):
-	# as in CRList, but without call to super
-	# to avoid duplicate list type reporting
-		if self.supportsEmptyListAnnouncements and self.isEmptyList():
-			self.handleEmpty()
+		# as in CRList, but without call to super
+		# to avoid duplicate list type reporting
 		if hasattr(self, "isEmpty") and self.isEmpty:
-			self.reportEmpty()
+			self.handleEmpty()
 
 
 class UIASuperGrid(CRList):
