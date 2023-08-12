@@ -50,7 +50,6 @@ import watchdog
 import winUser
 import wx
 from _ctypes import COMError
-import inspect
 
 from .actions import ACTIONS, actionFromName, configuredActions
 from .commonFunc import NVDALocale, findAllDescendantWindows, getScriptGestures
@@ -60,6 +59,7 @@ from . import configSpec
 from . import dialogs
 from .exceptions import columnAtIndexNotVisible, noColumnAtIndex
 from . import utils
+from .blockUntilConditionMet import blockUntilConditionMet
 
 # rename for code clarity
 SysLV32List = sysListView32.List
@@ -142,6 +142,7 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 		nextHandler()
 
 	def event_gainFocus(self, obj, nextHandler):
+		# avoid None obj
 		if not obj:
 			return
 		# speedup: nothing for web
@@ -156,7 +157,6 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 			)
 		):
 			self.reportListBounds(obj)
-#		debugLog("Running event_gainFocus nextHandler")
 		nextHandler()
 
 	def reportListBounds(self, obj):
@@ -227,7 +227,7 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 		# release COM object
 		if CRList64.shell:
 			CRList64.shell.Release()
-			del CRList64.shell
+#			del CRList64.shell
 
 	def handleConfigProfileSwitch(self):
 		# We cannot iterate through original set of instances
@@ -274,17 +274,13 @@ class CRList(object):
 		self.__class__._instances.add(self)
 
 	def event_focusEntered(self):
+		# apparently, this event is fired only by pre-populated lists
 		super(CRList, self).event_focusEntered()
 		self.bindCRGestures()
 
 	def bindCRGestures(self, reinitializeObj=False):
 		if reinitializeObj:
 			self.clearGestureBindings()
-		if self.supportsEmptyListAnnouncements:
-			self.isEmpty = self.isEmptyList()
-			if self.isEmpty:
-				self.handleEmpty()
-				return
 		# find gestures
 		self.bindGesture("kb:NVDA+control+f", "find")
 		self.bindGesture("kb:NVDA+f3", "findNext")
@@ -540,7 +536,7 @@ class CRList(object):
 		ui.message(*msgArgs)
 		if self.THREAD_SUPPORTED:
 			# Call launchFinder asynchronously, i.e. without expecting it to return
-			Thread(target=self.launchFinder, args=(text, reverse, caseSensitive) ).start()
+			Thread(target=self.launchFinder, args=(text, reverse, caseSensitive)).start()
 		else:
 			res = self.findInList(text, reverse, caseSensitive)
 			speech.cancelSpeech()
@@ -667,13 +663,29 @@ class CRList(object):
 		braille.handler.update()
 
 	def event_gainFocus(self):
+		# apparently, this event is fired only when focusing an empty list
 		# call super to get list type/name reporting
 		super(CRList, self).event_gainFocus()
-		if self.supportsEmptyListAnnouncements:
-			self.isEmpty = self.isEmptyList()
-			if self.isEmpty:
-				log.info("Calling binding on %s"%self.windowClassName)
-				core.callLater(100, self.bindCRGestures)
+		# ignore desktop, usually not empty
+		if self.supportsEmptyListAnnouncements and self.name != "Desktop":
+			if self.isEmptyList():
+				# first, handle list as surely empty
+				self.handleEmpty()
+				# then, wait to see whether items appear
+				# without blocking
+				Thread(target=self.waitForItems).start()
+
+	def waitForItems(self):
+		# for 10 seconds, check every 100 milliseconds 
+		# if list remains empty
+		res, value = blockUntilConditionMet(self.isEmptyList, 10.0, lambda empty: not empty, 0.1)
+		# now, if list has items and focus
+		if res and self.hasFocus:
+			# request focus on first item, if needed
+			if not self.simpleFirstChild.hasFocus:
+				eventHandler.queueEvent("gainFocus", self.simpleFirstChild)
+			# and bind gestures (not called by lacking event_focusEntered)
+			self.bindCRGestures(reinitializeObj=True)
 
 	def script_reportEmpty(self, gesture):
 		if not self.isEmptyList():
@@ -682,7 +694,7 @@ class CRList(object):
 		self.reportEmpty()
 
 	def bindGesturesForEmpty(self):
-		# bind arrows to focus again (and report empty)
+		# bind gestures to report empty
 		for item in ["Up", "Down", "Left", "Right"]:
 			self.bindGesture("kb:{0}Arrow".format(item), "reportEmpty")
 		# other useful gesture to remap
@@ -725,6 +737,7 @@ class CRList(object):
 		# which reports foreground and background color of the current list item.
 		"reports foreground and background colors of the current list item."
 	)
+
 
 class CRList32(CRList):
 # for SysListView32 or WindowsForms10.SysListView32.app.0.*
@@ -1092,15 +1105,16 @@ class CRList64(CRList):
 		# use UIA to avoid recursion error getting lastChild
 		try:
 			watchdog.alive()
-#			childCount = watchdog.cancellableExecute(self._get_rowCount)
 			childCount = self._get_UIAGridPattern().CurrentRowCount
 		except:
 			# assume not empty
 			childCount = 1
 		return not bool(childCount)
 
+	"""
 	def event_focusEntered(self):
-		# to get "0 items" alert e.g. choosing
+		# apparently, this event is NOT fired during usual folder exploring
+		# so we use it to get "0 items" alert i.e. choosing
 		# an empty folder in notepad open window
 		super(CRList64, self).event_focusEntered()
 		if hasattr(self, "isEmpty") and self.isEmpty:
@@ -1111,6 +1125,7 @@ class CRList64(CRList):
 		# to avoid duplicate list type reporting
 		if hasattr(self, "isEmpty") and self.isEmpty:
 			self.handleEmpty()
+	"""
 
 
 class UIASuperGrid(CRList):
