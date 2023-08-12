@@ -25,21 +25,27 @@ addon_info = {
 	# Translators: Long description to be shown for this add-on on add-on information from add-ons manager
 	"addon_description": _("""A better experience with lists"""),
 	# version
-	"addon_version": "5.2",
+	"addon_version": "5.3.0",
 	# Author(s)
 	"addon_author": u"Alberto Buffolino <a.buffolino@gmail.com>, Łukasz Golonka <lukasz.golonka@mailbox.org>, other contributors",
 	# URL for the add-on documentation support
 	"addon_url": "https://github.com/ABuffEr/columnsReview",
+	# URL for the add-on repository where the source code can be found
+	"addon_sourceURL": "https://github.com/ABuffEr/columnsReview",
 	# Documentation file name
 	"addon_docFileName": "readme.html",
 	# Minimum NVDA version supported (e.g. "2018.3.0", minor version is optional)
-	"addon_minimumNVDAVersion": "2017.3",
+	"addon_minimumNVDAVersion": "0.0.0",
 	# Last NVDA version supported/tested (e.g. "2018.4.0", ideally more recent than minimum version)
-	"addon_lastTestedNVDAVersion": "2023.1",
+	"addon_lastTestedNVDAVersion": "2023.2",
 	# Add-on update channel (default is None, denoting stable releases,
 	# and for development releases, use "dev".)
 	# Do not change unless you know what you are doing!
-	"addon_updateChannel": None,
+	"addon_updateChannel": "stable",
+	# Add-on license such as GPL 2
+	"addon_license": "GPL v2",
+	# URL for the license document the ad-on is licensed under
+	"addon_licenseURL": None,
 }
 
 # Define the python files that are the sources of your add-on.
