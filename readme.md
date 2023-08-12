@@ -55,6 +55,6 @@ Following list types are supported:
 
 [rss]: https://github.com/ABuffEr/rssowlnixSupport
 
-[stable]: https://addons.nvda-project.org/files/get.php?file=cr
+[stable]: https://www.nvaccess.org/addonStore/legacy?file=columnsReview
 
-[dev]: https://addons.nvda-project.org/files/get.php?file=cr-dev
+[dev]: https://www.nvaccess.org/addonStore/legacy?file=columnsReview-dev
