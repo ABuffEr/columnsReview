@@ -89,6 +89,6 @@ Les types de liste pris en charge sont les suivants:
 [[!tag dev stable]]
 
 
-[stable]: https://www.nvaccess.org/addonStore/legacy?file=cr
+[stable]: https://www.nvaccess.org/addonStore/legacy?file=columnsReview
 
-[dev]: https://www.nvaccess.org/addonStore/legacy?file=cr-dev
+[dev]: https://www.nvaccess.org/addonStore/legacy?file=columnsReview-dev
