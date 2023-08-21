@@ -275,6 +275,7 @@ class CRList(object):
 
 	def event_focusEntered(self):
 		# apparently, this event is fired only by pre-populated lists
+#		ui.message("focusEntered raised!")
 		super(CRList, self).event_focusEntered()
 		self.bindCRGestures()
 
@@ -665,15 +666,18 @@ class CRList(object):
 	def event_gainFocus(self):
 		# apparently, this event is fired only when focusing an empty list
 		# call super to get list type/name reporting
+#		ui.message("gainFocus raised!")
 		super(CRList, self).event_gainFocus()
 		# ignore desktop, usually not empty
-		if self.supportsEmptyListAnnouncements and self.name != "Desktop":
-			if self.isEmptyList():
-				# first, handle list as surely empty
-				self.handleEmpty()
-				# then, wait to see whether items appear
-				# without blocking
-				Thread(target=self.waitForItems).start()
+		if self.supportsEmptyListAnnouncements and self.name != "Desktop" and self.isEmptyList():
+			# first, handle list as surely empty
+			self.handleEmpty()
+			# then, wait to see whether items appear
+			# without blocking
+			Thread(target=self.waitForItems).start()
+		else:
+			# sometimes, we receive gainFocus instead of focusEntered
+			self.bindCRGestures()
 
 	def waitForItems(self):
 		# for 10 seconds, check every 100 milliseconds 
@@ -878,22 +882,25 @@ class CRList32(CRList):
 		return items
 
 	def isEmptyList(self):
+		if self.childCount > 1:
+			return False
+		# simple and fast check
 		try:
-			if self.childCount > 1:
-				return False
-			if (
-				# simple and fast check
-				(not self.rowCount)
-				# usual condition for SysListView32
-				# (the unique child should be the header list, that usually follows items)
-				or (self.firstChild.role != roles.LISTITEM and self.firstChild == self.lastChild)
-				# condition for possible strange cases
-				or (self.childCount <= 1)
-			):
+			if not self.rowCount:
 				return True
-			return False
+		except NotImplementedError:
+			pass
+		# usual condition for SysListView32
+		# (the unique child should be the header list, that usually follows items)
+		try:
+			if self.firstChild.role != roles.LISTITEM and self.firstChild == self.lastChild:
+				return True
 		except AttributeError:
-			return False
+			pass
+		# condition for possible strange cases
+		if self.childCount <= 1:
+			return True
+		return False
 
 
 class CRList64(CRList):
