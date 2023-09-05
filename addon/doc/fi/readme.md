@@ -89,6 +89,6 @@ Tuettuja luetteloita ovat:
 [[!tag dev stable]]
 
 
-[stable]: https://www.nvaccess.org/addonStore/legacy?file=cr
+[stable]: https://www.nvaccess.org/addonStore/legacy?file=columnsReview
 
-[dev]: https://www.nvaccess.org/addonStore/legacy?file=cr-dev
+[dev]: https://www.nvaccess.org/addonStore/legacy?file=columnsReview-dev
