@@ -15,10 +15,10 @@ eklentidir.
 * onar on aralıklarla sütunlar arasında geçiş yapma yeteneği;
 * basitleştirilmiş başlık yönetimi (fare tıklamaları);
 * göreli geçerli öğe konumunun isteğe bağlı okuması (öğe 7/10 gibi);
-* Numaratörün kullanıldığı ya da kullanılmadığı özelleştirilebilir
+* numaratörün kullanıldığı ya da kullanılmadığı özelleştirilebilir
   hareketler;
 * Liste boşken "0 öğe" duyurusu (maalesef Win8/10 klasörlerinde çalışmıyor);
-* Tümünü okuma desteği;
+* tümünü okuma desteği;
 * seçilen öğelerin bildirimi (miktar ve öğe adları);
 * liste araması (işaretliyse/destekleniyorsa öğe çoklu seçimli).
 
@@ -82,6 +82,6 @@ Desteklenen listeler :
 [[!tag dev stable]]
 
 
-[Kararlı]: https://www.nvaccess.org/addonStore/legacy?file=cr
+[stable]: https://www.nvaccess.org/addonStore/legacy?file=columnsReview
 
-[geliştirici]: https://www.nvaccess.org/addonStore/legacy?file=cr-dev
+[dev]: https://www.nvaccess.org/addonStore/legacy?file=columnsReview-dev

@@ -5,8 +5,8 @@
 * [Entwicklerversion herunterladen][dev]
 * NVDA-Kompatibilität: 2017.3 und neuer
 
-Spaltenbetrachter ist eine Erweiterung zur Verbesserung der NVDA-Erfahrung
-mit Listen.
+Spaltenbetrachter ist eine NVDA-Erweiterung zur Verbesserung der
+NVDA-Erfahrung mit Listen.
 
 Zu den Funktionen gehören:
 
@@ -16,15 +16,15 @@ Zu den Funktionen gehören:
 * Vereinfachte Überschriften-Verwaltung (Maus-Klicks);
 * Ausgabe der aktuellen Positionsinformation bei Bedarf (bspw. Eintrag 7 von
   10)
-* anpassbare Gesten mit oder ohne Nummernblock;
+* anpassbare Tastenbefehle mit oder ohne Nummernblock;
 * Die Ansage "0 Einträge", wenn die Liste lehr ist (derzeit nicht in Windows
   8/10-Ordnern)
-* Unterstützung für alles lesen;
+* Unterstützung für Alles Vorlesen;
 * Ansage der markierten Einträge (Anzahl und Namen der Einträge);
 * Listensuche (mit Mehrfachauswahl von Listeneinträgen, falls
   angehakt/unterstützt).
 
-## Gesten
+## Tastenbefehle
 
 Die Standard-Tastenkombinationen für Spalten, Überschriften und Position
 beinhalten NVDA+Steuerung. Dies kann in den Erweiterungseinstellungen, (aber
@@ -34,9 +34,9 @@ Beachten Sie, dass Ihre Tastatur Probleme bei der Verarbeitung einiger
 Tastenkombinationen haben könnte. Probieren Sie daher alle zusätzlichen
 Gesten aus und passen Sie diese für bessere Ergebnisse an.
 
-Siehe auch die Erweiterungs-Einstellungen für den Nummernblock-Modus,
-Tastaturschema (ohne Nummernblock) und die vier verfügbaren Aktionen für
-Spalten.
+Siehe auch die Einstellungen der NVDA-Erweiterung für den
+Nummernblock-Modus, Tastaturschema (ohne Nummernblock) und die vier
+verfügbaren Aktionen für Spalten.
 
 * NVDA+Steuerung+Ziffern von 1 bis 0 (Tastaturmodus) oder von 1 bis 9
   (Nummernblockmodus): einmal drücken: die ausgewählte Spalte wird
@@ -71,12 +71,12 @@ Spalten.
 
 ## Unterstützung
 
-Diese Erweiterung bietet eine allgemeine Unterstützung für häufigere Listen
-(siehe unten) und einige spezifische Anwendungen. Der Hauptautor (Alberto
-Buffolino) kann die Kompatibilität/Funktionalität für nicht verwendete
-Anwendungen wie  Outlook und Windows Mail nicht garantieren. Er wird gerne
-mit ihren Benutzern zusammenarbeiten oder einen Pull Request für die
-Anwendungen annehmen.
+Diese NVDA-Erweiterung bietet eine allgemeine Unterstützung für gängige
+Listen (siehe unten) und einige spezielle Anwendungen. Der Hauptautor
+(Alberto Buffolino) kann die Kompatibilität/Funktionalität für die
+Anwendungen, die er nicht benutzt, wie Outlook und Windows Mail, nicht
+garantieren, aber er ist gerne bereit, mit deren Nutzern zusammenzuarbeiten
+oder einen Pull-Request für sie einzureichen.
 
 Unterstützte Listen sind:
 
@@ -84,13 +84,13 @@ Unterstützte Listen sind:
 * DirectUIHWND (in 64-Bit-Systemen vorhanden);
 * WindowsForms10.SysListView32.* (Anwendungen, die .NET verwenden);
 * mehrspaltige Baumansicht wie in RSSOwlnix;
-* Mozilla-Tabelle (typischerweise Thunderbird-Nachrichtenliste, gruppierte
-  Beiträge werden unterstützt).
+* Mozilla-Tabelle (typischerweise die Nachrichtenliste in Mozilla
+  Thunderbird, gruppierte Beiträge werden unterstützt).
 
 
 [[!tag dev stable]]
 
 
-[stable]: https://addons.nvda-project.org/files/get.php?file=cr
+[stable]: https://www.nvaccess.org/addonStore/legacy?file=columnsReview
 
-[dev]: https://addons.nvda-project.org/files/get.php?file=cr-dev
+[dev]: https://www.nvaccess.org/addonStore/legacy?file=columnsReview-dev
