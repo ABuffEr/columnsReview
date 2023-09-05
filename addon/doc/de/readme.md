@@ -1,6 +1,6 @@
 # Spalten-Betrachter #
 
-* Autoren: Alberto Buffolino, Łukasz Golonka und weitere Entwickler
+* Autoren: Alberto Buffolino, Łukasz Golonka, andere Entwickler
 * [Stabile Version herunterladen][stable]
 * [Entwicklerversion herunterladen][dev]
 * NVDA-Kompatibilität: 2017.3 und neuer
@@ -91,6 +91,6 @@ Unterstützte Listen sind:
 [[!tag dev stable]]
 
 
-[stable]: https://www.nvaccess.org/addonStore/legacy?file=cr
+[stable]: https://addons.nvda-project.org/files/get.php?file=cr
 
-[dev]: https://www.nvaccess.org/addonStore/legacy?file=cr-dev
+[dev]: https://addons.nvda-project.org/files/get.php?file=cr-dev
