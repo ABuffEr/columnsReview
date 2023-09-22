@@ -48,8 +48,7 @@ numpad), and the four available actions for columns.
   zaglavlja;
 * NVDA+control+delete (numpadDelete in numpad mode): read relative current
   item position (i.e.: item 7 of 10);
-* Strelice i NVDA+tabulator (u praznom popisu): ponavlja poruku „0
-  elemenata”.
+* Strelice i NVDA+tabulator (u praznom popisu): ponovi poruku „0 elemenata”;
 * NVDA+downArrow (desktop layout) or NVDA+a (laptop layout): start say all
   (this gesture depends on original one under "Input gestures"/"System
   caret");
