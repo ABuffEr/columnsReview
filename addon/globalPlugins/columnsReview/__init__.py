@@ -97,7 +97,7 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 
 	def chooseNVDAObjectOverlayClasses(self, obj, clsList):
 		objRole = obj.role
-		objWindowClassName = obj.windowClassName
+		objWindowClassName = getattr(obj, "windowClassName", "")
 		if objWindowClassName == "TaskListThumbnailWnd":
 			return
 		# from Thunderbird 115
