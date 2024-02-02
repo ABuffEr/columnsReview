@@ -117,17 +117,12 @@ class configureActionPanel(wx.Panel):
 			self.copyHeader.Disable()
 
 
-class ColumnsReviewSettingsDialog(getattr(gui.settingsDialogs, "SettingsPanel", gui.SettingsDialog)):
-	"""Class to define settings dialog."""
+class ColumnsReviewSettingsDialog(gui.settingsDialogs.SettingsPanel):
+	"""Class to define settings panel."""
 
-	if hasattr(gui.settingsDialogs, "SettingsPanel"):
-		# Translators: title of settings dialog
-		title = _("Columns Review")
-	else:
-		# Translators: title of settings dialog
-		title = _("Columns Review Settings")
+	# Translators: title of settings panel
+	title = _("Columns Review")
 
-	# common to dialog and panel
 	def makeSettings(self, settingsSizer):
 		self.copyCheckboxEnabled = self.readCheckboxEnabled = self.hideNextPanels = False
 		self.panels = []
@@ -229,14 +224,6 @@ class ColumnsReviewSettingsDialog(getattr(gui.settingsDialogs, "SettingsPanel", 
 		if self._announceListBoundsWith.GetSelection() != 1:
 			settingsSizer.Hide(self._beepSizer) #self._beepValues)
 
-	# for dialog only
-	def postInit(self):
-		for panel in self.panels:
-			if panel.IsEnabled():
-				panel.chooseActionCombo.SetFocus()
-				break
-
-	# shared between onOk and onSave
 	def saveConfig(self):
 		# Update Configuration
 		addonConf = config.conf["columnsReview"]
@@ -270,12 +257,6 @@ class ColumnsReviewSettingsDialog(getattr(gui.settingsDialogs, "SettingsPanel", 
 				addonConf["beep"]["bottomBeep"] = bottomBeep
 				addonConf["beep"]["beepLen"] = beepLen
 
-	# for dialog only
-	def onOk(self, evt):
-		self.saveConfig()
-		super(ColumnsReviewSettingsDialog, self).onOk(evt)
-
-	# for panel only
 	def onSave(self):
 		self.saveConfig()
 
