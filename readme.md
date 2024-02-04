@@ -3,7 +3,7 @@
 * Author: Alberto Buffolino, Łukasz Golonka, other contributors
 * Download [stable version][stable]
 * Download [development version][dev]
-* NVDA compatibility: 2017.3 and beyond
+* NVDA compatibility: 2019.3 and beyond
 
 Columns Review is an add-on to enhance NVDA experience with lists.
 

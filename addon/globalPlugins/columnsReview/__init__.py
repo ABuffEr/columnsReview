@@ -204,20 +204,9 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 		reportFunc(*message)
 
 	def createMenu(self):
-		# Dialog or the panel.
-		if hasattr(gui.settingsDialogs, "SettingsPanel"):
-			gui.settingsDialogs.NVDASettingsDialog.categoryClasses.append(
-				dialogs.ColumnsReviewSettingsDialog
-			)
-		else:
-			self.prefsMenu = gui.mainFrame.sysTrayIcon.menu.GetMenuItems()[0].GetSubMenu()
-			# Translators: menu item in preferences
-			self.ColumnsReviewItem = self.prefsMenu.Append(wx.ID_ANY, _("Columns Review Settings..."), "")
-			gui.mainFrame.sysTrayIcon.Bind(
-				wx.EVT_MENU,
-				lambda e: gui.mainFrame._popupSettingsDialog(dialogs.ColumnsReviewSettingsDialog),
-				self.ColumnsReviewItem
-			)
+		gui.settingsDialogs.NVDASettingsDialog.categoryClasses.append(
+			dialogs.ColumnsReviewSettingsDialog
+		)
 
 	def terminate(self):
 		for extPointName in PROFILE_SWITCHED_NOTIFIERS:
@@ -225,15 +214,9 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 				getattr(config, extPointName).unregister(self.handleConfigProfileSwitch)
 			except AttributeError:
 				continue
-		if hasattr(gui.settingsDialogs, "SettingsPanel"):
-			gui.settingsDialogs.NVDASettingsDialog.categoryClasses.remove(
-				dialogs.ColumnsReviewSettingsDialog
-			)
-		else:
-			try:
-				self.prefsMenu.RemoveItem(self.ColumnsReviewItem)
-			except wx.PyDeadObjectError:
-				pass
+		gui.settingsDialogs.NVDASettingsDialog.categoryClasses.remove(
+			dialogs.ColumnsReviewSettingsDialog
+		)
 		# release COM object
 		if CRList64.shell:
 			CRList64.shell.Release()
