@@ -50,6 +50,7 @@ import watchdog
 import winUser
 import wx
 from _ctypes import COMError
+from NVDAObjects.IAccessible.mozilla import TextLeaf as MozillaTextLeaf
 
 from .actions import ACTIONS, actionFromName, configuredActions
 from .commonFunc import NVDALocale, findAllDescendantWindows, getScriptGestures
@@ -99,6 +100,14 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 		objWindowClassName = obj.windowClassName
 		if objWindowClassName == "TaskListThumbnailWnd":
 			return
+		# from Thunderbird 115
+		if (
+			objRole in (roles.LIST, roles.TREEVIEW)
+			and objWindowClassName == "MozillaWindowClass"
+			and "display:table-row-group" in obj.IAccessibleObject.attributes
+		):
+			clsList.insert(0, ThunderbirdSupernova)
+			return
 		if objRole == roles.LIST:
 			if SysLV32List in clsList:
 				clsList.insert(0, CRList32)
@@ -114,6 +123,7 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 		):
 			clsList.insert(0, UIASuperGrid)
 			return
+		# for Thunderbird before 115
 		if (
 			objRole in (roles.TABLE, roles.TREEVIEW)
 			and objWindowClassName == "MozillaWindowClass"
@@ -1297,6 +1307,9 @@ class MozillaTable(CRList32):
 	THREAD_SUPPORTED = True
 	supportsEmptyListAnnouncements = True
 
+	def getHeaderParent(self):
+		return self.simpleFirstChild
+
 	def _getColumnHeader(self, index):
 		"""Returns the column header in Mozilla applications"""
 		# get the list with headers, excluding these
@@ -1309,9 +1322,6 @@ class MozillaTable(CRList32):
 
 	def getFixedNum(self, num):
 		return num
-
-	def getHeaderParent(self):
-		return self.simpleFirstChild
 
 	def isMultipleSelectionSupported(self):
 		return True
@@ -1414,6 +1424,169 @@ class MozillaTable(CRList32):
 		except:
 			pass
 		return False
+
+
+class ThunderbirdSupernova(CRList32):
+	"""Class to manage column in Thunderbird 115 and above."""
+
+	THREAD_SUPPORTED = True
+	supportsEmptyListAnnouncements = True
+
+	def getHeaderParent(self):
+		headerParent = None
+		for child in self.parent.children:
+			if "class:tree-table-header" in child.IAccessibleObject.attributes:
+				headerParent = child.firstChild
+				break
+		return headerParent
+
+	def _getColumnHeader(self, index):
+		"""Returns the column header in Mozilla applications"""
+		headerParent = self.getHeaderParent()
+		if not headerParent:
+			return None
+		headerObj = headerParent.getChild(index-1).firstChild
+		return headerObj.name
+
+	def getColumnData(self, colNumber):
+		curItem = api.getFocusObject()
+		# even with no column, we consider
+		# list item as placed in first column
+		if (1 != colNumber > curItem.childCount) or (curItem.role == self.role):
+			raise noColumnAtIndex
+		cell = curItem.getChild(colNumber-1)
+		# None obj should be generated
+		# only in invisible column case
+		if not cell:
+			raise columnAtIndexNotVisible
+		if cell.appModule.productVersion < "119.0":
+			# TB 115...119b5, remove in future
+			header = self._getColumnHeader(colNumber)
+		else:
+			header = cell.name
+		if not header or len(header) == 0:
+			header = None
+		content = cell.description
+		if not content or len(content) == 0:
+			for child in cell.recursiveDescendants:
+				# better for attachment
+				if child.role == roles.GRAPHIC and child.next and not child.next.name:
+					content = child.description
+					break
+				if isinstance(child, MozillaTextLeaf):
+					content = child.name
+					break
+		return {"columnContent": content, "columnHeader": header}
+
+	def isMultipleSelectionSupported(self):
+		return True
+
+	def script_reportCurrentSelection(self, gesture):
+		# selected items retrieval from IAccessibleTable2Object
+		# seems broken in new Thunderbird, so...
+		ui.message(_("No information available"))
+
+	script_reportCurrentSelection.canPropagate = True
+	script_reportCurrentSelection.__doc__ = CRList.script_find.__doc__
+
+	def script_find(self, gesture, reverse=False):
+		# not fully working for now
+		ui.message(_("Cannot search here."))
+#		self.curPos = api.getFocusObject().IAccessibleObject.uniqueID
+#		super(ThunderbirdSupernova, self).script_find(gesture, reverse)
+
+	script_find.canPropagate = True
+	script_find.__doc__ = CRList.script_find.__doc__
+
+	def script_findNext(self, gesture):
+		ui.message(_("Cannot search here."))
+#		self.curPos = api.getFocusObject().IAccessibleObject.uniqueID
+#		super(ThunderbirdSupernova, self).script_findNext(gesture)
+
+	script_findNext.canPropagate = True
+	script_findNext.__doc__ = CRList.script_findNext.__doc__
+
+	def script_findPrevious(self, gesture):
+		ui.message(_("Cannot search here."))
+#		self.curPos = api.getFocusObject().IAccessibleObject.uniqueID
+#		super(ThunderbirdSupernova, self).script_findPrevious(gesture)
+
+	script_findPrevious.canPropagate = True
+	script_findPrevious.__doc__ = CRList.script_findPrevious.__doc__
+
+	def findInList(self, text, reverse, caseSensitive, stopCheck=lambda:False):
+		"""performs the search in item list, via NVDA object navigation (ThunderbirdSupernova specific)."""
+		index = self.curPos
+		curItem = getNVDAObjectFromEvent(self.windowHandle, winUser.OBJID_CLIENT, index)
+		item = curItem.previous if reverse else curItem.next
+		counter = -1
+		while (item and item.role == curItem.role):
+			counter += 1
+			debugLog("Search on item %d"%counter)
+			if (
+				(not caseSensitive and item.name and text.lower() in item.name.lower())
+				or
+				(caseSensitive and text in item.name)
+			):
+				resIndex = item.IAccessibleObject.uniqueID
+				return resIndex
+			newItem = item.previous if reverse else item.next
+			if not newItem:
+				debugLog("Scrolled at %s"%item.name)
+#				from comInterfaces.IAccessible2Lib import IA2_SCROLL_TYPE_TOP_LEFT, IA2_SCROLL_TYPE_BOTTOM_RIGHT
+#				item.IAccessibleObject.scrollTo(IA2_SCROLL_TYPE_BOTTOM_RIGHT if reverse else IA2_SCROLL_TYPE_TOP_LEFT)
+				self.getFocusMovingMouse(item)
+				newItem = item.previous if reverse else item.next
+				debugLog("newItem: %s"%(newItem.name if newItem else None))
+			item = newItem
+			if stopCheck():
+				break
+
+	def successSearchAction(self, resIndex):
+		global useMultipleSelection
+		speech.cancelSpeech()
+		# reacquire res for this thread
+		res = getNVDAObjectFromEvent(self.windowHandle, winUser.OBJID_CLIENT, resIndex)
+		# for some reasons, in Thunderbird xor of flagsSelect is not supported
+		# so execute same actions but splitting calls
+		if useMultipleSelection:
+			res.IAccessibleObject.accSelect(SELFLAG_ADDSELECTION, res.IAccessibleObject.uniqueID)
+		else:
+			res.IAccessibleObject.accSelect(SELFLAG_TAKESELECTION, res.IAccessibleObject.uniqueID)
+		self.getFocusMovingMouse(res)
+
+	def getFocusMovingMouse(self, obj):
+		# ensure that message is visible
+		obj.scrollIntoView()
+		# use subject column object to move mouse/focus
+		subjectChild = None
+		for child in obj.children:
+			attrs = getattr(child, "IA2Attributes", None)
+			if attrs and attrs.get("class", None) == "subjectcol-column":
+				subjectChild = child
+		if subjectChild:
+			api.moveMouseToNVDAObject(subjectChild)
+			import mouseHandler
+			mouseHandler.doPrimaryClick()
+
+	def script_itemInfo(self, gesture):
+		curItem = api.getFocusObject()
+		number = total = None
+		try:
+			number = curItem.positionInfo["indexInGroup"]
+			# total is not refreshed correctly, get it from last item
+			total = curItem.parent.lastChild.positionInfo["similarItemsInGroup"]
+		except (AttributeError, KeyError):
+			pass
+		if None in (number, total):
+			# Translators: Reported when information about position on a list cannot be retrieved.
+			ui.message(_("No information available"))
+		else:
+			info = ' '.join([NVDALocale("item"), NVDALocale("{number} of {total}").format(number=number, total=total)])
+			ui.message(info)
+
+	script_itemInfo.canPropagate = True
+	script_itemInfo.__doc__ = CRList.script_itemInfo.__doc__
 
 
 # Global ref on current finder
