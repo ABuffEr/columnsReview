@@ -97,7 +97,7 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 
 	def chooseNVDAObjectOverlayClasses(self, obj, clsList):
 		objRole = obj.role
-		objWindowClassName = obj.windowClassName
+		objWindowClassName = getattr(obj, "windowClassName", "")
 		if objWindowClassName == "TaskListThumbnailWnd":
 			return
 		# from Thunderbird 115
@@ -371,6 +371,7 @@ class CRList(object):
 		# Translators: documentation of script to read columns
 		"Returns the header and the content of the list column at the index corresponding to the number pressed"
 	)
+	script_readColumn.speakOnDemand = True
 
 	def getIndex(self, key):
 		"""get index from key pressed"""
@@ -444,6 +445,7 @@ class CRList(object):
 		# Translators: documentation for script to announce list item info
 		"Announces list item position information"
 	)
+	script_itemInfo.speakOnDemand = True
 
 	def script_manageHeaders(self, gesture):
 		headers = [h for h in self.getHeaderParent().children if states.INVISIBLE not in h.states]
@@ -494,6 +496,7 @@ class CRList(object):
 		# Translators: documentation for script to know current selected items
 		"Reports current selected list items"
 	)
+	script_reportCurrentSelection.speakOnDemand = True
 
 	def script_find(self, gesture, reverse=False):
 		self.searchFromItem = api.getFocusObject()
@@ -623,6 +626,7 @@ class CRList(object):
 		# Translators: documentation for script to read all list items starting from the focused one.
 		"Starts reading all list items beginning at the item with focus"
 	)
+	script_readListItems.speakOnDemand = True
 
 	@staticmethod
 	def prepareForThreatedSearch():
@@ -734,6 +738,7 @@ class CRList(object):
 		# which reports foreground and background color of the current list item.
 		"reports foreground and background colors of the current list item."
 	)
+	script_reportOrShowFormattingAtCaret.speakOnDemand = True
 
 
 class CRList32(CRList):
@@ -1347,6 +1352,7 @@ class MozillaTable(CRList32):
 
 	script_reportCurrentSelection.canPropagate = True
 	script_reportCurrentSelection.__doc__ = CRList.script_reportCurrentSelection.__doc__
+	script_reportCurrentSelection.speakOnDemand = True
 
 	def script_find(self, gesture, reverse=False):
 		self.curPos = api.getFocusObject().IAccessibleObject.uniqueID
@@ -1471,6 +1477,7 @@ class ThunderbirdSupernova(CRList32):
 
 	script_reportCurrentSelection.canPropagate = True
 	script_reportCurrentSelection.__doc__ = CRList.script_find.__doc__
+	script_reportCurrentSelection.speakOnDemand = True
 
 	def script_find(self, gesture, reverse=False):
 		# not fully working for now
@@ -1570,6 +1577,7 @@ class ThunderbirdSupernova(CRList32):
 
 	script_itemInfo.canPropagate = True
 	script_itemInfo.__doc__ = CRList.script_itemInfo.__doc__
+	script_itemInfo.speakOnDemand = True
 
 
 # Global ref on current finder
