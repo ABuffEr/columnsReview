@@ -1,6 +1,6 @@
 # Pregled stupaca (Columns Review) #
 
-* Autor: Alberto Buffolino, Łukasz Golonka, ostali suradnici
+* Author: Alberto Buffolino, Łukasz Golonka, other contributors
 * Preuzmi [stabilnu verziju][stable]
 * Preuzmi [razvojnu verziju][dev]
 * NVDA kompatibilnost: 2017.3 i nadalje

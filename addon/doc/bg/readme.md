@@ -1,6 +1,6 @@
 # Преглед на колоните (Columns Review) #
 
-* Автор: Alberto Buffolino, Łukasz Golonka, други сътрудници
+* Author: Alberto Buffolino, Łukasz Golonka, other contributors
 * Изтегляне на [стабилна версия][stable]
 * Изтегляне на [тестова версия][dev]
 * Съвместимост с NVDA: от 2017.3 и по-нови версии

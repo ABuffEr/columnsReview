@@ -1,6 +1,6 @@
 # Spalten-Betrachter #
 
-* Autoren: Alberto Buffolino, Łukasz Golonka und weitere Entwickler
+* Author: Alberto Buffolino, Łukasz Golonka, other contributors
 * [Stabile Version herunterladen][stable]
 * [Entwicklerversion herunterladen][dev]
 * NVDA-Kompatibilität: 2017.3 und neuer
