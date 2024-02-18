@@ -6,11 +6,14 @@ import api
 import config
 import speech
 import ui
+from versionInfo import *
 
 from .commonFunc import NVDALocale
 from .compat import rangeFunc
 
 addonHandler.initTranslation()
+
+currentVersion = (version_year, version_major, version_minor)
 
 
 class Action(object):
@@ -111,6 +114,17 @@ class DisplayAction(Action):
 			return
 		if not columnHeader:
 			columnHeader = u""
+		elif currentVersion < (2023, 3, 3):
+			# code partially from Character Information add-on
+			# for security advisory GHSA-xg6w-23rw-39r8.
+			# fixed in 2023.3.3
+			if currentVersion < (2023, 1, 0):
+				# Before #14668 (NVDA < 2023.1)
+				sep = ";"
+			else:
+				sep = "__NVDA:split-here__"
+			if sep in columnHeader:
+				columnHeader = columnHeader.replace(sep, "_")
 		ui.browseableMessage(columnContent, title=columnHeader)
 
 
