@@ -1,6 +1,6 @@
 # Pregled stupaca (Columns Review) #
 
-* Author: Alberto Buffolino, Łukasz Golonka, other contributors
+* Autor: Alberto Buffolino, Łukasz Golonka, drugi doprinositelji
 * Preuzmi [stabilnu verziju][stable]
 * Preuzmi [razvojnu verziju][dev]
 * NVDA kompatibilnost: 2017.3 i nadalje
@@ -21,10 +21,10 @@ Its features include:
 * report of selected items (amount and item names);
 * list search (with item multiselection, if checked/supported).
 
-## Gestures
+## Geste
 
-Default keys for columns, headers and position are NVDA+control, but you can
-customize them from add-on settings (not "Input gestures" dialog!).
+Zadane tipke za stupce, zaglavlja i položaj su NVDA+control, ali se mogu
+prilagoditi u postavkama dodatka (ne dijalog „Geste za unos”!).
 
 Note that your keyboard could have problems processing some key
 combinations, so try all add-on gestures and adjust them for better results.
