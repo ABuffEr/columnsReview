@@ -2,6 +2,14 @@
 # Provides various stuff used to preserve compatibility with older releases of NVDA.
 
 import controlTypes
+from versionInfo import *
+
+currentVersion = (version_year, version_major, version_minor)
+
+if currentVersion < (2024, 1, 0):
+	zeroItemsTemplate = "%s items"
+else:
+	zeroItemsTemplate = ngettext("%s item", "%s items", 0)
 
 
 class EnhancedGetter(object):
@@ -56,3 +64,4 @@ def rangeFunc(*args, **kwargs):
 			return __builtin__.xrange(*args, **kwargs)
 		except ImportError:
 			return range(*args, **kwargs)
+

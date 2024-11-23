@@ -6,14 +6,11 @@ import api
 import config
 import speech
 import ui
-from versionInfo import *
 
 from .commonFunc import NVDALocale
-from .compat import rangeFunc
+from .compat import currentVersion, rangeFunc
 
 addonHandler.initTranslation()
-
-currentVersion = (version_year, version_major, version_minor)
 
 
 class Action(object):

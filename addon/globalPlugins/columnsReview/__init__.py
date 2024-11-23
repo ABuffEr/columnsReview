@@ -54,7 +54,7 @@ from NVDAObjects.IAccessible.mozilla import TextLeaf as MozillaTextLeaf
 
 from .actions import ACTIONS, actionFromName, configuredActions
 from .commonFunc import NVDALocale, findAllDescendantWindows, getScriptGestures
-from .compat import CTWRAPPER, rangeFunc
+from .compat import CTWRAPPER, zeroItemsTemplate, rangeFunc
 from . import configManager
 from . import configSpec
 from . import dialogs
@@ -650,13 +650,18 @@ class CRList(object):
 
 	def reportEmpty(self):
 		# brailled and spoken the "0 items" message
-		text = NVDALocale("%s items") % 0
+		text = NVDALocale(zeroItemsTemplate) % 0
 		speech.speakMessage(text)
-		region = braille.TextRegion(" {0}".format(text))
-		region.focusToHardLeft = True
-		region.update()
-		braille.handler.buffer.regions.append(region)
-		braille.handler.buffer.focus(region)
+		brlText = " {0}".format(text)
+		regions = braille.handler.buffer.regions
+		if regions[-1].rawText != brlText:
+			newRegion = braille.TextRegion(brlText)
+			newRegion.focusToHardLeft = True
+			newRegion.update()
+			regions.append(newRegion)
+		else:
+			newRegion = regions[-1]
+		braille.handler.buffer.focus(newRegion)
 		braille.handler.buffer.update()
 		braille.handler.update()
 
@@ -949,7 +954,7 @@ class CRList64(CRList):
 	def preCheck(self, onFailureMsg=None):
 		# create shared COM object if needed
 		if not CRList64.shell:
-			CRList64.shell = CreateObject("shell.application")
+			CRList64.shell = CreateObject("shell.application", dynamic=True)
 		# check to ensure shell32 method will work
 		# (not available in all context, as open dialog)
 		fg = api.getForegroundObject()

@@ -29,7 +29,10 @@ class ConfigFromObject(object):
 		if self.triggersApplyForObj:
 			res = []
 			if len(config.conf.profiles) > 1:
-				if config.conf._profileCache[config.conf.profiles[-1].name].manual:
+				profileName = config.conf.profiles[-1].name
+				# avoid occasional no manual AttributeError
+				# maybe due to cache updating
+				if getattr(config.conf._profileCache[profileName], "manual", False):
 					res.append(config.conf._profileCache[config.conf.profiles[-1].name])
 			try:
 				res.append(config.conf._profileCache[config.conf.triggersToProfiles[self.possibleTriggerName]])
