@@ -1,6 +1,6 @@
 # Columns Review (Огляд Стовпців) #
 
-* Автори: Alberto Buffolino, Łukasz Golonka, інші учасники
+* Author: Alberto Buffolino, Łukasz Golonka, other contributors
 * Завантажити [стабільну версію][stable]
 * Завантажити [версію в розробці][dev]
 * Сумісність з NVDA: 2017.3 і пізніші

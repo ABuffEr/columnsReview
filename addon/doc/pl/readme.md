@@ -1,6 +1,6 @@
 # Columns Review #
 
-* Autor: Alberto Buffolino, Łukasz Golonka, inni współpracownicy
+* Author: Alberto Buffolino, Łukasz Golonka, other contributors
 * Pobierz [stabilna wersja][stabilna]
 * Pobierz [wersja rozwojowa][dev]
 * Zgodność z NVDA: 2017.3 i później

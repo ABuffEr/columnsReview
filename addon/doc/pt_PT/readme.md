@@ -1,6 +1,6 @@
 # Revisão de colunas #
 
-* Autor: Alberto Buffolino, Łukasz Golonka, outros colaboradores
+* Author: Alberto Buffolino, Łukasz Golonka, other contributors
 * Descarregar [versão estável][estável]
 * Descarregar [versão de desenvolvimento][dev]
 * Compatibilidade com o NVDA: 2017.3 e posteriores
