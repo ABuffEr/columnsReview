@@ -1,6 +1,6 @@
 # Sarakkeiden tarkastelu #
 
-* Tekijät: Alberto Buffolino, Łukasz Golonka, muut avustajat
+* Tekijät: Alberto Buffolino, Łukasz Golonka sekä muut yhteisön jäsenet
 * Lataa [vakaa versio][stable]
 * Lataa [kehitysversio][dev]
 * Yhteensopivuus: NVDA 2017.3 ja uudemmat
