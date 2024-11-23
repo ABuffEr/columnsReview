@@ -1,8 +1,6 @@
 # Columns Review
 
 * Author: Alberto Buffolino, Łukasz Golonka, other contributors
-* Download [stable version][stable]
-* Download [development version][dev]
 * NVDA compatibility: 2019.3 and beyond
 
 Columns Review is an add-on to enhance NVDA experience with lists.
@@ -55,6 +53,3 @@ Following list types are supported:
 
 [rss]: https://github.com/ABuffEr/rssowlnixSupport
 
-[stable]: https://www.nvaccess.org/addonStore/legacy?file=columnsReview
-
-[dev]: https://www.nvaccess.org/addonStore/legacy?file=columnsReview-dev
