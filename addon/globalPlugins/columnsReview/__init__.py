@@ -652,8 +652,11 @@ class CRList(object):
 		# brailled and spoken the "0 items" message
 		text = NVDALocale(zeroItemsTemplate) % 0
 		speech.speakMessage(text)
-		brlText = " {0}".format(text)
 		regions = braille.handler.buffer.regions
+		# no regions if no Braille
+		if not regions:
+			return
+		brlText = " {0}".format(text)
 		if regions[-1].rawText != brlText:
 			newRegion = braille.TextRegion(brlText)
 			newRegion.focusToHardLeft = True
