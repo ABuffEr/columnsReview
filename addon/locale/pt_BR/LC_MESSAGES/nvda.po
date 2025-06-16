@@ -1,0 +1,279 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the columnsReview package.
+# FIRST Josevan Barbosa Fernandes <josevanfernandes@yahoo.com.br>, 2024.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: columnsReview 3.0\n"
+"Report-Msgid-Bugs-To: nvda-translations@groups.io\n"
+"POT-Creation-Date: 2021-09-16 00:36+0000\n"
+"PO-Revision-Date: 2024-12-13 17:07-0300\n"
+"Last-Translator: Josevan Fernandes <josevanfernandes@yahoo.com.br>\n"
+"Language-Team: \n"
+"Language: pt_BR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.5\n"
+
+#. Translators: message when list contains one item only
+msgid "Mono-item list: "
+msgstr "Lista de itens únicos: "
+
+#. Translators: message when user lands on the last list item
+msgid "List bottom: "
+msgstr "Fundo da lista: "
+
+#. Translators: message when user lands on the first list item
+msgid "List top: "
+msgstr "Topo da lista: "
+
+#. Translators: menu item in preferences
+msgid "Columns Review Settings..."
+msgstr "Configurações de revisão de colunas..."
+
+#. Translators: Name of the default category
+#. in the Input Gestures dialog where scripts of this add-on are placed.
+#, python-brace-format
+msgid "{name} (DO NOT EDIT!)"
+msgstr "{name} (NÃO EDITA!)"
+
+#. Translators: message when digit pressed exceed the columns number
+msgid "No more columns available"
+msgstr "Não há mais colunas disponíveis"
+
+#. Translators: Announced when the column at the requested index is not visible.
+msgid "No more visible columns available"
+msgstr "Não há mais colunas visíveis disponíveis"
+
+#. Translators: Presented for an empty column.
+msgid "Empty column"
+msgstr "Coluna vazia"
+
+#. Translators: documentation of script to read columns
+msgid ""
+"Returns the header and the content of the list column at the index "
+"corresponding to the number pressed"
+msgstr ""
+"Retorna o cabeçalho e o conteúdo da coluna da lista no índice correspondente "
+"ao número pressionado"
+
+#. Translators: message when you change interval in a list with more ten columns
+#, python-brace-format
+msgid "From {start} to {end}"
+msgstr "De {start} ao {end}"
+
+#. Translators: documentation for script to change interval
+msgid "Cycles between a variable number of intervals of ten columns"
+msgstr "Ciclos entre um número variável de intervalos de dez colunas"
+
+#. Translators: Reported when information about position on a list cannot be retrieved.
+msgid "No information available"
+msgstr "Não há informações disponíveis"
+
+#. Translators: documentation for script to announce list item info
+msgid "Announces list item position information"
+msgstr "Anuncia informações sobre a posição do item da lista"
+
+#. Translators: documentation for script to manage headers
+msgid "Provides a dialog for interactions with list column headers"
+msgstr ""
+"Oferece uma caixa de diálogo para interações com cabeçalhos de colunas de "
+"listas"
+
+#. Translators: message presented when get selected item count and names
+#, python-brace-format
+msgid "{selCount} selected items: {selNames}"
+msgstr "{selCount} itens selecionados: {selNames}"
+
+#. Translators: documentation for script to know current selected items
+msgid "Reports current selected list items"
+msgstr "Relata os itens atuais da lista selecionada"
+
+#. Translators: documentation for script to find in list
+msgid "Provides a dialog for searching in item list"
+msgstr "Oferece uma caixa de diálogo para pesquisar na lista de itens"
+
+#. Translators: Message presented when search is in progress.
+msgid "Searching..."
+msgstr "Pesquisando..."
+
+#. Translators: documentation for script to manage headers
+msgid "Goes to next result of current search"
+msgstr "Vai para o próximo resultado da pesquisa atual"
+
+#. Translators: documentation for script to manage headers
+msgid "Goes to previous result of current search"
+msgstr "Vai para o resultado anterior da pesquisa atual"
+
+#. Translators: documentation for script to read all list items starting from the focused one.
+msgid "Starts reading all list items beginning at the item with focus"
+msgstr ""
+"Inicia a leitura de todos os itens da lista, começando pelo item com foco"
+
+#. Translators: message listing foreground over background colors
+#, python-brace-format
+msgid "{foregroundColors} over {backgroundColors}"
+msgstr "{foregroundColors} sobre {backgroundColors}"
+
+#. Translators: Description of the keyboard command,
+#. which reports foreground and background color of the current list item.
+msgid "reports foreground and background colors of the current list item."
+msgstr ""
+"informa as cores do primeiro plano e do plano de fundo do item atual da "
+"lista."
+
+#. Translators: Reported when it is impossible to report currently selected items.
+msgid "Current selection info not available"
+msgstr "Informações sobre a seleção atual não estão disponíveis"
+
+#. Translators: Reported when current list does not support searching.
+msgid "Cannot search here."
+msgstr "Não é possível pesquisar aqui."
+
+#. Translators: Label of the checkbox in the find dialog which, if checked, selects multiple
+#. items if they match the search query.
+msgid "Use multiple selection"
+msgstr "Usar seleção múltipla"
+
+#. Translators: Description of the action which simply ignores the pressed key
+msgid "Do nothing"
+msgstr "Não fazer nada"
+
+#. Translators: Name of the action which reads given column.
+msgid "Read column"
+msgstr "Leia a coluna"
+
+#. Translators: Name of the action which copies given column.
+msgid "Copy column"
+msgstr "Copiar coluna"
+
+#. Translators: Name of the action which spells given column.
+msgid "Spell column"
+msgstr "Coluna de feitiços"
+
+#. Translators: Name of the action which displays content of the given column in the browseable message.
+msgid "Show column content in browse mode"
+msgstr "Mostrar o conteúdo da coluna no modo de navegação"
+
+#. Translators: Label of a combobox in which action can be assigned to a first press of the shortcut.
+msgid "On first press:"
+msgstr "Na primeira pressione:"
+
+#. Translators: Label of a combobox in which action can be assigned to a second press of the shortcut.
+msgid "On second press:"
+msgstr "Na segunda pressione:"
+
+#. Translators: Label of a combobox in which action can be assigned to a third press of the shortcut.
+msgid "On third press:"
+msgstr "Na terceira pressione:"
+
+#. Translators: Label of a combobox in which action can be assigned to a fourth press of the shortcut.
+msgid "On fourth press:"
+msgstr "Na quarta pressione:"
+
+#. Translators: label for read-header checkbox in settings
+msgid "Read the column header"
+msgstr "Ler o cabeçalho da coluna"
+
+#. Translators: label for copy-header checkbox in settings
+msgid "Copy the column header"
+msgstr "Copiar o cabeçalho da coluna"
+
+#. Translators: title of settings dialog
+#. Add-on summary, usually the user visible name of the addon.
+#. Translators: Summary for this add-on
+#. to be shown on installation and add-on information found in Add-ons Manager.
+msgid "Columns Review"
+msgstr "Revisão de colunas"
+
+#. Translators: title of settings dialog
+msgid "Columns Review Settings"
+msgstr "Configurações de revisão de colunas"
+
+#. Translators: Help message for group of comboboxes allowing to assign action to a keypress.
+msgid "When pressing combination to read column:"
+msgstr "Ao pressionar a combinação para ler a coluna:"
+
+#. Translators: Help message for sub-sizer of keys choices
+msgid "Choose the keys you want to use with numbers:"
+msgstr "Escolha as teclas que você deseja usar com números:"
+
+#. Translators: label for numpad keys checkbox in settings
+msgid "Use numpad keys to navigate through the columns"
+msgstr "Use as teclas do teclado numérico para navegar pelas colunas"
+
+#. Translators: label for edit field in settings, visible if previous checkbox is disabled
+msgid ""
+"Insert the char after \"0\" in your keyboard layout, or another char as you "
+"like:"
+msgstr ""
+"Insira o caractere após o “0” em seu layout de teclado ou outro caractere "
+"que desejar:"
+
+#. Translators: label for announce-empty-list checkbox in settings
+msgid "Announce empty list"
+msgstr "Anunciar lista vazia"
+
+#. Translators: label for announce-list-bounds checkbox in settings
+msgid "Announce list bounds (voice only)"
+msgstr "Anunciar limites da lista (somente voz)"
+
+#. Translators: Title of the dialog which allows to perform actions on headers of the current list.
+msgid "Headers manager"
+msgstr "Gerenciador de cabeçalhos"
+
+#. Translators: Shown for a header which has no name.
+msgid "Unnamed header"
+msgstr "Cabeçalho sem nome"
+
+#. Translators: Label for a list containing names of all headers of the current list.
+msgid "Headers:"
+msgstr "Cabeçalhos:"
+
+#. Translators: Label for a button which clicks the given header with the left mouse button.
+msgid "Left click"
+msgstr "Clique com o botão esquerdo do mouse"
+
+#. Translators: Label for a button which clicks the given header with the right mouse button.
+msgid "Right click"
+msgstr "Clique com o botão direito do mouse"
+
+#. Translators: Announced when the given header has been clicked, 'headerName' is replaced with the name of
+#. the  clicked object.
+#, python-brace-format
+msgid "{headerName} header clicked"
+msgstr "{headerName} cabeçalho clicado"
+
+#. Translators: the label of a message box dialog.
+msgid ""
+"Previous add-on settings will be lost. Please configure it again, from NVDA "
+"preferences."
+msgstr ""
+"As configurações anteriores do complemento serão perdidas. Configure-o "
+"novamente nas preferências do NVDA."
+
+#. Translators: the title of a message box dialog.
+msgid "Add-on settings reset"
+msgstr "Redefinição das configurações do complemento"
+
+#. Translators: the label of a message box dialog to uninstall another add-on
+#, python-brace-format
+msgid ""
+"You have installed {another_addon} by {another_author}, that causes problems "
+"with empty folder feature of ColumnsReview (if enabled); do you want to "
+"remove it now?"
+msgstr ""
+"Você instalou {another_addon} by {another_author}, que causa problemas com o "
+"recurso de pasta vazia do ColumnsReview (se ativado); deseja removê-lo agora?"
+
+#. Translators: the title of a message box dialog.
+msgid "Warning!"
+msgstr "Atenção!"
+
+#. Add-on description
+#. Translators: Long description to be shown for this add-on on add-on information from add-ons manager
+msgid "A better experience with lists"
+msgstr "Uma experiência melhor com listas"
