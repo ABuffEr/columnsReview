@@ -219,8 +219,10 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 		)
 		# release COM object
 		if CRList64.shell:
-			CRList64.shell.Release()
-#			del CRList64.shell
+			try:
+				CRList64.shell.Release()
+			except COMError:
+				pass
 
 	def handleConfigProfileSwitch(self):
 		# We cannot iterate through original set of instances
