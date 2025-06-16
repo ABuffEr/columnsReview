@@ -74,7 +74,7 @@ Desteklenen listeler :
 * SysListView32;
 * DirectUIHWND (64 bit sistemlerde bulunur);
 * WindowsForms10.SysListView32.* (.NET kullanan uygulamalar);
-* RSSOwlnix'te olduğu gibi çok sütunlu ağaç görünümü;
+* rssOwlnix'te olduğu gibi çok sütunlu ağaç görünümü;
 * Mozilla tablosu (tipik olarak Thunderbird mesaj listesi, konu bazında
   gruplandırmalar desteklenir).
 
