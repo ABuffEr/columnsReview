@@ -8,36 +8,32 @@ msgstr ""
 "Project-Id-Version: columnsReview 3.0\n"
 "Report-Msgid-Bugs-To: nvda-translations@groups.io\n"
 "POT-Creation-Date: 2021-09-16 00:36+0000\n"
-"PO-Revision-Date: 2023-07-06 08:25+0200\n"
-"Last-Translator: Sascha Pawolleck <pawolleck@icloud.com>\n"
+"PO-Revision-Date: 2023-05-13 05:03+0200\n"
+"Last-Translator: Bernd Dorer <mail@bdorer.de>\n"
 "Language-Team: \n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 3.3.2\n"
+"X-Generator: Poedit 3.3\n"
 
 #. Translators: message when list contains one item only
 msgid "Mono-item list: "
-msgstr "Liste mit einem Element: "
+msgstr "Ein-Punkt-Liste: "
 
 #. Translators: message when user lands on the last list item
 msgid "List bottom: "
-msgstr "Listenende:"
+msgstr "Liste unten: "
 
 #. Translators: message when user lands on the first list item
 msgid "List top: "
-msgstr "Listenanfang:"
-
-#. Translators: menu item in preferences
-msgid "Columns Review Settings..."
-msgstr "Spalten-Betrachter-Einstellungen..."
+msgstr "Liste oben: "
 
 #. Translators: Name of the default category
 #. in the Input Gestures dialog where scripts of this add-on are placed.
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "{name} (DO NOT EDIT!)"
-msgstr "(NICHT ÄNDERN!)"
+msgstr "{name} (NICHT ÄNDERN!)"
 
 #. Translators: message when digit pressed exceed the columns number
 msgid "No more columns available"
@@ -69,6 +65,9 @@ msgid "Cycles between a variable number of intervals of ten columns"
 msgstr "Wechselt zwischen den Spalten 0-9, 10-20, usw"
 
 #. Translators: Reported when information about position on a list cannot be retrieved.
+#. selected items retrieval from IAccessibleTable2Object
+#. seems broken in new Thunderbird, so...
+#. Translators: Reported when information about position on a list cannot be retrieved.
 msgid "No information available"
 msgstr "Keine Information verfügbar"
 
@@ -83,7 +82,7 @@ msgstr "Zeigt einen Dialog zur Interaktion mit Spaltenüberschriften in Listen"
 #. Translators: message presented when get selected item count and names
 #, python-brace-format
 msgid "{selCount} selected items: {selNames}"
-msgstr ""
+msgstr "{selCount} ausgewählte Einträge: {selNames}"
 
 #. Translators: documentation for script to know current selected items
 msgid "Reports current selected list items"
@@ -112,20 +111,21 @@ msgstr "Ließt alle Listeneinträge beginnend beim fokussierten Eintrag vor"
 #. Translators: message listing foreground over background colors
 #, python-brace-format
 msgid "{foregroundColors} over {backgroundColors}"
-msgstr ""
+msgstr "{foregroundColors} auf {backgroundColors}"
 
 #. Translators: Description of the keyboard command,
 #. which reports foreground and background color of the current list item.
 msgid "reports foreground and background colors of the current list item."
-msgstr ""
+msgstr "Teilt Vorder- und Hintergrundfarben des aktuellen Listenelements mit."
 
 #. Translators: Reported when it is impossible to report currently selected items.
 msgid "Current selection info not available"
 msgstr "Keine Information zu Markierungen verfügbar"
 
 #. Translators: Reported when current list does not support searching.
+#. not fully working for now
 msgid "Cannot search here."
-msgstr ""
+msgstr "Keine Suche möglich."
 
 #. Translators: Label of the checkbox in the find dialog which, if checked, selects multiple
 #. items if they match the search query.
@@ -152,6 +152,12 @@ msgstr "Buchstabiere Spalte"
 msgid "Show column content in browse mode"
 msgstr "Zeige Spalteninhalt im Lesemodus"
 
+#, python-format
+msgid "%s item"
+msgid_plural "%s items"
+msgstr[0] ""
+msgstr[1] ""
+
 #. Translators: Label of a combobox in which action can be assigned to a first press of the shortcut.
 msgid "On first press:"
 msgstr "Beim ersten Tastendruck:"
@@ -176,16 +182,12 @@ msgstr "Lese die Spaltenüberschrift"
 msgid "Copy the column header"
 msgstr "Kopiere die Spaltenüberschrift"
 
-#. Translators: title of settings dialog
+#. Translators: title of settings panel
 #. Add-on summary, usually the user visible name of the addon.
 #. Translators: Summary for this add-on
 #. to be shown on installation and add-on information found in Add-ons Manager.
 msgid "Columns Review"
 msgstr "Spalten-Betrachter"
-
-#. Translators: title of settings dialog
-msgid "Columns Review Settings"
-msgstr "Spalten-Betrachter-Einstellungen"
 
 #. Translators: Help message for group of comboboxes allowing to assign action to a keypress.
 msgid "When pressing combination to read column:"
@@ -209,10 +211,42 @@ msgstr ""
 
 #. Translators: label for announce-empty-list checkbox in settings
 msgid "Announce empty list"
-msgstr ""
+msgstr "Leere Liste mitteilen"
 
 #. Translators: label for announce-list-bounds checkbox in settings
-msgid "Announce list bounds (voice only)"
+#, fuzzy
+msgid "Announce list bounds (top, mono-item, bottom)"
+msgstr "Listengrenzen mitteilen (nur über Sprachausgabe)"
+
+#. Translators: a choice in announce-list-bounds-with radio box
+msgid "voice"
+msgstr ""
+
+#. Translators: a choice in announce-list-bounds-with radio box
+msgid "beep"
+msgstr ""
+
+#. Translators: label for announce-list-bounds-with radio box in settings
+#, fuzzy
+msgid "Announce with:"
+msgstr "Leere Liste mitteilen"
+
+#. Translators: a tooltip on beep values input box
+msgid ""
+"Please input a frequency for top beep, a frequency for bottom beep, and "
+"their duration in milliseconds (each of three values must be a positive "
+"number, separated by comma):"
+msgstr ""
+
+msgid "Beep values"
+msgstr ""
+
+#. Translators: message when user inputs wrong values for beep
+msgid "Please input valid values for beep."
+msgstr ""
+
+#. Translators: Title of the dialog when user inputs wrong values for beep
+msgid "Error!"
 msgstr ""
 
 #. Translators: Title of the dialog which allows to perform actions on headers of the current list.
@@ -237,9 +271,9 @@ msgstr "Rechtsklick"
 
 #. Translators: Announced when the given header has been clicked, 'headerName' is replaced with the name of
 #. the  clicked object.
-#, fuzzy, python-brace-format
+#, python-brace-format
 msgid "{headerName} header clicked"
-msgstr "Überschrift %s angeklickt"
+msgstr "{headerName} Kopfzeile angeklickt"
 
 #. Translators: the label of a message box dialog.
 msgid ""
@@ -260,15 +294,24 @@ msgid ""
 "with empty folder feature of ColumnsReview (if enabled); do you want to "
 "remove it now?"
 msgstr ""
+"Sie haben {another_addon} von {another_author} noch installiert, das "
+"Probleme mit der Funktion für leere Ordner in dieser NVDA-Erweiterung "
+"verursacht (falls aktiviert). Möchten Sie dieses jetzt entfernen?"
 
 #. Translators: the title of a message box dialog.
 msgid "Warning!"
-msgstr ""
+msgstr "Warnung!"
 
 #. Add-on description
 #. Translators: Long description to be shown for this add-on on add-on information from add-ons manager
 msgid "A better experience with lists"
 msgstr "Eine bessere Erfahrung mit Listen"
+
+#~ msgid "Columns Review Settings..."
+#~ msgstr "Einstellungen für den Spalten-Betrachter"
+
+#~ msgid "Columns Review Settings"
+#~ msgstr "Spalten-Betrachter-Einstellungen"
 
 #~ msgid "selected items"
 #~ msgstr "ausgewählte Einträge"

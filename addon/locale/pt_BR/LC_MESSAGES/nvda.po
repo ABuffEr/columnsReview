@@ -30,10 +30,6 @@ msgstr "Fundo da lista: "
 msgid "List top: "
 msgstr "Topo da lista: "
 
-#. Translators: menu item in preferences
-msgid "Columns Review Settings..."
-msgstr "Configurações de revisão de colunas..."
-
 #. Translators: Name of the default category
 #. in the Input Gestures dialog where scripts of this add-on are placed.
 #, python-brace-format
@@ -69,6 +65,9 @@ msgstr "De {start} ao {end}"
 msgid "Cycles between a variable number of intervals of ten columns"
 msgstr "Ciclos entre um número variável de intervalos de dez colunas"
 
+#. Translators: Reported when information about position on a list cannot be retrieved.
+#. selected items retrieval from IAccessibleTable2Object
+#. seems broken in new Thunderbird, so...
 #. Translators: Reported when information about position on a list cannot be retrieved.
 msgid "No information available"
 msgstr "Não há informações disponíveis"
@@ -130,6 +129,7 @@ msgid "Current selection info not available"
 msgstr "Informações sobre a seleção atual não estão disponíveis"
 
 #. Translators: Reported when current list does not support searching.
+#. not fully working for now
 msgid "Cannot search here."
 msgstr "Não é possível pesquisar aqui."
 
@@ -158,6 +158,12 @@ msgstr "Coluna de feitiços"
 msgid "Show column content in browse mode"
 msgstr "Mostrar o conteúdo da coluna no modo de navegação"
 
+#, python-format
+msgid "%s item"
+msgid_plural "%s items"
+msgstr[0] ""
+msgstr[1] ""
+
 #. Translators: Label of a combobox in which action can be assigned to a first press of the shortcut.
 msgid "On first press:"
 msgstr "Na primeira pressione:"
@@ -182,16 +188,12 @@ msgstr "Ler o cabeçalho da coluna"
 msgid "Copy the column header"
 msgstr "Copiar o cabeçalho da coluna"
 
-#. Translators: title of settings dialog
+#. Translators: title of settings panel
 #. Add-on summary, usually the user visible name of the addon.
 #. Translators: Summary for this add-on
 #. to be shown on installation and add-on information found in Add-ons Manager.
 msgid "Columns Review"
 msgstr "Revisão de colunas"
-
-#. Translators: title of settings dialog
-msgid "Columns Review Settings"
-msgstr "Configurações de revisão de colunas"
 
 #. Translators: Help message for group of comboboxes allowing to assign action to a keypress.
 msgid "When pressing combination to read column:"
@@ -218,8 +220,40 @@ msgid "Announce empty list"
 msgstr "Anunciar lista vazia"
 
 #. Translators: label for announce-list-bounds checkbox in settings
-msgid "Announce list bounds (voice only)"
+#, fuzzy
+msgid "Announce list bounds (top, mono-item, bottom)"
 msgstr "Anunciar limites da lista (somente voz)"
+
+#. Translators: a choice in announce-list-bounds-with radio box
+msgid "voice"
+msgstr ""
+
+#. Translators: a choice in announce-list-bounds-with radio box
+msgid "beep"
+msgstr ""
+
+#. Translators: label for announce-list-bounds-with radio box in settings
+#, fuzzy
+msgid "Announce with:"
+msgstr "Anunciar lista vazia"
+
+#. Translators: a tooltip on beep values input box
+msgid ""
+"Please input a frequency for top beep, a frequency for bottom beep, and "
+"their duration in milliseconds (each of three values must be a positive "
+"number, separated by comma):"
+msgstr ""
+
+msgid "Beep values"
+msgstr ""
+
+#. Translators: message when user inputs wrong values for beep
+msgid "Please input valid values for beep."
+msgstr ""
+
+#. Translators: Title of the dialog when user inputs wrong values for beep
+msgid "Error!"
+msgstr ""
 
 #. Translators: Title of the dialog which allows to perform actions on headers of the current list.
 msgid "Headers manager"
@@ -277,3 +311,9 @@ msgstr "Atenção!"
 #. Translators: Long description to be shown for this add-on on add-on information from add-ons manager
 msgid "A better experience with lists"
 msgstr "Uma experiência melhor com listas"
+
+#~ msgid "Columns Review Settings..."
+#~ msgstr "Configurações de revisão de colunas..."
+
+#~ msgid "Columns Review Settings"
+#~ msgstr "Configurações de revisão de colunas"
