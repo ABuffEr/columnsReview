@@ -8,14 +8,15 @@ msgstr ""
 "Project-Id-Version: columnsReview 3.0\n"
 "Report-Msgid-Bugs-To: nvda-translations@groups.io\n"
 "POT-Creation-Date: 2021-09-16 00:36+0000\n"
-"PO-Revision-Date: 2023-02-24 09:30+0100\n"
-"Last-Translator: \n"
+"PO-Revision-Date: 2025-06-20 22:45+0200\n"
+"Last-Translator: José Manuel Delicado <jm.delicado@nvda.es>\n"
 "Language-Team: \n"
 "Language: es\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 3.2.2\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: Poedit 3.6\n"
 
 #. Translators: message when list contains one item only
 msgid "Mono-item list: "
@@ -160,8 +161,8 @@ msgstr "Mostrar contenido de la columna en modo exploración"
 #, python-format
 msgid "%s item"
 msgid_plural "%s items"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%s elemento"
+msgstr[1] "%s elementos"
 
 #. Translators: Label of a combobox in which action can be assigned to a first press of the shortcut.
 msgid "On first press:"
@@ -219,22 +220,20 @@ msgid "Announce empty list"
 msgstr "Anunciar lista vacía"
 
 #. Translators: label for announce-list-bounds checkbox in settings
-#, fuzzy
 msgid "Announce list bounds (top, mono-item, bottom)"
-msgstr "Anunciar límites de lista (sólo por voz)"
+msgstr "Anunciar límites de lista (superior, de un solo elemento e inferior)"
 
 #. Translators: a choice in announce-list-bounds-with radio box
 msgid "voice"
-msgstr ""
+msgstr "voz"
 
 #. Translators: a choice in announce-list-bounds-with radio box
 msgid "beep"
-msgstr ""
+msgstr "pitido"
 
 #. Translators: label for announce-list-bounds-with radio box in settings
-#, fuzzy
 msgid "Announce with:"
-msgstr "Anunciar lista vacía"
+msgstr "Anunciar con:"
 
 #. Translators: a tooltip on beep values input box
 msgid ""
@@ -242,17 +241,20 @@ msgid ""
 "their duration in milliseconds (each of three values must be a positive "
 "number, separated by comma):"
 msgstr ""
+"Introduce una frecuencia para el pitido superior, una frecuencia para el "
+"pitido inferior, y su duración en milisegundos (cada uno de los tres valores "
+"debe ser un número positivo, separados por comas):"
 
 msgid "Beep values"
-msgstr ""
+msgstr "Valores de pitido"
 
 #. Translators: message when user inputs wrong values for beep
 msgid "Please input valid values for beep."
-msgstr ""
+msgstr "Introduce valores válidos para el pitido."
 
 #. Translators: Title of the dialog when user inputs wrong values for beep
 msgid "Error!"
-msgstr ""
+msgstr "¡Error!"
 
 #. Translators: Title of the dialog which allows to perform actions on headers of the current list.
 msgid "Headers manager"
@@ -311,9 +313,3 @@ msgstr "¡Aviso!"
 #. Translators: Long description to be shown for this add-on on add-on information from add-ons manager
 msgid "A better experience with lists"
 msgstr "Experiencia mejorada con listas"
-
-#~ msgid "Columns Review Settings..."
-#~ msgstr "Opciones de Columns Review..."
-
-#~ msgid "Columns Review Settings"
-#~ msgstr "Opciones de Columns Review"

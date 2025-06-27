@@ -8,7 +8,7 @@ msgstr ""
 "Project-Id-Version: columnsReview\n"
 "Report-Msgid-Bugs-To: nvda-translations@groups.io\n"
 "POT-Creation-Date: 2021-09-16 00:36+0000\n"
-"PO-Revision-Date: 2023-02-24 15:50+0200\n"
+"PO-Revision-Date: 2025-06-20 23:21+0300\n"
 "Last-Translator: Jani Kinnunen <janikinnunen340@gmail.com>\n"
 "Language-Team: fi_FI <janikinnunen340@gmail.com>\n"
 "Language: fi\n"
@@ -16,7 +16,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
-"X-Generator: Poedit 1.6.11\n"
+"X-Generator: Poedit 3.6\n"
 
 #. Translators: message when list contains one item only
 msgid "Mono-item list: "
@@ -158,8 +158,8 @@ msgstr "Näytä sarakkeen sisältö selaustilassa"
 #, python-format
 msgid "%s item"
 msgid_plural "%s items"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%s kohde"
+msgstr[1] "%s items"
 
 #. Translators: Label of a combobox in which action can be assigned to a first press of the shortcut.
 msgid "On first press:"
@@ -216,22 +216,20 @@ msgid "Announce empty list"
 msgstr "Ilmoita tyhjästä luettelosta"
 
 #. Translators: label for announce-list-bounds checkbox in settings
-#, fuzzy
 msgid "Announce list bounds (top, mono-item, bottom)"
-msgstr "Ilmoita luettelon rajat (vain puheella)"
+msgstr "Ilmoita luettelon rajat"
 
 #. Translators: a choice in announce-list-bounds-with radio box
 msgid "voice"
-msgstr ""
+msgstr "puheella"
 
 #. Translators: a choice in announce-list-bounds-with radio box
 msgid "beep"
-msgstr ""
+msgstr "piippauksella"
 
 #. Translators: label for announce-list-bounds-with radio box in settings
-#, fuzzy
 msgid "Announce with:"
-msgstr "Ilmoita tyhjästä luettelosta"
+msgstr "Ilmoita:"
 
 #. Translators: a tooltip on beep values input box
 msgid ""
@@ -239,17 +237,19 @@ msgid ""
 "their duration in milliseconds (each of three values must be a positive "
 "number, separated by comma):"
 msgstr ""
+"Syötä kolme positiivista lukua pilkuilla eroteltuna (ylin ja alin taajuus "
+"hertseinä sekä kesto millisekunteina):"
 
 msgid "Beep values"
-msgstr ""
+msgstr "Piippauksen arvot"
 
 #. Translators: message when user inputs wrong values for beep
 msgid "Please input valid values for beep."
-msgstr ""
+msgstr "Syötä kelvolliset piippauksen arvot."
 
 #. Translators: Title of the dialog when user inputs wrong values for beep
 msgid "Error!"
-msgstr ""
+msgstr "Virhe"
 
 #. Translators: Title of the dialog which allows to perform actions on headers of the current list.
 msgid "Headers manager"

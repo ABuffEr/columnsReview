@@ -8,26 +8,27 @@ msgstr ""
 "Project-Id-Version: columnsReview 3.0\n"
 "Report-Msgid-Bugs-To: nvda-translations@groups.io\n"
 "POT-Creation-Date: 2021-09-16 00:36+0000\n"
-"PO-Revision-Date: 2023-02-27 11:18+0100\n"
-"Last-Translator: Michel Such <michelsuch93@gmail.com>\n"
+"PO-Revision-Date: 2025-06-20 15:39+0200\n"
+"Last-Translator: Rémy Ruiz <remyruiz@gmail.com>\n"
 "Language-Team: \n"
 "Language: fr\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 3.0\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Generator: Poedit 3.6\n"
 
 #. Translators: message when list contains one item only
 msgid "Mono-item list: "
-msgstr "Liste à élément unique :"
+msgstr "Liste à élément unique : "
 
 #. Translators: message when user lands on the last list item
 msgid "List bottom: "
-msgstr "Bas de liste :"
+msgstr "Bas de liste : "
 
 #. Translators: message when user lands on the first list item
 msgid "List top: "
-msgstr "Haut de liste :"
+msgstr "Haut de liste : "
 
 #. Translators: Name of the default category
 #. in the Input Gestures dialog where scripts of this add-on are placed.
@@ -121,7 +122,7 @@ msgstr "{foregroundColors} sur {backgroundColors}"
 #. which reports foreground and background color of the current list item.
 msgid "reports foreground and background colors of the current list item."
 msgstr ""
-"Annonce les couleurs de premier plan et d'arrière-plan de l'élément de liste "
+"annonce les couleurs de premier plan et d'arrière-plan de l'élément de liste "
 "courant."
 
 #. Translators: Reported when it is impossible to report currently selected items.
@@ -161,8 +162,8 @@ msgstr "Afficher le contenu de la colonne en mode navigation"
 #, python-format
 msgid "%s item"
 msgid_plural "%s items"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%s élément"
+msgstr[1] "%s éléments"
 
 #. Translators: Label of a combobox in which action can be assigned to a first press of the shortcut.
 msgid "On first press:"
@@ -220,22 +221,22 @@ msgid "Announce empty list"
 msgstr "Annoncer liste vide"
 
 #. Translators: label for announce-list-bounds checkbox in settings
-#, fuzzy
 msgid "Announce list bounds (top, mono-item, bottom)"
-msgstr "Annoncer les limites de la liste (parole uniquement)"
+msgstr ""
+"Annoncer les limites de la liste (haut de liste, élément unique, bas de "
+"liste)"
 
 #. Translators: a choice in announce-list-bounds-with radio box
 msgid "voice"
-msgstr ""
+msgstr "parole"
 
 #. Translators: a choice in announce-list-bounds-with radio box
 msgid "beep"
-msgstr ""
+msgstr "bip"
 
 #. Translators: label for announce-list-bounds-with radio box in settings
-#, fuzzy
 msgid "Announce with:"
-msgstr "Annoncer liste vide"
+msgstr "Annoncer avec:"
 
 #. Translators: a tooltip on beep values input box
 msgid ""
@@ -243,17 +244,20 @@ msgid ""
 "their duration in milliseconds (each of three values must be a positive "
 "number, separated by comma):"
 msgstr ""
+"Veuillez saisir une fréquence pour le bip aigu, une fréquence pour le bip "
+"grave et leur durée en millisecondes (chacune des trois valeurs doit être un "
+"nombre positif, séparée par une virgule):"
 
 msgid "Beep values"
-msgstr ""
+msgstr "Valeurs pour le bip"
 
 #. Translators: message when user inputs wrong values for beep
 msgid "Please input valid values for beep."
-msgstr ""
+msgstr "Veuillez saisir des valeurs valides pour le bip."
 
 #. Translators: Title of the dialog when user inputs wrong values for beep
 msgid "Error!"
-msgstr ""
+msgstr "Erreur !"
 
 #. Translators: Title of the dialog which allows to perform actions on headers of the current list.
 msgid "Headers manager"

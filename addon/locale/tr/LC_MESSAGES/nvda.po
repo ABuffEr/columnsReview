@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: ColumnsReview 1.0\n"
 "Report-Msgid-Bugs-To: nvda-translations@groups.io\n"
 "POT-Creation-Date: 2021-09-16 00:36+0000\n"
-"PO-Revision-Date: 2023-05-20 16:42+0300\n"
+"PO-Revision-Date: 2025-06-20 12:34+0300\n"
 "Last-Translator: Umut KORKMAZ <umutkork@gmail.com>\n"
 "Language-Team: cagrid@hotmail.com\n"
 "Language: tr_TR\n"
@@ -14,7 +14,7 @@ msgstr ""
 "X-Poedit-KeywordsList: _;gettext;gettext_noop\n"
 "X-Poedit-Basepath: .\n"
 "X-Poedit-SourceCharset: UTF-8\n"
-"X-Generator: Poedit 3.3.1\n"
+"X-Generator: Poedit 3.6\n"
 "X-Poedit-SearchPath-0: ../../../globalPlugins\n"
 
 #. Translators: message when list contains one item only
@@ -155,8 +155,8 @@ msgstr "Sütun içeriğini tarama kipinde göster"
 #, python-format
 msgid "%s item"
 msgid_plural "%s items"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%s öğe"
+msgstr[1] "%s items"
 
 #. Translators: Label of a combobox in which action can be assigned to a first press of the shortcut.
 msgid "On first press:"
@@ -214,22 +214,20 @@ msgid "Announce empty list"
 msgstr "Boş listeyi duyur"
 
 #. Translators: label for announce-list-bounds checkbox in settings
-#, fuzzy
 msgid "Announce list bounds (top, mono-item, bottom)"
-msgstr "Liste sınırlarını duyur (yalnızca ses)"
+msgstr "Liste sınırlarını duyur (üst, tek öğe, alt)"
 
 #. Translators: a choice in announce-list-bounds-with radio box
 msgid "voice"
-msgstr ""
+msgstr "ses"
 
 #. Translators: a choice in announce-list-bounds-with radio box
 msgid "beep"
-msgstr ""
+msgstr "bip"
 
 #. Translators: label for announce-list-bounds-with radio box in settings
-#, fuzzy
 msgid "Announce with:"
-msgstr "Boş listeyi duyur"
+msgstr "Şununla duyur:"
 
 #. Translators: a tooltip on beep values input box
 msgid ""
@@ -237,17 +235,20 @@ msgid ""
 "their duration in milliseconds (each of three values must be a positive "
 "number, separated by comma):"
 msgstr ""
+"Lütfen üst bip sesi için bir frekans, alt bip sesi için bir frekans ve "
+"bunların süresini milisaniye cinsinden girin (üç değerin her biri virgülle "
+"ayrılmış pozitif bir sayı olmalıdır):"
 
 msgid "Beep values"
-msgstr ""
+msgstr "Bip Değerleri"
 
 #. Translators: message when user inputs wrong values for beep
 msgid "Please input valid values for beep."
-msgstr ""
+msgstr "Lütfen bip sesi için geçerli bir değer girin."
 
 #. Translators: Title of the dialog when user inputs wrong values for beep
 msgid "Error!"
-msgstr ""
+msgstr "Hata!"
 
 #. Translators: Title of the dialog which allows to perform actions on headers of the current list.
 msgid "Headers manager"
