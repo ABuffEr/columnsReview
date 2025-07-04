@@ -8,14 +8,16 @@ msgstr ""
 "Project-Id-Version: columnsReview 3.0\n"
 "Report-Msgid-Bugs-To: nvda-translations@groups.io\n"
 "POT-Creation-Date: 2021-09-16 00:36+0000\n"
-"PO-Revision-Date: 2024-06-27 14:47+0300\n"
+"PO-Revision-Date: 2025-07-01 10:26+0300\n"
 "Last-Translator: Ruslan Kolodyazhni <rupelodn@gmail.com>\n"
 "Language-Team: Translators <nvda-translations@groups.io>\n"
 "Language: ru_RU\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 3.4.2\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<12 || n%100>14) ? 1 : 2);\n"
+"X-Generator: Poedit 3.5\n"
 
 #. Translators: message when list contains one item only
 msgid "Mono-item list: "
@@ -155,8 +157,9 @@ msgstr "Показать содержимое столбца в режиме о�
 #, python-format
 msgid "%s item"
 msgid_plural "%s items"
-msgstr[0] ""
-msgstr[1] ""
+msgstr[0] "%s элемент"
+msgstr[1] "%s элемента"
+msgstr[2] "%s элементов"
 
 #. Translators: Label of a combobox in which action can be assigned to a first press of the shortcut.
 msgid "On first press:"
@@ -214,22 +217,20 @@ msgid "Announce empty list"
 msgstr "Объявлять пустой список"
 
 #. Translators: label for announce-list-bounds checkbox in settings
-#, fuzzy
 msgid "Announce list bounds (top, mono-item, bottom)"
-msgstr "Объявлять границы списка (только голос)"
+msgstr "Объявлять границы списка (верх, с одним элементом, низ)"
 
 #. Translators: a choice in announce-list-bounds-with radio box
 msgid "voice"
-msgstr ""
+msgstr "голоса"
 
 #. Translators: a choice in announce-list-bounds-with radio box
 msgid "beep"
-msgstr ""
+msgstr "сигнала"
 
 #. Translators: label for announce-list-bounds-with radio box in settings
-#, fuzzy
 msgid "Announce with:"
-msgstr "Объявлять пустой список"
+msgstr "Объявлять спомощью:"
 
 #. Translators: a tooltip on beep values input box
 msgid ""
@@ -237,17 +238,20 @@ msgid ""
 "their duration in milliseconds (each of three values must be a positive "
 "number, separated by comma):"
 msgstr ""
+"Введите частоту для сигнала верха, сигнала низа и их длительность в "
+"милисекундах (каждое из трёх значений должно быть положительным числом, "
+"отделяемым запятой):"
 
 msgid "Beep values"
-msgstr ""
+msgstr "Значения сигнала"
 
 #. Translators: message when user inputs wrong values for beep
 msgid "Please input valid values for beep."
-msgstr ""
+msgstr "Пожалуйста, введите правильные значения для сигнала."
 
 #. Translators: Title of the dialog when user inputs wrong values for beep
 msgid "Error!"
-msgstr ""
+msgstr "Ошибка!"
 
 #. Translators: Title of the dialog which allows to perform actions on headers of the current list.
 msgid "Headers manager"
@@ -306,15 +310,3 @@ msgstr "Предупреждение!"
 #. Translators: Long description to be shown for this add-on on add-on information from add-ons manager
 msgid "A better experience with lists"
 msgstr "Лучший опыт работы со списками"
-
-#~ msgid "Columns Review Settings..."
-#~ msgstr "Настройки Просмотра Столбцов..."
-
-#~ msgid "Columns Review Settings"
-#~ msgstr "Настройки просмотра столбцов"
-
-#~ msgid "selected items"
-#~ msgstr "ausgewählte Einträge"
-
-#~ msgid "Announce empty list (not working in Win8/10 folders)"
-#~ msgstr "Leere Listen ansagen (funktioniert nicht in Windows8/10-Ordnern)"
