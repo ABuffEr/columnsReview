@@ -2,7 +2,11 @@
 # Provides various stuff used to preserve compatibility with older releases of NVDA.
 
 import controlTypes
-from versionInfo import *
+
+try:
+	from buildVersion import version_year, version_major, version_minor
+except ImportError:
+	from versionInfo import version_year, version_major, version_minor
 
 currentVersion = (version_year, version_major, version_minor)
 
