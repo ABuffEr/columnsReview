@@ -8,14 +8,16 @@ msgstr ""
 "Project-Id-Version: columnsReview 3.0\n"
 "Report-Msgid-Bugs-To: nvda-translations@groups.io\n"
 "POT-Creation-Date: 2021-09-16 00:36+0000\n"
-"PO-Revision-Date: 2024-06-27 14:47+0300\n"
+"PO-Revision-Date: 2025-07-01 10:26+0300\n"
 "Last-Translator: Ruslan Kolodyazhni <rupelodn@gmail.com>\n"
 "Language-Team: Translators <nvda-translations@groups.io>\n"
 "Language: ru_RU\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 3.4.2\n"
+"Plural-Forms: nplurals=3; plural=(n%10==1 && n%100!=11 ? 0 : n%10>=2 && "
+"n%10<=4 && (n%100<12 || n%100>14) ? 1 : 2);\n"
+"X-Generator: Poedit 3.5\n"
 
 #. Translators: message when list contains one item only
 msgid "Mono-item list: "
@@ -28,10 +30,6 @@ msgstr "Конец списка: "
 #. Translators: message when user lands on the first list item
 msgid "List top: "
 msgstr "Начало списка: "
-
-#. Translators: menu item in preferences
-msgid "Columns Review Settings..."
-msgstr "Настройки Просмотра Столбцов..."
 
 #. Translators: Name of the default category
 #. in the Input Gestures dialog where scripts of this add-on are placed.
@@ -68,6 +66,9 @@ msgstr "От {start} до {end}"
 msgid "Cycles between a variable number of intervals of ten columns"
 msgstr "Переключает между переменным числом интервалов из десяти столбцов"
 
+#. Translators: Reported when information about position on a list cannot be retrieved.
+#. selected items retrieval from IAccessibleTable2Object
+#. seems broken in new Thunderbird, so...
 #. Translators: Reported when information about position on a list cannot be retrieved.
 msgid "No information available"
 msgstr "Информация отсутствует"
@@ -124,6 +125,7 @@ msgid "Current selection info not available"
 msgstr "Текущая информация о выделении недоступна"
 
 #. Translators: Reported when current list does not support searching.
+#. not fully working for now
 msgid "Cannot search here."
 msgstr "Здесь невозможно искать."
 
@@ -152,6 +154,13 @@ msgstr "Spell column"
 msgid "Show column content in browse mode"
 msgstr "Показать содержимое столбца в режиме обзора"
 
+#, python-format
+msgid "%s item"
+msgid_plural "%s items"
+msgstr[0] "%s элемент"
+msgstr[1] "%s элемента"
+msgstr[2] "%s элементов"
+
 #. Translators: Label of a combobox in which action can be assigned to a first press of the shortcut.
 msgid "On first press:"
 msgstr "При однократном нажатии:"
@@ -176,16 +185,12 @@ msgstr "Прочитать заголовок столбца"
 msgid "Copy the column header"
 msgstr "Копировать заголовок столбца"
 
-#. Translators: title of settings dialog
+#. Translators: title of settings panel
 #. Add-on summary, usually the user visible name of the addon.
 #. Translators: Summary for this add-on
 #. to be shown on installation and add-on information found in Add-ons Manager.
 msgid "Columns Review"
 msgstr "Просмотр Столбцов"
-
-#. Translators: title of settings dialog
-msgid "Columns Review Settings"
-msgstr "Настройки просмотра столбцов"
 
 #. Translators: Help message for group of comboboxes allowing to assign action to a keypress.
 msgid "When pressing combination to read column:"
@@ -212,8 +217,41 @@ msgid "Announce empty list"
 msgstr "Объявлять пустой список"
 
 #. Translators: label for announce-list-bounds checkbox in settings
-msgid "Announce list bounds (voice only)"
-msgstr "Объявлять границы списка (только голос)"
+msgid "Announce list bounds (top, mono-item, bottom)"
+msgstr "Объявлять границы списка (верх, с одним элементом, низ)"
+
+#. Translators: a choice in announce-list-bounds-with radio box
+msgid "voice"
+msgstr "голоса"
+
+#. Translators: a choice in announce-list-bounds-with radio box
+msgid "beep"
+msgstr "сигнала"
+
+#. Translators: label for announce-list-bounds-with radio box in settings
+msgid "Announce with:"
+msgstr "Объявлять спомощью:"
+
+#. Translators: a tooltip on beep values input box
+msgid ""
+"Please input a frequency for top beep, a frequency for bottom beep, and "
+"their duration in milliseconds (each of three values must be a positive "
+"number, separated by comma):"
+msgstr ""
+"Введите частоту для сигнала верха, сигнала низа и их длительность в "
+"милисекундах (каждое из трёх значений должно быть положительным числом, "
+"отделяемым запятой):"
+
+msgid "Beep values"
+msgstr "Значения сигнала"
+
+#. Translators: message when user inputs wrong values for beep
+msgid "Please input valid values for beep."
+msgstr "Пожалуйста, введите правильные значения для сигнала."
+
+#. Translators: Title of the dialog when user inputs wrong values for beep
+msgid "Error!"
+msgstr "Ошибка!"
 
 #. Translators: Title of the dialog which allows to perform actions on headers of the current list.
 msgid "Headers manager"
@@ -272,9 +310,3 @@ msgstr "Предупреждение!"
 #. Translators: Long description to be shown for this add-on on add-on information from add-ons manager
 msgid "A better experience with lists"
 msgstr "Лучший опыт работы со списками"
-
-#~ msgid "selected items"
-#~ msgstr "ausgewählte Einträge"
-
-#~ msgid "Announce empty list (not working in Win8/10 folders)"
-#~ msgstr "Leere Listen ansagen (funktioniert nicht in Windows8/10-Ordnern)"

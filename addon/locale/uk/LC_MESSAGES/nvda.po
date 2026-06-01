@@ -29,10 +29,6 @@ msgstr "Кінець списку: "
 msgid "List top: "
 msgstr "Початок списку: "
 
-#. Translators: menu item in preferences
-msgid "Columns Review Settings..."
-msgstr "Налаштування перегляду стовпців..."
-
 #. Translators: Name of the default category
 #. in the Input Gestures dialog where scripts of this add-on are placed.
 #, python-brace-format
@@ -68,6 +64,9 @@ msgstr "Від {start} до {end}"
 msgid "Cycles between a variable number of intervals of ten columns"
 msgstr "Циклічно переходить між змінною кількістю інтервалів з десяти стовпців"
 
+#. Translators: Reported when information about position on a list cannot be retrieved.
+#. selected items retrieval from IAccessibleTable2Object
+#. seems broken in new Thunderbird, so...
 #. Translators: Reported when information about position on a list cannot be retrieved.
 msgid "No information available"
 msgstr "Інформація відсутня"
@@ -124,6 +123,7 @@ msgid "Current selection info not available"
 msgstr "Інформація про поточний вибір недоступна"
 
 #. Translators: Reported when current list does not support searching.
+#. not fully working for now
 msgid "Cannot search here."
 msgstr "Тут неможливо шукати."
 
@@ -152,6 +152,12 @@ msgstr "Посимвольне читання стовпця"
 msgid "Show column content in browse mode"
 msgstr "Показати вміст стовпця в режимі огляду"
 
+#, python-format
+msgid "%s item"
+msgid_plural "%s items"
+msgstr[0] ""
+msgstr[1] ""
+
 #. Translators: Label of a combobox in which action can be assigned to a first press of the shortcut.
 msgid "On first press:"
 msgstr "При першому натисканні:"
@@ -176,16 +182,12 @@ msgstr "Прочитати заголовок стовпця"
 msgid "Copy the column header"
 msgstr "Скопіювати заголовок стовпця"
 
-#. Translators: title of settings dialog
+#. Translators: title of settings panel
 #. Add-on summary, usually the user visible name of the addon.
 #. Translators: Summary for this add-on
 #. to be shown on installation and add-on information found in Add-ons Manager.
 msgid "Columns Review"
 msgstr "Перегляд Стовпців"
-
-#. Translators: title of settings dialog
-msgid "Columns Review Settings"
-msgstr "Налаштування перегляду стовпців"
 
 #. Translators: Help message for group of comboboxes allowing to assign action to a keypress.
 msgid "When pressing combination to read column:"
@@ -212,8 +214,42 @@ msgid "Announce empty list"
 msgstr "Оголосити порожній список"
 
 #. Translators: label for announce-list-bounds checkbox in settings
-msgid "Announce list bounds (voice only)"
+#, fuzzy
+msgid "Announce list bounds (top, mono-item, bottom)"
 msgstr "Оголосити межі списку (лише голос)"
+
+#. Translators: a choice in announce-list-bounds-with radio box
+msgid "voice"
+msgstr "голос"
+
+#. Translators: a choice in announce-list-bounds-with radio box
+msgid "beep"
+msgstr "звуковий сигнал"
+
+#. Translators: label for announce-list-bounds-with radio box in settings
+msgid "Announce with:"
+msgstr "Оголосити з:"
+
+#. Translators: a tooltip on beep values input box
+msgid ""
+"Please input a frequency for top beep, a frequency for bottom beep, and "
+"their duration in milliseconds (each of three values must be a positive "
+"number, separated by comma):"
+msgstr ""
+"Будь ласка, введіть частоту верхнього звукового сигналу, частоту нижнього "
+"звукового сигналу та їх тривалість у мілісекундах (кожне з трьох значень має "
+"бути додатнім числом, відокремленим комою):"
+
+msgid "Beep values"
+msgstr "Значення звукових сигналів"
+
+#. Translators: message when user inputs wrong values for beep
+msgid "Please input valid values for beep."
+msgstr "Будь ласка, введіть правильні значення для звукового сигналу."
+
+#. Translators: Title of the dialog when user inputs wrong values for beep
+msgid "Error!"
+msgstr "Помилка!"
 
 #. Translators: Title of the dialog which allows to perform actions on headers of the current list.
 msgid "Headers manager"
@@ -273,29 +309,8 @@ msgstr "УВАГА!"
 msgid "A better experience with lists"
 msgstr "Кращий досвід роботи зі списками"
 
-#~ msgid "voice"
-#~ msgstr "голос"
+#~ msgid "Columns Review Settings..."
+#~ msgstr "Налаштування перегляду стовпців..."
 
-#~ msgid "beep"
-#~ msgstr "звуковий сигнал"
-
-#~ msgid "Announce with:"
-#~ msgstr "Оголосити з:"
-
-#~ msgid ""
-#~ "Please input a frequency for top beep, a frequency for bottom beep, and "
-#~ "their duration in milliseconds (each of three values must be a positive "
-#~ "number, separated by comma):"
-#~ msgstr ""
-#~ "Будь ласка, введіть частоту верхнього звукового сигналу, частоту нижнього "
-#~ "звукового сигналу та їх тривалість у мілісекундах (кожне з трьох значень "
-#~ "має бути додатнім числом, відокремленим комою):"
-
-#~ msgid "Beep values"
-#~ msgstr "Значення звукових сигналів"
-
-#~ msgid "Please input valid values for beep."
-#~ msgstr "Будь ласка, введіть правильні значення для звукового сигналу."
-
-#~ msgid "Error!"
-#~ msgstr "Помилка!"
+#~ msgid "Columns Review Settings"
+#~ msgstr "Налаштування перегляду стовпців"
