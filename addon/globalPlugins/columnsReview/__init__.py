@@ -101,14 +101,14 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 		if objWindowClassName == "TaskListThumbnailWnd":
 			return
 		# from Thunderbird 115
-		if (
+		elif (
 			objRole in (roles.LIST, roles.TREEVIEW)
 			and objWindowClassName == "MozillaWindowClass"
 			and "display:table-row-group" in obj.IAccessibleObject.attributes
 		):
 			clsList.insert(0, ThunderbirdSupernova)
 			return
-		if objRole == roles.LIST:
+		elif objRole == roles.LIST:
 			if SysLV32List in clsList:
 				clsList.insert(0, CRList32)
 			# Windows 8/8.1/10 Start Screen tiles should not expose column info.
@@ -116,7 +116,7 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 				clsList.insert(0, CRList64)
 			return
 		# for Outlook
-		if (
+		elif (
 			objRole == roles.TABLE
 			and UIA in clsList
 			and obj.UIAElement.cachedClassName == "SuperGrid"
@@ -124,7 +124,7 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 			clsList.insert(0, UIASuperGrid)
 			return
 		# for Thunderbird before 115
-		if (
+		elif (
 			objRole in (roles.TABLE, roles.TREEVIEW)
 			and objWindowClassName == "MozillaWindowClass"
 			and "id:threadTree" in obj.IAccessibleObject.attributes
@@ -132,7 +132,7 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 			clsList.insert(0, MozillaTable)
 			return
 		# found in RSSOwlnix, but may be in other software
-		if objRole == roles.TREEVIEW:
+		elif objRole == roles.TREEVIEW:
 			try:
 				watchdog.alive()
 				if obj.parent.previous.windowClassName == "SysHeader32":
@@ -870,7 +870,7 @@ class CRList32(CRList):
 			parentHandle,
 			sysListView32.LVM_GETNEXTITEM,
 			-1,
-			ctypes.wintypes.LPARAM(sysListView32.LVNI_SELECTED)
+			ctypes.c_void_p(sysListView32.LVNI_SELECTED),
 		)
 		listLen = watchdog.cancellableSendMessage(parentHandle, sysListView32.LVM_GETITEMCOUNT, 0, 0)
 		items = []
@@ -885,7 +885,7 @@ class CRList32(CRList):
 				parentHandle,
 				sysListView32.LVM_GETNEXTITEM,
 				selItemIndex,
-				ctypes.wintypes.LPARAM(sysListView32.LVNI_SELECTED)
+				ctypes.c_void_p(sysListView32.LVNI_SELECTED)
 			)
 		return items
 

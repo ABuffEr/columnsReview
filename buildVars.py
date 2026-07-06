@@ -23,10 +23,10 @@ addon_info = AddonInfo(
 	# Translators: Long description to be shown for this add-on on add-on information from add-on store
 	addon_description=_("""A better experience with lists"""),
 	# version
-	addon_version="5.6.0",
+	addon_version="5.7.0",
 	# Brief changelog for this version
 	# Translators: what's new content for the add-on version to be shown in the add-on store
-	addon_changelog=_("""2026.x compatibility."""),
+	addon_changelog=_("""Fixed selected items reporting, small speedup in general navigation."""),
 	# Author(s)
 	addon_author="Alberto Buffolino <a.buffolino@gmail.com>, Łukasz Golonka <lukasz.golonka@mailbox.org>, other contributors",
 	# URL for the add-on documentation support
