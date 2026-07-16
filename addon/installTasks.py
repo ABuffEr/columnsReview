@@ -21,7 +21,7 @@ def onInstall():
 					wx.OK|wx.ICON_WARNING)
 				try:
 					os.remove(iniFile)
-				except:
+				except Exception:
 					pass
 		elif addon.name == "ExplorerEnhancements":
 			if gui.messageBox(

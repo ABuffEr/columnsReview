@@ -1,7 +1,6 @@
 # -*- coding: UTF-8 -*-
 # Utility functions for the Columns Review add-on
 
-from .compat import CTWRAPPER
 import ctypes
 import winUser
 
@@ -35,13 +34,12 @@ def getScriptGestures(*args):
 	allGestures = manager.getAllGestureMappings()
 	scriptDict = {}
 	for scriptFunc in args:
-		scriptGestures = []
 		try:
 			scriptCategory = scriptFunc.category if hasattr(scriptFunc, "category") else scriptFunc.__self__.__class__.scriptCategory
 			scriptDoc = scriptFunc.__doc__
 			script = allGestures[scriptCategory][scriptDoc]
 			scriptDict[scriptFunc] = script.gestures
-		except:
+		except Exception:
 			pass
 	# try to avoid garbageHandler warnings
 	del allGestures

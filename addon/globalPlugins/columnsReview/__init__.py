@@ -178,7 +178,7 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 		similar = positionInfo.get("similarItemsInGroup")
 		if index == similar == 1:
 			pos = "mono"
-		elif index == similar != None:
+		elif index == similar is not None:
 			pos = "bottom"
 		elif index == 1:
 			pos = "top"
@@ -507,7 +507,7 @@ class CRList(object):
 		else:
 			try:
 				d = FindDialog(gui.mainFrame, self, self._lastFindText, self._lastCaseSensitivity, reverse)
-			except:
+			except Exception:
 				# until NVDA 2020.3
 				d = FindDialog(gui.mainFrame, self, self._lastFindText, self._lastCaseSensitivity)
 		gui.mainFrame.prePopup()
@@ -731,9 +731,11 @@ class CRList(object):
 		for field in fields:
 			if isinstance(field, textInfos.FieldCommand) and isinstance(field.field, textInfos.FormatField):
 				fgColor = field.field.get("color")
-				if fgColor: fgColors.add(fgColor.name)
+				if fgColor:
+					fgColors.add(fgColor.name)
 				bgColor = field.field.get("background-color")
-				if bgColor: bgColors.add(bgColor.name)
+				if bgColor:
+					bgColors.add(bgColor.name)
 		if fgColors and bgColors:
 			foregroundColors = ', '.join(fgColors)
 			backgroundColors = ', '.join(bgColors)
@@ -847,7 +849,7 @@ class CRList32(CRList):
 			states = curItem.IAccessibleObject.accState(curItem.IAccessibleChildID)
 			if states & STATE_SYSTEM_MULTISELECTABLE:
 				return True
-		except:
+		except Exception:
 			pass
 
 	def successSearchAction(self, res):
@@ -968,7 +970,7 @@ class CRList64(CRList):
 				if window.hwnd and window.hwnd == fg.windowHandle:
 					self.curWindow = window
 					break
-			except:
+			except Exception:
 				pass
 		if not self.curWindow:
 			if onFailureMsg:
@@ -1121,7 +1123,7 @@ class CRList64(CRList):
 		try:
 			watchdog.alive()
 			childCount = self._get_UIAGridPattern().CurrentRowCount
-		except:
+		except Exception:
 			# assume not empty
 			childCount = 1
 		return not bool(childCount)
@@ -1290,7 +1292,7 @@ class UIASuperGrid(CRList):
 			try:
 				childCount = self.UIAGridPattern.CurrentRowCount
 				return not bool(childCount)
-			except:
+			except Exception:
 				pass
 		if self.childCount == 1 and self.firstChild.role == roles.PANE:
 			# it's an empty list with header objs, so...
@@ -1420,7 +1422,7 @@ class MozillaTable(CRList32):
 		try:
 			if self.IAccessibleTable2Object.nRows == 0:
 				return True
-		except:
+		except Exception:
 			pass
 		return False
 
@@ -1612,7 +1614,7 @@ class CRTreeview(CRList32):
 			raise noColumnAtIndex
 		try:
 			header = headers[colNumber-1].name
-		except:
+		except Exception:
 			header = None
 		# too few cases, it's all a big try...
 		try:
@@ -1624,7 +1626,7 @@ class CRTreeview(CRList32):
 				else:
 					nextHeader = headers[colNumber].name
 				content = curItem.description.split("%s: "%header, 1)[1].split(", %s: "%nextHeader, 1)[0]
-		except:
+		except Exception:
 			content = None
 		return {"columnContent": content, "columnHeader": header}
 
@@ -1717,7 +1719,7 @@ class CRTreeview(CRList32):
 	def isEmptyList(self):
 		try:
 			childCount = self.childCount
-		except:
+		except Exception:
 			# assume not empty
 			childCount = 1
 		return not bool(childCount)
