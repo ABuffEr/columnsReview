@@ -53,4 +53,3 @@ Following list types are supported:
 * Outlook messages table (but list search is not recommended in thread view).
 
 [rss]: https://github.com/ABuffEr/rssowlnixSupport
-
