@@ -18,14 +18,13 @@ addonHandler.initTranslation()
 
 
 class configureActionPanel(wx.Panel):
-
 	COPY_ACTION_INDEX = getActionIndexFromName("copy")
 	READ_ACTION_INDEX = getActionIndexFromName("read")
 	try:
 		HIDE_NEXT_PANELS_AFTER = ACTIONS.index(
-			[action for action in ACTIONS if action.showLaterActions is False][0]
+			[action for action in ACTIONS if action.showLaterActions is False][0],
 		)
-	except(IndexError, ValueError):
+	except (IndexError, ValueError):
 		HIDE_NEXT_PANELS_AFTER = None
 
 	ON_PRESS_LABELS = {
@@ -36,7 +35,7 @@ class configureActionPanel(wx.Panel):
 		# Translators: Label of a combobox in which action can be assigned to a third press of the shortcut.
 		3: _("On third press:"),
 		# Translators: Label of a combobox in which action can be assigned to a fourth press of the shortcut.
-		4: _("On fourth press:")
+		4: _("On fourth press:"),
 	}
 
 	TRANSLATED_ACTION_NAMES = tuple(action.translatedName for action in ACTIONS)
@@ -48,7 +47,7 @@ class configureActionPanel(wx.Panel):
 		self.chooseActionCombo = sizer.addLabeledControl(
 			self.ON_PRESS_LABELS[self.panelNumber],
 			wx.Choice,
-			choices=self.TRANSLATED_ACTION_NAMES
+			choices=self.TRANSLATED_ACTION_NAMES,
 		)
 		self.chooseActionCombo.SetSelection(initialSelection)
 		self.chooseActionCombo.Bind(wx.EVT_CHOICE, self.onSelectedActionChange)
@@ -77,10 +76,10 @@ class configureActionPanel(wx.Panel):
 		for panel in self.Parent.panels:
 			panel.setControlsVisibility()
 		if evt.GetSelection() == self.HIDE_NEXT_PANELS_AFTER:
-			for panel in self.Parent.panels[self.panelNumber:]:
+			for panel in self.Parent.panels[self.panelNumber :]:
 				panel.Disable()
 		else:
-			for panel in self.Parent.panels[self.panelNumber:]:
+			for panel in self.Parent.panels[self.panelNumber :]:
 				panel.Enable()
 				if panel.chooseActionCombo.GetSelection() == self.HIDE_NEXT_PANELS_AFTER:
 					break
@@ -96,8 +95,7 @@ class configureActionPanel(wx.Panel):
 			self.Parent.readCheckboxEnabled = True
 			self.readHeader.Enable()
 		shouldDisableReadHeaderChk = (
-			self.chooseActionCombo.GetSelection() != self.READ_ACTION_INDEX
-			and self.readHeader.IsEnabled()
+			self.chooseActionCombo.GetSelection() != self.READ_ACTION_INDEX and self.readHeader.IsEnabled()
 		)
 		if shouldDisableReadHeaderChk:
 			self.readHeader.Disable()
@@ -110,8 +108,7 @@ class configureActionPanel(wx.Panel):
 			self.Parent.copyCheckboxEnabled = True
 			self.copyHeader.Enable()
 		shouldDisableCopyHeaderChk = (
-			self.chooseActionCombo.GetSelection() != self.COPY_ACTION_INDEX
-			and self.copyHeader.IsEnabled()
+			self.chooseActionCombo.GetSelection() != self.COPY_ACTION_INDEX and self.copyHeader.IsEnabled()
 		)
 		if shouldDisableCopyHeaderChk:
 			self.copyHeader.Disable()
@@ -130,9 +127,9 @@ class ColumnsReviewSettingsDialog(gui.settingsDialogs.SettingsPanel):
 			wx.StaticBox(
 				self,
 				# Translators: Help message for group of comboboxes allowing to assign action to a keypress.
-				label=_("When pressing combination to read column:")
+				label=_("When pressing combination to read column:"),
 			),
-			wx.VERTICAL
+			wx.VERTICAL,
 		)
 		for pressNumber, actionName in configuredActions().items():
 			actionIndex = getActionIndexFromName(actionName)
@@ -148,9 +145,9 @@ class ColumnsReviewSettingsDialog(gui.settingsDialogs.SettingsPanel):
 			wx.StaticBox(
 				self,
 				# Translators: Help message for sub-sizer of keys choices
-				label=_("Choose the keys you want to use with numbers:")
+				label=_("Choose the keys you want to use with numbers:"),
 			),
-			wx.VERTICAL
+			wx.VERTICAL,
 		)
 		self.keysChks = []
 		gesturesSect = config.conf["columnsReview"]["gestures"]
@@ -169,7 +166,7 @@ class ColumnsReviewSettingsDialog(gui.settingsDialogs.SettingsPanel):
 		self._switchCharLabel = wx.StaticText(
 			self,
 			# Translators: label for edit field in settings, visible if previous checkbox is disabled
-			label=_("Insert the char after \"0\" in your keyboard layout, or another char as you like:")
+			label=_('Insert the char after "0" in your keyboard layout, or another char as you like:'),
 		)
 		settingsSizer.Add(self._switchCharLabel)
 		self._switchChar = wx.TextCtrl(self, name="switchCharTextCtrl")
@@ -180,14 +177,16 @@ class ColumnsReviewSettingsDialog(gui.settingsDialogs.SettingsPanel):
 			settingsSizer.Hide(self._switchCharLabel)
 			settingsSizer.Hide(self._switchChar)
 		self._announceEmptyList = wx.CheckBox(
+			self,
 			# Translators: label for announce-empty-list checkbox in settings
-			self, label=_("Announce empty list")
+			label=_("Announce empty list"),
 		)
 		self._announceEmptyList.SetValue(config.conf["columnsReview"]["general"]["announceEmptyList"])
 		settingsSizer.Add(self._announceEmptyList)
 		self._announceListBounds = wx.CheckBox(
+			self,
 			# Translators: label for announce-list-bounds checkbox in settings
-			self, label=_("Announce list bounds (top, mono-item, bottom)")
+			label=_("Announce list bounds (top, mono-item, bottom)"),
 		)
 		self._announceListBounds.SetValue(config.conf["columnsReview"]["general"]["announceListBounds"])
 		self._announceListBounds.Bind(wx.EVT_CHECKBOX, self.onCheck)
@@ -199,30 +198,31 @@ class ColumnsReviewSettingsDialog(gui.settingsDialogs.SettingsPanel):
 			_("beep"),
 		]
 		self._announceListBoundsWith = wx.RadioBox(
+			self,
 			# Translators: label for announce-list-bounds-with radio box in settings
-			self, label=_("Announce with:"), choices=voiceOrBeep
+			label=_("Announce with:"),
+			choices=voiceOrBeep,
 		)
-		self._announceListBoundsWith.SetSelection(0 if config.conf["columnsReview"]["general"]["announceListBoundsWith"] == "voice" else 1)
+		self._announceListBoundsWith.SetSelection(
+			0 if config.conf["columnsReview"]["general"]["announceListBoundsWith"] == "voice" else 1,
+		)
 		self._announceListBoundsWith.Bind(wx.EVT_RADIOBOX, self.onRadioCheck)
 		settingsSizer.Add(self._announceListBoundsWith)
-		# Translators: a tooltip on beep values input box
-		self._beepInstructions=_("Please input a frequency for top beep, a frequency for bottom beep, and their duration in milliseconds (each of three values must be a positive number, separated by comma):")
-		self._beepSizer = wx.StaticBoxSizer(
-			wx.StaticBox(self, label=self._beepInstructions),
-			wx.HORIZONTAL
+		self._beepInstructions = _(
+			# Translators: a tooltip on beep values input box
+			"Please input a frequency for top beep, a frequency for bottom beep, and their duration in milliseconds (each of three values must be a positive number, separated by comma):",
 		)
-		beepValues = ', '.join([str(x) for x in config.conf["columnsReview"]["beep"].dict().values()])
-		self._beepValues = wx.TextCtrl(
-			self, value=beepValues, name=_("Beep values")
-		)
+		self._beepSizer = wx.StaticBoxSizer(wx.StaticBox(self, label=self._beepInstructions), wx.HORIZONTAL)
+		beepValues = ", ".join([str(x) for x in config.conf["columnsReview"]["beep"].dict().values()])
+		self._beepValues = wx.TextCtrl(self, value=beepValues, name=_("Beep values"))
 		self._beepValues.Bind(wx.EVT_KILL_FOCUS, self.evaluateBeepValues)
 		self._beepSizer.Add(self._beepValues)
 		settingsSizer.Add(self._beepSizer)
 		if not self._announceListBounds.IsChecked():
 			settingsSizer.Hide(self._announceListBoundsWith)
-			settingsSizer.Hide(self._beepSizer) #self._beepValues)
+			settingsSizer.Hide(self._beepSizer)  # self._beepValues)
 		if self._announceListBoundsWith.GetSelection() != 1:
-			settingsSizer.Hide(self._beepSizer) #self._beepValues)
+			settingsSizer.Hide(self._beepSizer)  # self._beepValues)
 
 	def saveConfig(self):
 		# Update Configuration
@@ -269,20 +269,20 @@ class ColumnsReviewSettingsDialog(gui.settingsDialogs.SettingsPanel):
 			self.settingsSizer.Show(self._switchChar)
 		if not self._announceListBounds.IsChecked():
 			self.settingsSizer.Hide(self._announceListBoundsWith)
-			self.settingsSizer.Hide(self._beepSizer) #self._beepValues)
+			self.settingsSizer.Hide(self._beepSizer)  # self._beepValues)
 		else:
 			self.settingsSizer.Show(self._announceListBoundsWith)
 			if self._announceListBoundsWith.GetSelection() != 1:
-				self.settingsSizer.Hide(self._beepSizer) #self._beepValues)
+				self.settingsSizer.Hide(self._beepSizer)  # self._beepValues)
 			else:
-				self.settingsSizer.Show(self._beepSizer) #self._beepValues)
+				self.settingsSizer.Show(self._beepSizer)  # self._beepValues)
 		self.Fit()
 
 	def onRadioCheck(self, evt):
 		if self._announceListBoundsWith.GetSelection() == 1:
-			self.settingsSizer.Show(self._beepSizer) #self._beepValues)
+			self.settingsSizer.Show(self._beepSizer)  # self._beepValues)
 		else:
-			self.settingsSizer.Hide(self._beepSizer) #self._beepValues)
+			self.settingsSizer.Hide(self._beepSizer)  # self._beepValues)
 
 	def evaluateBeepValues(self, evt):
 		try:
@@ -290,9 +290,10 @@ class ColumnsReviewSettingsDialog(gui.settingsDialogs.SettingsPanel):
 			topBeep, bottomBeep, beepLen = self.getBeepValues(text)
 			from tones import beep
 			from time import sleep
+
 			beep(topBeep, beepLen)
 			sleep(0.3)
-			beep(abs(topBeep-bottomBeep), beepLen*2)
+			beep(abs(topBeep - bottomBeep), beepLen * 2)
 			sleep(0.3)
 			beep(bottomBeep, beepLen)
 		except (ValueError, IndexError):
@@ -301,7 +302,7 @@ class ColumnsReviewSettingsDialog(gui.settingsDialogs.SettingsPanel):
 				_("Please input valid values for beep."),
 				# Translators: Title of the dialog when user inputs wrong values for beep
 				_("Error!"),
-				wx.OK | wx.ICON_ERROR
+				wx.OK | wx.ICON_ERROR,
 			)
 			self._beepValues.SetFocus()
 
@@ -314,12 +315,13 @@ class ColumnsReviewSettingsDialog(gui.settingsDialogs.SettingsPanel):
 				raise ValueError
 		return values
 
+
 class HeaderDialog(wx.Dialog):
 	"""define dialog for column headers management."""
 
 	def __init__(self, title, headerList):
 		# Translators: Title of the dialog which allows to perform actions on headers of the current list.
-		super(HeaderDialog, self).__init__(None, title=' - '.join([_("Headers manager"), title]))
+		super(HeaderDialog, self).__init__(None, title=" - ".join([_("Headers manager"), title]))
 		helperSizer = BoxSizerHelper(self, wx.HORIZONTAL)
 		# Translators: Shown for a header which has no name.
 		choices = [x.name if x.name else _("Unnamed header") for x in headerList]

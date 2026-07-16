@@ -20,12 +20,17 @@ import textInfos
 from logHandler import log
 from NVDAObjects.IAccessible import getNVDAObjectFromEvent
 from NVDAObjects.IAccessible import sysListView32
-from NVDAObjects.UIA import UIA # For UIA implementations only, chiefly 64-bit.
+from NVDAObjects.UIA import UIA  # For UIA implementations only, chiefly 64-bit.
 import sys
 from comtypes.client import CreateObject
 from comtypes.gen.IAccessible2Lib import IAccessible2
 from globalCommands import commands
-from oleacc import STATE_SYSTEM_MULTISELECTABLE, SELFLAG_TAKEFOCUS, SELFLAG_TAKESELECTION, SELFLAG_ADDSELECTION
+from oleacc import (
+	STATE_SYSTEM_MULTISELECTABLE,
+	SELFLAG_TAKEFOCUS,
+	SELFLAG_TAKESELECTION,
+	SELFLAG_ADDSELECTION,
+)
 from scriptHandler import getLastScriptRepeatCount
 import weakref
 from threading import Thread, Event
@@ -77,12 +82,13 @@ PROFILE_SWITCHED_NOTIFIERS = ("configProfileSwitch", "post_configProfileSwitch")
 # for debug logging
 DEBUG = False
 
+
 def debugLog(message):
 	if DEBUG:
 		log.info(message)
 
-class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 
+class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 	def __init__(self, *args, **kwargs):
 		super(GlobalPlugin, self).__init__(*args, **kwargs)
 		if globalVars.appArgs.secure:
@@ -116,11 +122,7 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 				clsList.insert(0, CRList64)
 			return
 		# for Outlook
-		if (
-			objRole == roles.TABLE
-			and UIA in clsList
-			and obj.UIAElement.cachedClassName == "SuperGrid"
-		):
+		if objRole == roles.TABLE and UIA in clsList and obj.UIAElement.cachedClassName == "SuperGrid":
 			clsList.insert(0, UIASuperGrid)
 			return
 		# for Thunderbird before 115
@@ -142,10 +144,7 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 
 	def event_focusEntered(self, obj, nextHandler):
 		objRole = obj.role
-		if (
-			objRole == roles.LIST
-			or (objRole == roles.TABLE and obj.windowClassName == "MozillaWindowClass")
-		):
+		if objRole == roles.LIST or (objRole == roles.TABLE and obj.windowClassName == "MozillaWindowClass"):
 			self.proceedWithBounds = True
 		else:
 			self.proceedWithBounds = False
@@ -160,11 +159,9 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 			nextHandler()
 			return
 		objRole = obj.role
-		if (
-			self.proceedWithBounds
-			and (objRole == roles.LISTITEM
-				or (objRole == roles.TABLEROW and obj.windowClassName == "MozillaWindowClass")
-			)
+		if self.proceedWithBounds and (
+			objRole == roles.LISTITEM
+			or (objRole == roles.TABLEROW and obj.windowClassName == "MozillaWindowClass")
 		):
 			self.reportListBounds(obj)
 		nextHandler()
@@ -193,20 +190,39 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 			bottomBeep = confFromObj.bottomBeep
 			beepLen = confFromObj.beepLen
 		if pos == "mono":
-			# Translators: message when list contains one item only
-			message = (_("Mono-item list: "),) if reportFunc != beep else (abs(topBeep-bottomBeep), beepLen*2,)
+			message = (
+				# Translators: message when list contains one item only
+				(_("Mono-item list: "),)
+				if reportFunc != beep
+				else (
+					abs(topBeep - bottomBeep),
+					beepLen * 2,
+				)
+			)
 		elif pos == "bottom":
-			# Translators: message when user lands on the last list item
-			message = (_("List bottom: "),) if reportFunc != beep else (topBeep, beepLen,)
+			message = (
+				# Translators: message when user lands on the last list item
+				(_("List bottom: "),)
+				if reportFunc != beep
+				else (
+					topBeep,
+					beepLen,
+				)
+			)
 		elif pos == "top":
-			# Translators: message when user lands on the first list item
-			message = (_("List top: "),) if reportFunc != beep else (bottomBeep, beepLen,)
+			message = (
+				# Translators: message when user lands on the first list item
+				(_("List top: "),)
+				if reportFunc != beep
+				else (
+					bottomBeep,
+					beepLen,
+				)
+			)
 		reportFunc(*message)
 
 	def createMenu(self):
-		gui.settingsDialogs.NVDASettingsDialog.categoryClasses.append(
-			dialogs.ColumnsReviewSettingsDialog
-		)
+		gui.settingsDialogs.NVDASettingsDialog.categoryClasses.append(dialogs.ColumnsReviewSettingsDialog)
 
 	def terminate(self):
 		for extPointName in PROFILE_SWITCHED_NOTIFIERS:
@@ -214,9 +230,7 @@ class GlobalPlugin(globalPluginHandler.GlobalPlugin):
 				getattr(config, extPointName).unregister(self.handleConfigProfileSwitch)
 			except AttributeError:
 				continue
-		gui.settingsDialogs.NVDASettingsDialog.categoryClasses.remove(
-			dialogs.ColumnsReviewSettingsDialog
-		)
+		gui.settingsDialogs.NVDASettingsDialog.categoryClasses.remove(dialogs.ColumnsReviewSettingsDialog)
 		# release COM object
 		if CRList64.shell:
 			try:
@@ -238,7 +252,7 @@ class CRList(object):
 
 	# Translators: Name of the default category
 	# in the Input Gestures dialog where scripts of this add-on are placed.
-	scriptCategory = _('{name} (DO NOT EDIT!)').format(name=addonHandler.getCodeAddon().manifest['summary'])
+	scriptCategory = _("{name} (DO NOT EDIT!)").format(name=addonHandler.getCodeAddon().manifest["summary"])
 
 	_instances = weakref.WeakSet()
 	# the variable representing tens
@@ -270,7 +284,7 @@ class CRList(object):
 
 	def event_focusEntered(self):
 		# apparently, this event is fired only by pre-populated lists
-#		ui.message("focusEntered raised!")
+		# ui.message("focusEntered raised!")
 		super(CRList, self).event_focusEntered()
 		self.bindCRGestures()
 
@@ -284,7 +298,11 @@ class CRList(object):
 		# other useful gesture to remap
 		scriptMap = {
 			# for color reporting
-			getattr(commands, "script_reportOrShowFormattingAtCaret", commands.script_reportFormatting): "reportOrShowFormattingAtCaret",
+			getattr(
+				commands,
+				"script_reportOrShowFormattingAtCaret",
+				commands.script_reportFormatting,
+			): "reportOrShowFormattingAtCaret",
 			# for current selection
 			commands.script_reportCurrentSelection: "reportCurrentSelection",
 		}
@@ -316,7 +334,10 @@ class CRList(object):
 		else:
 			# do same things for no numpad case
 			self.bindGesture("kb:{0}+0".format(enabledModifiers), "readColumn")
-			self.bindGesture("kb:{0}+{1}".format(enabledModifiers, confFromObj.nextColumnsGroupKey), "changeInterval")
+			self.bindGesture(
+				"kb:{0}+{1}".format(enabledModifiers, confFromObj.nextColumnsGroupKey),
+				"changeInterval",
+			)
 			self.bindGesture("kb:{0}+delete".format(enabledModifiers), "itemInfo")
 			self.bindGesture("kb:{0}+enter".format(enabledModifiers), "manageHeaders")
 
@@ -330,7 +351,7 @@ class CRList(object):
 
 	def script_readColumn(self, gesture):
 		# ask for index
-		num = self.getIndex(gesture.mainKeyName.rsplit('+', 1)[-1])
+		num = self.getIndex(gesture.mainKeyName.rsplit("+", 1)[-1])
 		repeatCount = getLastScriptRepeatCount()
 		if not repeatCount:
 			self.repeatCount = 0
@@ -345,7 +366,7 @@ class CRList(object):
 			self.repeatCount += 1
 		actionToExecute = configuredActions().get(
 			self.repeatCount,
-			ACTIONS[0].name  # Default dummy action
+			ACTIONS[0].name,  # Default dummy action
 		)
 		actionToExecute = actionFromName(actionToExecute)
 		if not actionToExecute.performsAction:
@@ -371,7 +392,7 @@ class CRList(object):
 	script_readColumn.canPropagate = True
 	script_readColumn.__doc__ = _(
 		# Translators: documentation of script to read columns
-		"Returns the header and the content of the list column at the index corresponding to the number pressed"
+		"Returns the header and the content of the list column at the index corresponding to the number pressed",
 	)
 	script_readColumn.speakOnDemand = True
 
@@ -385,10 +406,10 @@ class CRList(object):
 		# if num == 0, from numpad or keyboard
 		if not num:
 			# set it to 10, 20, etc
-			num = (self.tens+1)*10
+			num = (self.tens + 1) * 10
 		else:
 			# set it to 9, 13, 22, etc
-			num = self.tens*10+num
+			num = self.tens * 10 + num
 		return num
 
 	def script_changeInterval(self, gesture):
@@ -396,7 +417,7 @@ class CRList(object):
 		it's built so to have always all gestures from 1 to 0"""
 		curItem = api.getFocusObject()
 		# no further interval
-		if curItem.childCount<10:
+		if curItem.childCount < 10:
 			# Translators: message when digit pressed exceed the columns number
 			ui.message(_("No more columns available"))
 			return
@@ -405,23 +426,23 @@ class CRList(object):
 		# intervals (2) of needed  10 columns;
 		# if childCount is a multiple of 10 (es. 30),
 		# we have exactly childCount/10=3 intervals.
-		mod = curItem.childCount//10+(1 if curItem.childCount%10 else 0)
+		mod = curItem.childCount // 10 + (1 if curItem.childCount % 10 else 0)
 		# now, we can scroll ten by ten among intervals, using modulus
-		self.tens = (self.tens+1)%mod
+		self.tens = (self.tens + 1) % mod
 		# interval bounds to announce
-		start = self.tens*10+1
+		start = self.tens * 10 + 1
 		# nice: announce what is the absolutely last column available
-		if self.tens == mod-1:
+		if self.tens == mod - 1:
 			end = curItem.childCount
 		else:
-			end = (self.tens+1)*10
+			end = (self.tens + 1) * 10
 		# Translators: message when you change interval in a list with more ten columns
 		ui.message(_("From {start} to {end}").format(start=start, end=end))
 
 	script_changeInterval.canPropagate = True
 	script_changeInterval.__doc__ = _(
 		# Translators: documentation for script to change interval
-		"Cycles between a variable number of intervals of ten columns"
+		"Cycles between a variable number of intervals of ten columns",
 	)
 
 	def script_itemInfo(self, gesture):
@@ -439,28 +460,26 @@ class CRList(object):
 			# Translators: Reported when information about position on a list cannot be retrieved.
 			ui.message(_("No information available"))
 		else:
-			info = ' '.join([NVDALocale("item"), NVDALocale("{number} of {total}").format(number=number, total=total)])
+			info = " ".join(
+				[NVDALocale("item"), NVDALocale("{number} of {total}").format(number=number, total=total)],
+			)
 			ui.message(info)
 
 	script_itemInfo.canPropagate = True
 	script_itemInfo.__doc__ = _(
 		# Translators: documentation for script to announce list item info
-		"Announces list item position information"
+		"Announces list item position information",
 	)
 	script_itemInfo.speakOnDemand = True
 
 	def script_manageHeaders(self, gesture):
 		headers = [h for h in self.getHeaderParent().children if states.INVISIBLE not in h.states]
-		wx.CallAfter(
-			dialogs.HeaderDialog.Run,
-			title=self.appModule.appName,
-			headerList=headers
-		)
+		wx.CallAfter(dialogs.HeaderDialog.Run, title=self.appModule.appName, headerList=headers)
 
 	script_manageHeaders.canPropagate = True
 	script_manageHeaders.__doc__ = _(
 		# Translators: documentation for script to manage headers
-		"Provides a dialog for interactions with list column headers"
+		"Provides a dialog for interactions with list column headers",
 	)
 
 	def getHeaderParent(self):
@@ -476,7 +495,7 @@ class CRList(object):
 		curItem = api.getFocusObject()
 		items = []
 		item = self.firstChild
-		while (item and item.role == curItem.role):
+		while item and item.role == curItem.role:
 			if states.SELECTED in item.states:
 				itemChild = item.getChild(0)
 				itemName = itemChild.name if itemChild else item.name
@@ -488,15 +507,17 @@ class CRList(object):
 	def script_reportCurrentSelection(self, gesture):
 		items = self.getSelectedItems()
 		if items is not None:
-			ui.message(_(
-				# Translators: message presented when get selected item count and names
-				"{selCount} selected items: {selNames}").format(selCount=len(items), selNames=', '.join(items)
-			))
+			ui.message(
+				_(
+					# Translators: message presented when get selected item count and names
+					"{selCount} selected items: {selNames}",
+				).format(selCount=len(items), selNames=", ".join(items)),
+			)
 
 	script_reportCurrentSelection.canPropagate = True
 	script_reportCurrentSelection.__doc__ = _(
 		# Translators: documentation for script to know current selected items
-		"Reports current selected list items"
+		"Reports current selected list items",
 	)
 	script_reportCurrentSelection.speakOnDemand = True
 
@@ -517,7 +538,7 @@ class CRList(object):
 	script_find.canPropagate = True
 	script_find.__doc__ = _(
 		# Translators: documentation for script to find in list
-		"Provides a dialog for searching in item list"
+		"Provides a dialog for searching in item list",
 	)
 
 	def doFindText(self, text, reverse=False, caseSensitive=False):
@@ -529,6 +550,7 @@ class CRList(object):
 		msgArgs = [_("Searching...")]
 		try:
 			from speech.priorities import SpeechPriority
+
 			msgArgs.append(SpeechPriority.NOW)
 		except ImportError:  # NVDA 2019.2.1 or earlier - no priorities in speech.
 			pass
@@ -542,7 +564,12 @@ class CRList(object):
 			if res:
 				self.successSearchAction(res)
 			else:
-				wx.CallAfter(gui.messageBox, NVDALocale('text "%s" not found')%text, NVDALocale("Find Error"), wx.OK|wx.ICON_ERROR)
+				wx.CallAfter(
+					gui.messageBox,
+					NVDALocale('text "%s" not found') % text,
+					NVDALocale("Find Error"),
+					wx.OK | wx.ICON_ERROR,
+				)
 		CRList._lastFindText = text
 		CRList._lastCaseSensitivity = caseSensitive
 
@@ -566,21 +593,24 @@ class CRList(object):
 			if finder.res:
 				core.callLater(0, self.successSearchAction, finder.res)
 			else:
-				wx.CallAfter(gui.messageBox, NVDALocale('text "%s" not found')%text, NVDALocale("Find Error"), wx.OK|wx.ICON_ERROR)
+				wx.CallAfter(
+					gui.messageBox,
+					NVDALocale('text "%s" not found') % text,
+					NVDALocale("Find Error"),
+					wx.OK | wx.ICON_ERROR,
+				)
 		else:
 			core.callLater(0, beep, 220, 150)
 		finder = None
 
-	def findInList(self, text, reverse, caseSensitive, stopCheck=lambda:False):
+	def findInList(self, text, reverse, caseSensitive, stopCheck=lambda: False):
 		"""performs the search in item list, via NVDA object navigation."""
 		# generic implementation
 		curItem = self.searchFromItem
 		item = curItem.previous if reverse else curItem.next
-		while (item and item.role == curItem.role):
-			if (
-				(not caseSensitive and item.name and text.lower() in item.name.lower())
-				or
-				(caseSensitive and text in item.name)
+		while item and item.role == curItem.role:
+			if (not caseSensitive and item.name and text.lower() in item.name.lower()) or (
+				caseSensitive and text in item.name
 			):
 				return item
 			item = item.previous if reverse else item.next
@@ -598,12 +628,12 @@ class CRList(object):
 			self.script_find(gesture)
 			return
 		self.searchFromItem = api.getFocusObject()
-		self.doFindText(self._lastFindText, caseSensitive = self._lastCaseSensitivity)
+		self.doFindText(self._lastFindText, caseSensitive=self._lastCaseSensitivity)
 
 	script_findNext.canPropagate = True
 	script_findNext.__doc__ = _(
 		# Translators: documentation for script to manage headers
-		"Goes to next result of current search"
+		"Goes to next result of current search",
 	)
 
 	def script_findPrevious(self, gesture):
@@ -611,12 +641,12 @@ class CRList(object):
 			self.script_find(gesture, reverse=True)
 			return
 		self.searchFromItem = api.getFocusObject()
-		self.doFindText(self._lastFindText, reverse=True, caseSensitive = self._lastCaseSensitivity)
+		self.doFindText(self._lastFindText, reverse=True, caseSensitive=self._lastCaseSensitivity)
 
 	script_findPrevious.canPropagate = True
 	script_findPrevious.__doc__ = _(
 		# Translators: documentation for script to manage headers
-		"Goes to previous result of current search"
+		"Goes to previous result of current search",
 	)
 
 	def script_readListItems(self, gesture):
@@ -626,7 +656,7 @@ class CRList(object):
 	script_readListItems.canPropagate = True
 	script_readListItems.__doc__ = _(
 		# Translators: documentation for script to read all list items starting from the focused one.
-		"Starts reading all list items beginning at the item with focus"
+		"Starts reading all list items beginning at the item with focus",
 	)
 	script_readListItems.speakOnDemand = True
 
@@ -673,7 +703,7 @@ class CRList(object):
 	def event_gainFocus(self):
 		# apparently, this event is fired only when focusing an empty list
 		# call super to get list type/name reporting
-#		ui.message("gainFocus raised!")
+		# ui.message("gainFocus raised!")
 		super(CRList, self).event_gainFocus()
 		# ignore desktop, usually not empty
 		if self.supportsEmptyListAnnouncements and self.name != "Desktop" and self.isEmptyList():
@@ -687,7 +717,7 @@ class CRList(object):
 			self.bindCRGestures()
 
 	def waitForItems(self):
-		# for 10 seconds, check every 100 milliseconds 
+		# for 10 seconds, check every 100 milliseconds
 		# if list remains empty
 		res, value = blockUntilConditionMet(self.isEmptyList, 10.0, lambda empty: not empty, 0.1)
 		# now, if list has items and focus
@@ -712,7 +742,7 @@ class CRList(object):
 		scriptFuncs = (
 			commands.script_reportCurrentFocus,
 			commands.script_reportCurrentLine,
-			commands.script_reportCurrentSelection
+			commands.script_reportCurrentSelection,
 		)
 		scriptDict = getScriptGestures(*scriptFuncs)
 		for script, gestures in scriptDict.items():
@@ -737,24 +767,28 @@ class CRList(object):
 				if bgColor:
 					bgColors.add(bgColor.name)
 		if fgColors and bgColors:
-			foregroundColors = ', '.join(fgColors)
-			backgroundColors = ', '.join(bgColors)
+			foregroundColors = ", ".join(fgColors)
+			backgroundColors = ", ".join(bgColors)
 			# Translators: message listing foreground over background colors
-			message = _("{foregroundColors} over {backgroundColors}").format(foregroundColors=foregroundColors, backgroundColors=backgroundColors)
+			message = _("{foregroundColors} over {backgroundColors}").format(
+				foregroundColors=foregroundColors,
+				backgroundColors=backgroundColors,
+			)
 		else:
 			message = NVDALocale("No formatting information")
 		ui.message(message)
+
 	script_reportOrShowFormattingAtCaret.canPropagate = True
 	script_reportOrShowFormattingAtCaret.__doc__ = _(
 		# Translators: Description of the keyboard command,
 		# which reports foreground and background color of the current list item.
-		"reports foreground and background colors of the current list item."
+		"reports foreground and background colors of the current list item.",
 	)
 	script_reportOrShowFormattingAtCaret.speakOnDemand = True
 
 
 class CRList32(CRList):
-# for SysListView32 or WindowsForms10.SysListView32.app.0.*
+	# for SysListView32 or WindowsForms10.SysListView32.app.0.*
 
 	# flag to guarantee thread support
 	THREAD_SUPPORTED = True
@@ -770,7 +804,7 @@ class CRList32(CRList):
 			# for invisible column case
 			num = self.getFixedNum(colNumber)
 			# getChild is zero-based
-			obj = curItem.getChild(num-1)
+			obj = curItem.getChild(num - 1)
 		else:
 			obj = curItem
 		# None obj should be generated
@@ -792,9 +826,9 @@ class CRList32(CRList):
 	def getFixedNum(self, num):
 		curItem = api.getFocusObject()
 		child = curItem.simpleFirstChild
-		startNum = child.columnNumber-1
+		startNum = child.columnNumber - 1
 		if num == 1:
-			return startNum+1
+			return startNum + 1
 		counter = 1
 		stop = False
 		while not stop:
@@ -805,7 +839,7 @@ class CRList32(CRList):
 				counter += 1
 			if counter == num:
 				stop = True
-		return child.columnNumber if child else curItem.childCount+1
+		return child.columnNumber if child else curItem.childCount + 1
 
 	def getHeaderParent(self):
 		# faster than previous self.simpleParent.children[-1]
@@ -813,7 +847,7 @@ class CRList32(CRList):
 		headerParent = getNVDAObjectFromEvent(headerHandle, winUser.OBJID_CLIENT, 0)
 		return headerParent
 
-	def findInList(self, text, reverse, caseSensitive, stopCheck=lambda:False):
+	def findInList(self, text, reverse, caseSensitive, stopCheck=lambda: False):
 		"""performs search in item list, via object handles."""
 		# specific implementation
 		fg = api.getForegroundObject()
@@ -827,17 +861,15 @@ class CRList32(CRList):
 		# 1-based index
 		curIndex = curItem.positionInfo["indexInGroup"]
 		if reverse:
-			indexes = rangeFunc(curIndex-1,0,-1)
+			indexes = rangeFunc(curIndex - 1, 0, -1)
 		else:
-			indexes = rangeFunc(curIndex+1,listLen+1)
+			indexes = rangeFunc(curIndex + 1, listLen + 1)
 		for index in indexes:
 			item = getNVDAObjectFromEvent(self.windowHandle, winUser.OBJID_CLIENT, index)
 			if not item or not item.name:
 				continue
-			if (
-				(not caseSensitive and text.lower() in item.name.lower())
-				or
-				(caseSensitive and text in item.name)
+			if (not caseSensitive and text.lower() in item.name.lower()) or (
+				caseSensitive and text in item.name
 			):
 				return item
 			if stopCheck():
@@ -861,7 +893,7 @@ class CRList32(CRList):
 		if useMultipleSelection:
 			res.IAccessibleObject.accSelect(SELFLAG_ADDSELECTION | SELFLAG_TAKEFOCUS, res.IAccessibleChildID)
 		else:
-		 res.IAccessibleObject.accSelect(SELFLAG_TAKESELECTION | SELFLAG_TAKEFOCUS, res.IAccessibleChildID)
+			res.IAccessibleObject.accSelect(SELFLAG_TAKESELECTION | SELFLAG_TAKEFOCUS, res.IAccessibleChildID)
 
 	def getSelectedItems(self):
 		parentHandle = self.windowHandle
@@ -872,12 +904,12 @@ class CRList32(CRList):
 			parentHandle,
 			sysListView32.LVM_GETNEXTITEM,
 			-1,
-			ctypes.wintypes.LPARAM(sysListView32.LVNI_SELECTED)
+			ctypes.wintypes.LPARAM(sysListView32.LVNI_SELECTED),
 		)
 		listLen = watchdog.cancellableSendMessage(parentHandle, sysListView32.LVM_GETITEMCOUNT, 0, 0)
 		items = []
-		while (0 <= selItemIndex < listLen):
-			item = getNVDAObjectFromEvent(parentHandle, winUser.OBJID_CLIENT, selItemIndex+1)
+		while 0 <= selItemIndex < listLen:
+			item = getNVDAObjectFromEvent(parentHandle, winUser.OBJID_CLIENT, selItemIndex + 1)
 			itemChild = item.getChild(0)
 			itemName = itemChild.name if itemChild else item.name
 			if itemName:
@@ -887,7 +919,7 @@ class CRList32(CRList):
 				parentHandle,
 				sysListView32.LVM_GETNEXTITEM,
 				selItemIndex,
-				ctypes.wintypes.LPARAM(sysListView32.LVNI_SELECTED)
+				ctypes.wintypes.LPARAM(sysListView32.LVNI_SELECTED),
 			)
 		return items
 
@@ -931,7 +963,7 @@ class CRList64(CRList):
 		# colNumber is passed as is, excluding the first position (0) of the children list
 		# containing an icon, so this check in this way
 		curItem = api.getFocusObject()
-		if colNumber > curItem.childCount-1:
+		if colNumber > curItem.childCount - 1:
 			raise noColumnAtIndex
 		obj = curItem.getChild(colNumber)
 		# obj.value is the column content
@@ -1001,6 +1033,7 @@ class CRList64(CRList):
 		# Translators: Reported when current list does not support searching.
 		if self.preCheck(_("Cannot search here.")):
 			super(CRList64, self).script_findNext(gesture)
+
 	script_findNext.canPropagate = True
 	script_findNext.__doc__ = CRList.script_findNext.__doc__
 
@@ -1012,7 +1045,7 @@ class CRList64(CRList):
 	script_findPrevious.canPropagate = True
 	script_findPrevious.__doc__ = CRList.script_findPrevious.__doc__
 
-	def findInList(self, text, reverse, caseSensitive, stopCheck=lambda:False):
+	def findInList(self, text, reverse, caseSensitive, stopCheck=lambda: False):
 		"""performs search in item list, via shell32 object."""
 		# reacquire curWindow for current thread
 		self.preCheck()  # No message on failure here as we cannot hit this code path if shell is not supported.
@@ -1025,7 +1058,7 @@ class CRList64(CRList):
 		# corresponding indexes to query info for each file
 		detailIndexes = []
 		# 500 limit seems reasonable (they are 300+ on my system!)
-		for index in rangeFunc(0,500):
+		for index in rangeFunc(0, 500):
 			# localized detail name, as "size"
 			detailName = curFolder.GetDetailsOf("", index)
 			# we get index corresponding to name, so update lists
@@ -1041,7 +1074,13 @@ class CRList64(CRList):
 		curPath = self.curWindow.LocationURL.rsplit("/", 1)[0][8:]
 		# we get from current path, to ensure precision
 		# also on external drives or different partitions (not verified)
-		getBytePerSector(ctypes.c_wchar_p(curPath), None, ctypes.pointer(bytePerSector), None, None,)
+		getBytePerSector(
+			ctypes.c_wchar_p(curPath),
+			None,
+			ctypes.pointer(bytePerSector),
+			None,
+			None,
+		)
 		listLen = curItem.positionInfo["similarItemsInGroup"]
 		# 1-based index
 		curIndex = curItem.positionInfo["indexInGroup"]
@@ -1049,13 +1088,13 @@ class CRList64(CRList):
 		items = curFolder.Items()
 		resIndex = None
 		if reverse:
-#			indexes = rangeFunc(curIndex-2,-1,-1)
+			# indexes = rangeFunc(curIndex-2,-1,-1)
 			# unfortunately, list pointer seems to change
 			# for each query in reverse order
 			# so, this range
-			indexes = rangeFunc(0,curIndex-1)
+			indexes = rangeFunc(0, curIndex - 1)
 		else:
-			indexes = rangeFunc(curIndex,listLen)
+			indexes = rangeFunc(curIndex, listLen)
 		for index in indexes:
 			# pointer to item
 			item = items.Item(index)
@@ -1066,23 +1105,25 @@ class CRList64(CRList):
 				# item.size returns  as file size in bytes
 				# but explorer shows file size on disk, in kilobytes...
 				if (detailIndex == 1) and not item.IsFolder:
-				# formula below is an optimization of ((item.size-1)/bytePerSector.value+1)*bytePerSector.value
-					diskSizeB = ((item.size-1)&~(bytePerSector.value-1))+bytePerSector.value if item.size>512 else 1024
-					diskSizeKB = int(round(diskSizeB/1024.0))
+					# formula below is an optimization of ((item.size-1)/bytePerSector.value+1)*bytePerSector.value
+					diskSizeB = (
+						((item.size - 1) & ~(bytePerSector.value - 1)) + bytePerSector.value
+						if item.size > 512
+						else 1024
+					)
+					diskSizeKB = int(round(diskSizeB / 1024.0))
 					# to insert thousands separator
-					formattedSize = locale.format_string('%d', diskSizeKB, True)
-					formattedSize = formattedSize if py3 else formattedSize.decode('mbcs')
-					explorerSize = ' '.join([formattedSize, "KB"])
+					formattedSize = locale.format_string("%d", diskSizeKB, True)
+					formattedSize = formattedSize if py3 else formattedSize.decode("mbcs")
+					explorerSize = " ".join([formattedSize, "KB"])
 					tempItemInfo.append(explorerSize)
 				else:
 					tempItemInfo.append(curFolder.GetDetailsOf(item, detailIndex))
 			# our reconstruction of item as shown in explorer
-			itemInfo = '; '.join(tempItemInfo)
+			itemInfo = "; ".join(tempItemInfo)
 			# finally, the search if
-			if (
-				(not caseSensitive and text.lower() in itemInfo.lower())
-				or
-				(caseSensitive and text in itemInfo)
+			if (not caseSensitive and text.lower() in itemInfo.lower()) or (
+				caseSensitive and text in itemInfo
 			):
 				resIndex = index
 				if not reverse:
@@ -1146,7 +1187,6 @@ class CRList64(CRList):
 
 
 class UIASuperGrid(CRList):
-
 	# flag to guarantee thread support,
 	# apparently, self-managed by UIAHandler.handler.MTAThreadFunc
 	THREAD_SUPPORTED = True
@@ -1157,17 +1197,21 @@ class UIASuperGrid(CRList):
 	def preCheck(self, featureKeys, onFailureMsg=None):
 		if self.UIAFeatures is None:
 			# check and cache results
-			self.UIAFeatures = {}.fromkeys(("selection","scroll","selectionItem", "grid"), False)
-			if hasattr(self, 'UIASelectionPattern') and self.UIASelectionPattern is not None:
+			self.UIAFeatures = {}.fromkeys(("selection", "scroll", "selectionItem", "grid"), False)
+			if hasattr(self, "UIASelectionPattern") and self.UIASelectionPattern is not None:
 				self.UIAFeatures["selection"] = True
 			# for some reason, NVDA does not expose UIAScrollPattern, so...
-			if hasattr(self, '_getUIAPattern') and self._getUIAPattern(UIAHandler.UIA_ScrollPatternId, UIAHandler.IUIAutomationScrollPattern) is not None:
+			if (
+				hasattr(self, "_getUIAPattern")
+				and self._getUIAPattern(UIAHandler.UIA_ScrollPatternId, UIAHandler.IUIAutomationScrollPattern)
+				is not None
+			):
 				self.UIAFeatures["scroll"] = True
-			if hasattr(self, 'UIAGridPattern') and self.UIAGridPattern is not None:
+			if hasattr(self, "UIAGridPattern") and self.UIAGridPattern is not None:
 				self.UIAFeatures["grid"] = True
 		# check everytime
 		focus = api.getFocusObject()
-		if hasattr(focus, 'UIASelectionItemPattern') and focus.UIASelectionItemPattern is not None:
+		if hasattr(focus, "UIASelectionItemPattern") and focus.UIASelectionItemPattern is not None:
 			self.UIAFeatures["selectionItem"] = True
 		res = all((self.UIAFeatures[x] for x in featureKeys))
 		if not res and onFailureMsg:
@@ -1178,7 +1222,7 @@ class UIASuperGrid(CRList):
 		curItem = api.getFocusObject()
 		if colNumber > curItem.childCount:
 			raise noColumnAtIndex
-		obj = curItem.getChild(colNumber-1)
+		obj = curItem.getChild(colNumber - 1)
 		# obj.name is the column content
 		if obj and obj.name and len(obj.name):
 			content = obj.name
@@ -1205,19 +1249,19 @@ class UIASuperGrid(CRList):
 		items = []
 		try:
 			selArray = self.UIASelectionPattern.GetCurrentSelection()
-			for index in rangeFunc(0,selArray.Length):
+			for index in rangeFunc(0, selArray.Length):
 				item = selArray.GetElement(index).CurrentName
 				items.append(item)
-		except AttributeError: # UIASelectionPattern absent or None
+		except AttributeError:  # UIASelectionPattern absent or None
 			pass
 		return items
 
 	def isMultipleSelectionSupported(self):
 		# currently, scrolling the list brings to previous selection lost,
 		# making this feature quite useless, so no support for now
-		#try:
-		#	return bool(self.UIASelectionPattern.CurrentCanSelectMultiple)
-		#except AttributeError: # UIASelectionPattern absent or None
+		# try:
+		# return bool(self.UIASelectionPattern.CurrentCanSelectMultiple)
+		# except AttributeError: # UIASelectionPattern absent or None
 		return False
 
 	def script_find(self, gesture, reverse=False):
@@ -1244,19 +1288,24 @@ class UIASuperGrid(CRList):
 	script_findPrevious.canPropagate = True
 	script_findPrevious.__doc__ = CRList.script_findPrevious.__doc__
 
-	def findInList(self, text, reverse, caseSensitive, stopCheck=lambda:False):
+	def findInList(self, text, reverse, caseSensitive, stopCheck=lambda: False):
 		# specific implementation
 		curItem = self.searchFromItem
 		curPos = curItem.positionInfo["indexInGroup"]
 		listLen = curItem.positionInfo["similarItemsInGroup"]
 		cl = UIAHandler.handler.clientObject
 		classCond = cl.CreatePropertyCondition(UIAHandler.UIA_ClassNamePropertyId, "LeafRow")
-		scrollManager = self._getUIAPattern(UIAHandler.UIA_ScrollPatternId, UIAHandler.IUIAutomationScrollPattern)
-		verticalAmount = UIAHandler.ScrollAmount_LargeDecrement if reverse else UIAHandler.ScrollAmount_LargeIncrement
+		scrollManager = self._getUIAPattern(
+			UIAHandler.UIA_ScrollPatternId,
+			UIAHandler.IUIAutomationScrollPattern,
+		)
+		verticalAmount = (
+			UIAHandler.ScrollAmount_LargeDecrement if reverse else UIAHandler.ScrollAmount_LargeIncrement
+		)
 		while True:
 			msgArr = self.UIAElement.FindAll(UIAHandler.TreeScope_Subtree, classCond)
 			if reverse:
-				indexes = rangeFunc(msgArr.Length-1, -1, -1)
+				indexes = rangeFunc(msgArr.Length - 1, -1, -1)
 			else:
 				indexes = rangeFunc(0, msgArr.Length)
 			for index in indexes:
@@ -1264,10 +1313,8 @@ class UIASuperGrid(CRList):
 				itemPos = item.GetCurrentPropertyValue(UIAHandler.UIA_PositionInSetPropertyId)
 				if (reverse and itemPos >= curPos) or (not reverse and itemPos <= curPos):
 					continue
-				if (
-					(not caseSensitive and text.lower() in item.CurrentName.lower())
-					or
-					(caseSensitive and text in item.CurrentName)
+				if (not caseSensitive and text.lower() in item.CurrentName.lower()) or (
+					caseSensitive and text in item.CurrentName
 				):
 					return item
 			if stopCheck():
@@ -1318,7 +1365,7 @@ class MozillaTable(CRList32):
 		# now, headers are not ordered as on screen,
 		# but we deduce the order thanks to top location of each header
 		headers.sort(key=lambda i: i.location)
-		return headers[index-1].name
+		return headers[index - 1].name
 
 	def getFixedNum(self, num):
 		return num
@@ -1338,21 +1385,21 @@ class MozillaTable(CRList32):
 		selCellArray, selCellNum = table.selectedCells
 		for row in rangeFunc(0, selRowNum):
 			# to scan cells of the row
-			rowRange = row*colNum
+			rowRange = row * colNum
 			itemCells = []
 			for col in rangeFunc(0, colNum):
-				if rowRange+col >= selCellNum:
+				if rowRange + col >= selCellNum:
 					# it should not happen, but if it is,
 					# subscripting cells crashes NVDA, so...
 					continue
 				try:
-					cellText = selCellArray[rowRange+col].QueryInterface(IAccessible2).accName[0]
+					cellText = selCellArray[rowRange + col].QueryInterface(IAccessible2).accName[0]
 					if cellText:
 						itemCells.append(cellText)
-				except COMError: # unexplicable, but happens
+				except COMError:  # unexplicable, but happens
 					pass
 			if itemCells:
-				item = ' '.join(itemCells)+";"
+				item = " ".join(itemCells) + ";"
 			items.append(item)
 		return items
 
@@ -1387,16 +1434,14 @@ class MozillaTable(CRList32):
 	script_findPrevious.canPropagate = True
 	script_findPrevious.__doc__ = CRList.script_findPrevious.__doc__
 
-	def findInList(self, text, reverse, caseSensitive, stopCheck=lambda:False):
+	def findInList(self, text, reverse, caseSensitive, stopCheck=lambda: False):
 		"""performs the search in item list, via NVDA object navigation (MozillaTable specific)."""
 		index = self.curPos
 		curItem = getNVDAObjectFromEvent(self.windowHandle, winUser.OBJID_CLIENT, index)
 		item = curItem.previous if reverse else curItem.next
-		while (item and item.role == curItem.role):
-			if (
-				(not caseSensitive and item.name and text.lower() in item.name.lower())
-				or
-				(caseSensitive and text in item.name)
+		while item and item.role == curItem.role:
+			if (not caseSensitive and item.name and text.lower() in item.name.lower()) or (
+				caseSensitive and text in item.name
 			):
 				resIndex = item.IAccessibleObject.uniqueID
 				return resIndex
@@ -1415,8 +1460,8 @@ class MozillaTable(CRList32):
 			res.IAccessibleObject.accSelect(SELFLAG_ADDSELECTION, res.IAccessibleChildID)
 			res.IAccessibleObject.accSelect(SELFLAG_TAKEFOCUS, res.IAccessibleChildID)
 		else:
-		 res.IAccessibleObject.accSelect(SELFLAG_TAKESELECTION, res.IAccessibleChildID)
-		 res.IAccessibleObject.accSelect(SELFLAG_TAKEFOCUS, res.IAccessibleChildID)
+			res.IAccessibleObject.accSelect(SELFLAG_TAKESELECTION, res.IAccessibleChildID)
+			res.IAccessibleObject.accSelect(SELFLAG_TAKEFOCUS, res.IAccessibleChildID)
 
 	def isEmptyList(self):
 		try:
@@ -1446,7 +1491,7 @@ class ThunderbirdSupernova(CRList32):
 		headerParent = self.getHeaderParent()
 		if not headerParent:
 			return None
-		headerObj = headerParent.getChild(index-1).firstChild
+		headerObj = headerParent.getChild(index - 1).firstChild
 		return headerObj.name
 
 	def getColumnData(self, colNumber):
@@ -1455,7 +1500,7 @@ class ThunderbirdSupernova(CRList32):
 		# list item as placed in first column
 		if (1 != colNumber > curItem.childCount) or (curItem.role == self.role):
 			raise noColumnAtIndex
-		cell = curItem.getChild(colNumber-1)
+		cell = curItem.getChild(colNumber - 1)
 		# None obj should be generated
 		# only in invisible column case
 		if not cell:
@@ -1494,52 +1539,53 @@ class ThunderbirdSupernova(CRList32):
 	def script_find(self, gesture, reverse=False):
 		# not fully working for now
 		ui.message(_("Cannot search here."))
-#		self.curPos = api.getFocusObject().IAccessibleObject.uniqueID
-#		super(ThunderbirdSupernova, self).script_find(gesture, reverse)
+
+	# self.curPos = api.getFocusObject().IAccessibleObject.uniqueID
+	# super(ThunderbirdSupernova, self).script_find(gesture, reverse)
 
 	script_find.canPropagate = True
 	script_find.__doc__ = CRList.script_find.__doc__
 
 	def script_findNext(self, gesture):
 		ui.message(_("Cannot search here."))
-#		self.curPos = api.getFocusObject().IAccessibleObject.uniqueID
-#		super(ThunderbirdSupernova, self).script_findNext(gesture)
+
+	# self.curPos = api.getFocusObject().IAccessibleObject.uniqueID
+	# super(ThunderbirdSupernova, self).script_findNext(gesture)
 
 	script_findNext.canPropagate = True
 	script_findNext.__doc__ = CRList.script_findNext.__doc__
 
 	def script_findPrevious(self, gesture):
 		ui.message(_("Cannot search here."))
-#		self.curPos = api.getFocusObject().IAccessibleObject.uniqueID
-#		super(ThunderbirdSupernova, self).script_findPrevious(gesture)
+
+	# self.curPos = api.getFocusObject().IAccessibleObject.uniqueID
+	# super(ThunderbirdSupernova, self).script_findPrevious(gesture)
 
 	script_findPrevious.canPropagate = True
 	script_findPrevious.__doc__ = CRList.script_findPrevious.__doc__
 
-	def findInList(self, text, reverse, caseSensitive, stopCheck=lambda:False):
+	def findInList(self, text, reverse, caseSensitive, stopCheck=lambda: False):
 		"""performs the search in item list, via NVDA object navigation (ThunderbirdSupernova specific)."""
 		index = self.curPos
 		curItem = getNVDAObjectFromEvent(self.windowHandle, winUser.OBJID_CLIENT, index)
 		item = curItem.previous if reverse else curItem.next
 		counter = -1
-		while (item and item.role == curItem.role):
+		while item and item.role == curItem.role:
 			counter += 1
-			debugLog("Search on item %d"%counter)
-			if (
-				(not caseSensitive and item.name and text.lower() in item.name.lower())
-				or
-				(caseSensitive and text in item.name)
+			debugLog("Search on item %d" % counter)
+			if (not caseSensitive and item.name and text.lower() in item.name.lower()) or (
+				caseSensitive and text in item.name
 			):
 				resIndex = item.IAccessibleObject.uniqueID
 				return resIndex
 			newItem = item.previous if reverse else item.next
 			if not newItem:
-				debugLog("Scrolled at %s"%item.name)
-#				from comInterfaces.IAccessible2Lib import IA2_SCROLL_TYPE_TOP_LEFT, IA2_SCROLL_TYPE_BOTTOM_RIGHT
-#				item.IAccessibleObject.scrollTo(IA2_SCROLL_TYPE_BOTTOM_RIGHT if reverse else IA2_SCROLL_TYPE_TOP_LEFT)
+				debugLog("Scrolled at %s" % item.name)
+				# from comInterfaces.IAccessible2Lib import IA2_SCROLL_TYPE_TOP_LEFT, IA2_SCROLL_TYPE_BOTTOM_RIGHT
+				# item.IAccessibleObject.scrollTo(IA2_SCROLL_TYPE_BOTTOM_RIGHT if reverse else IA2_SCROLL_TYPE_TOP_LEFT)
 				self.getFocusMovingMouse(item)
 				newItem = item.previous if reverse else item.next
-				debugLog("newItem: %s"%(newItem.name if newItem else None))
+				debugLog("newItem: %s" % (newItem.name if newItem else None))
 			item = newItem
 			if stopCheck():
 				break
@@ -1569,6 +1615,7 @@ class ThunderbirdSupernova(CRList32):
 		if subjectChild:
 			api.moveMouseToNVDAObject(subjectChild)
 			import mouseHandler
+
 			mouseHandler.doPrimaryClick()
 
 	def script_itemInfo(self, gesture):
@@ -1584,7 +1631,9 @@ class ThunderbirdSupernova(CRList32):
 			# Translators: Reported when information about position on a list cannot be retrieved.
 			ui.message(_("No information available"))
 		else:
-			info = ' '.join([NVDALocale("item"), NVDALocale("{number} of {total}").format(number=number, total=total)])
+			info = " ".join(
+				[NVDALocale("item"), NVDALocale("{number} of {total}").format(number=number, total=total)],
+			)
 			ui.message(info)
 
 	script_itemInfo.canPropagate = True
@@ -1599,7 +1648,6 @@ useMultipleSelection = False
 
 
 class CRTreeview(CRList32):
-
 	# flag to guarantee thread support
 	THREAD_SUPPORTED = False
 	supportsEmptyListAnnouncements = True
@@ -1613,7 +1661,7 @@ class CRTreeview(CRList32):
 		if (1 != colNumber > len(headers)) or (curItem.role == self.role):
 			raise noColumnAtIndex
 		try:
-			header = headers[colNumber-1].name
+			header = headers[colNumber - 1].name
 		except Exception:
 			header = None
 		# too few cases, it's all a big try...
@@ -1625,7 +1673,7 @@ class CRTreeview(CRList32):
 					nextHeader = ""
 				else:
 					nextHeader = headers[colNumber].name
-				content = curItem.description.split("%s: "%header, 1)[1].split(", %s: "%nextHeader, 1)[0]
+				content = curItem.description.split("%s: " % header, 1)[1].split(", %s: " % nextHeader, 1)[0]
 		except Exception:
 			content = None
 		return {"columnContent": content, "columnHeader": header}
@@ -1633,7 +1681,7 @@ class CRTreeview(CRList32):
 	def getHeaderParent(self):
 		return self.simplePrevious
 
-	def findInList(self, text, reverse, caseSensitive, stopCheck=lambda:False):
+	def findInList(self, text, reverse, caseSensitive, stopCheck=lambda: False):
 		"""performs search in item list, via object handles."""
 		# specific implementation
 		fg = api.getForegroundObject()
@@ -1648,40 +1696,34 @@ class CRTreeview(CRList32):
 		# 1-based index
 		curIndex = curItem.positionInfo["indexInGroup"]
 		if reverse:
-			indexes = rangeFunc(curIndex-1,0,-1)
+			indexes = rangeFunc(curIndex - 1, 0, -1)
 		else:
-			indexes = rangeFunc(curIndex+1,listLen+1)
+			indexes = rangeFunc(curIndex + 1, listLen + 1)
 		for index in indexes:
 			item = getNVDAObjectFromEvent(self.windowHandle, winUser.OBJID_CLIENT, index)
 			if not item or not item.name:
 				continue
 			if (
 				(not caseSensitive and text.lower() in item.name.lower())
-				or
-				(not caseSensitive and text.lower() in item.description.lower())
-				or
-				(caseSensitive and text in item.name)
-				or
-				(caseSensitive and text in item.description)
+				or (not caseSensitive and text.lower() in item.description.lower())
+				or (caseSensitive and text in item.name)
+				or (caseSensitive and text in item.description)
 			):
 				return item
 			if stopCheck():
 				break
 
-	def genericFindInList(self, text, reverse, caseSensitive, stopCheck=lambda:False):
+	def genericFindInList(self, text, reverse, caseSensitive, stopCheck=lambda: False):
 		"""performs the search in treeview, via NVDA object navigation."""
 		# generic implementation
 		curItem = self.searchFromItem
 		item = curItem.previous if reverse else curItem.next
-		while (item and item.role == curItem.role):
+		while item and item.role == curItem.role:
 			if (
 				(not caseSensitive and item.name and text.lower() in item.name.lower())
-				or
-				(not caseSensitive and item.description and text.lower() in item.description.lower())
-				or
-				(caseSensitive and text in item.name)
-				or
-				(caseSensitive and text in item.description)
+				or (not caseSensitive and item.description and text.lower() in item.description.lower())
+				or (caseSensitive and text in item.name)
+				or (caseSensitive and text in item.description)
 			):
 				return item
 			item = item.previous if reverse else item.next
@@ -1697,20 +1739,24 @@ class CRTreeview(CRList32):
 		resIndex = res.positionInfo["indexInGroup"]
 		# sometime, due to list updates, items/indexes may differ
 		if foundIndex != resIndex:
-			res = getNVDAObjectFromEvent(self.windowHandle, winUser.OBJID_CLIENT, foundIndex+(foundIndex-resIndex))
+			res = getNVDAObjectFromEvent(
+				self.windowHandle,
+				winUser.OBJID_CLIENT,
+				foundIndex + (foundIndex - resIndex),
+			)
 		if useMultipleSelection:
 			res.IAccessibleObject.accSelect(SELFLAG_ADDSELECTION | SELFLAG_TAKEFOCUS, res.IAccessibleChildID)
 		else:
-		 res.IAccessibleObject.accSelect(SELFLAG_TAKESELECTION | SELFLAG_TAKEFOCUS, res.IAccessibleChildID)
+			res.IAccessibleObject.accSelect(SELFLAG_TAKESELECTION | SELFLAG_TAKEFOCUS, res.IAccessibleChildID)
 
 	def getSelectedItems(self):
 		# generic (slow) implementation
 		curItem = api.getFocusObject()
 		items = []
 		item = self.firstChild
-		while (item and item.role == curItem.role):
+		while item and item.role == curItem.role:
 			if states.SELECTED in item.states:
-				itemName = ' '.join([item.name, item.description])
+				itemName = " ".join([item.name, item.description])
 				if itemName:
 					items.append(itemName)
 			item = item.next
@@ -1726,7 +1772,6 @@ class CRTreeview(CRList32):
 
 
 class Finder(Thread):
-
 	STATUS_NOT_STARTED = 1
 	STATUS_RUNNING = 2
 	STATUS_COMPLETE = 3
