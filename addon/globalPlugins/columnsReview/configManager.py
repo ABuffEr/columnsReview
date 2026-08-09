@@ -1,5 +1,6 @@
 # -*- coding: UTF-8 -*-
 import config
+
 try:
 	from configobj.validate import is_boolean
 except ImportError:
@@ -7,7 +8,6 @@ except ImportError:
 
 
 class ConfigFromObject(object):
-
 	def __init__(self, obj):
 		self.obj = obj
 		try:
@@ -35,11 +35,15 @@ class ConfigFromObject(object):
 				if getattr(config.conf._profileCache[profileName], "manual", False):
 					res.append(config.conf._profileCache[config.conf.profiles[-1].name])
 			try:
-				res.append(config.conf._profileCache[config.conf.triggersToProfiles[self.possibleTriggerName]])
+				res.append(
+					config.conf._profileCache[config.conf.triggersToProfiles[self.possibleTriggerName]],
+				)
 			except KeyError:
 				try:
 					config.conf._getProfile(config.conf.triggersToProfiles[self.possibleTriggerName])
-					res.append(config.conf._profileCache[config.conf.triggersToProfiles[self.possibleTriggerName]])
+					res.append(
+						config.conf._profileCache[config.conf.triggersToProfiles[self.possibleTriggerName]],
+					)
 				except KeyError:
 					pass
 			res.append(config.conf._profileCache[None])  # Default config

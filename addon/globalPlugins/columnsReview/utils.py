@@ -14,7 +14,6 @@ def getRowsReaderSuperClass():
 
 
 class _RowsReader(getRowsReaderSuperClass()):
-
 	def walk(self, obj):
 		yield obj
 		nextObj = obj.next
@@ -25,12 +24,15 @@ class _RowsReader(getRowsReaderSuperClass()):
 	@classmethod
 	def readRows(cls, obj):
 		import weakref
+
 		try:
 			import sayAllHandler
+
 			reader = cls(obj)
 			sayAllHandler._activeSayAll = weakref.ref(reader)
 		except ImportError:
 			import speech.sayAll
+
 			reader = cls(speech.sayAll.SayAllHandler, obj)
 			speech.sayAll.SayAllHandler._getActiveSayAll = weakref.ref(reader)
 		reader.next()
