@@ -826,6 +826,14 @@ class CRList32(CRList):
 	def getFixedNum(self, num):
 		curItem = api.getFocusObject()
 		child = curItem.simpleFirstChild
+		# Some list implementations report childCount > 0 but expose no simple
+		# first child object (seen with wxWidgets wxListCtrl on recent wxWidgets
+		# builds). Without a first column we can't compute an invisible-column
+		# offset, so fall back to treating the pressed number as the 1-based
+		# column index instead of crashing on child.columnNumber (issue: bare
+		# Alt/NVDA+Ctrl+n raised "'NoneType' object has no attribute 'columnNumber'").
+		if child is None or child.columnNumber is None:
+			return num
 		startNum = child.columnNumber - 1
 		if num == 1:
 			return startNum + 1
