@@ -21,7 +21,7 @@ jobs:
 
     steps:
     - name: Checkout repo
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
     - name: Install uv
       uses: astral-sh/setup-uv@v7
       with:
@@ -33,7 +33,11 @@ jobs:
         uv sync
 
     - name: Code checks
-      run: export SKIP=no-commit-to-branch; uv run pre-commit run --all-files
+      # Pyright is skipped here for the same reason .pre-commit-config.yaml skips it on
+      # pre-commit.ci: it needs the NVDA source tree at ../nvda/source (see the extraPaths
+      # setting in pyproject.toml), which is not available on the runner, so every NVDA
+      # import is unresolved and the hook can never pass.
+      run: export SKIP=no-commit-to-branch,pyright; uv run pre-commit run --all-files
 
     - name: building addon
       run: uv run scons && uv run scons pot
@@ -59,7 +63,7 @@ jobs:
     permissions:
       contents: write
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     - name: download all artifacts
       uses: actions/download-artifact@v8
       with:

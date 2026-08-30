@@ -53,8 +53,8 @@ class ReadAction(Action):
 		if not columnHeader or config.conf["columnsReview"]["general"]["readHeader"] is False:
 			columnHeader = ""
 		else:
-			columnHeader = u"{}: ".format(columnHeader)
-		ui.message(u"{0}{1}".format(columnHeader, columnContent))
+			columnHeader = "{}: ".format(columnHeader)
+		ui.message("{0}{1}".format(columnHeader, columnContent))
 
 
 class CopyAction(Action):
@@ -72,8 +72,8 @@ class CopyAction(Action):
 		if not columnHeader or config.conf["columnsReview"]["general"]["copyHeader"] is False:
 			columnHeader = ""
 		else:
-			columnHeader = u"{}: ".format(columnHeader)
-		res = u"{0}{1}".format(columnHeader, columnContent)
+			columnHeader = "{}: ".format(columnHeader)
+		res = "{0}{1}".format(columnHeader, columnContent)
 		if api.copyToClip(res):
 			# Translators: message announcing what was copied
 			ui.message(NVDALocale("Copied to clipboard: {text}").format(text=res))
@@ -110,7 +110,7 @@ class DisplayAction(Action):
 			ui.message(_("Empty column"))
 			return
 		if not columnHeader:
-			columnHeader = u""
+			columnHeader = ""
 		elif currentVersion < (2023, 3, 3):
 			# code partially from Character Information add-on
 			# for security advisory GHSA-xg6w-23rw-39r8.
@@ -127,13 +127,7 @@ class DisplayAction(Action):
 
 # List of actions in order in which they appear in the  GUI
 # when implementing a new one please add it at the end.
-ACTIONS = (
-	NoAction(),
-	ReadAction(),
-	CopyAction(),
-	SpellAction(),
-	DisplayAction()
-)
+ACTIONS = (NoAction(), ReadAction(), CopyAction(), SpellAction(), DisplayAction())
 
 
 def actionFromName(name):
@@ -141,10 +135,7 @@ def actionFromName(name):
 	if not matchingActions:
 		raise RuntimeError("Action named %s  does not exist" % (name))
 	if len(matchingActions) > 1:
-		raise RuntimeError(
-			"More than one action with such name exist."
-			"This is unexpected."
-		)
+		raise RuntimeError("More than one action with such name exist.This is unexpected.")
 	return matchingActions[0]
 
 

@@ -6,9 +6,9 @@ try:
 except ModuleNotFoundError:  # Python 3
 	from io import StringIO
 from configobj import ConfigObj
-from . actions import ACTIONS
+from .actions import ACTIONS
 
-configSpecString = ("""
+configSpecString = """
 [general]
 	readHeader = boolean(default=True)
 	copyHeader = boolean(default=True)
@@ -33,6 +33,6 @@ configSpecString = ("""
 	press2 = option({actionNames} default="copy")
 	press3 = option({actionNames} default="noAction")
 	press4 = option({actionNames} default="noAction")
-""".format(actionNames=''.join('"{}", '.format(action.name) for action in ACTIONS)[:-1]))
+""".format(actionNames="".join('"{}", '.format(action.name) for action in ACTIONS)[:-1])
 confspec = ConfigObj(StringIO(configSpecString), list_values=False, encoding="UTF-8")
 confspec.newlines = "\r\n"

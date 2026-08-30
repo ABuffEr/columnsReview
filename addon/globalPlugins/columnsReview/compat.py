@@ -2,6 +2,7 @@
 # Provides various stuff used to preserve compatibility with older releases of NVDA.
 
 import controlTypes
+
 try:
 	from buildVersion import version_year, version_major, version_minor
 except ImportError:
@@ -16,7 +17,6 @@ else:
 
 
 class EnhancedGetter(object):
-
 	def __init__(self, modWithAttrs, baseAttrName, gettersToTry):
 		super(EnhancedGetter, self).__init__()
 		self.mod = modWithAttrs
@@ -33,7 +33,6 @@ class EnhancedGetter(object):
 
 
 class ControlTypesCompatWrapper(object):
-
 	def __init__(self):
 		super(ControlTypesCompatWrapper, self).__init__()
 		self.Role = EnhancedGetter(
@@ -42,7 +41,7 @@ class ControlTypesCompatWrapper(object):
 			[
 				lambda mod, bName, name: getattr(mod, "{0}_{1}".format(bName.upper(), name)),
 				lambda mod, bName, name: getattr(getattr(mod, bName), name),
-			]
+			],
 		)
 		self.State = EnhancedGetter(
 			controlTypes,
@@ -50,7 +49,7 @@ class ControlTypesCompatWrapper(object):
 			[
 				lambda mod, bName, name: getattr(mod, "{0}_{1}".format(bName.upper(), name)),
 				lambda mod, bName, name: getattr(getattr(mod, bName), name),
-			]
+			],
 		)
 
 
@@ -60,11 +59,12 @@ CTWRAPPER = ControlTypesCompatWrapper()
 def rangeFunc(*args, **kwargs):
 	try:
 		import six
+
 		return six.moves.range(*args, **kwargs)
 	except ImportError:
 		try:
 			import __builtin__
+
 			return __builtin__.xrange(*args, **kwargs)
 		except ImportError:
 			return range(*args, **kwargs)
-
