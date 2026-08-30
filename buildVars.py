@@ -10,7 +10,6 @@ from site_scons.site_tools.NVDATool.typings import AddonInfo, BrailleTables, Sym
 # which returns whatever is given to it as an argument.
 from site_scons.site_tools.NVDATool.utils import _
 
-
 # Add-on information variables
 addon_info = AddonInfo(
 	# add-on Name/identifier, internal for NVDA
@@ -18,7 +17,7 @@ addon_info = AddonInfo(
 	# Add-on summary/title, usually the user visible name of the add-on
 	# Translators: Summary/title for this add-on
 	# to be shown on installation and add-on information found in add-on store
-	addon_summary=_("Columns Review"),
+	addon_summary=_("""Columns Review"""),
 	# Add-on description
 	# Translators: Long description to be shown for this add-on on add-on information from add-on store
 	addon_description=_("""A better experience with lists"""),
@@ -57,7 +56,7 @@ addon_info = AddonInfo(
 # pythonSources = ["addon/globalPlugins/*.py"]
 # For more information on SCons Glob expressions please take a look at:
 # https://scons.org/doc/production/HTML/scons-user/apd.html
-pythonSources: list[str] = ["addon/globalPlugins/columnsReview/*.py", "addon/installTasks.py"]
+pythonSources: list[str] = ['addon/globalPlugins/columnsReview/*.py', 'addon/installTasks.py']
 
 # Files that contain strings for translation. Usually your python sources
 i18nSources: list[str] = pythonSources + ["buildVars.py"]
@@ -72,7 +71,7 @@ excludedFiles: list[str] = []
 # If your add-on is written in a language other than english, modify this variable.
 # For example, set baseLanguage to "es" if your add-on is primarily written in spanish.
 # You must also edit .gitignore file to specify base language files to be ignored.
-baseLanguage: str = "en"
+baseLanguage: str = 'en'
 
 # Markdown extensions for add-on documentation
 # Most add-ons do not require additional Markdown extensions.

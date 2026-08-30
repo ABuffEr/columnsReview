@@ -10,6 +10,7 @@ on:
     branches: [ main, master ]
 
   workflow_dispatch:
+  workflow_call:
 
 jobs:
   build:
@@ -23,7 +24,7 @@ jobs:
     - name: Checkout repo
       uses: actions/checkout@v7
     - name: Install uv
-      uses: astral-sh/setup-uv@v7
+      uses: astral-sh/setup-uv@v10.0.1
       with:
         enable-cache: true
     - name: Install dependencies
@@ -33,11 +34,7 @@ jobs:
         uv sync
 
     - name: Code checks
-      # Pyright is skipped here for the same reason .pre-commit-config.yaml skips it on
-      # pre-commit.ci: it needs the NVDA source tree at ../nvda/source (see the extraPaths
-      # setting in pyproject.toml), which is not available on the runner, so every NVDA
-      # import is unresolved and the hook can never pass.
-      run: export SKIP=no-commit-to-branch,pyright; uv run pre-commit run --all-files
+      run: export PREK_SKIP=no-commit-to-branch; uv run prek run --all-files
 
     - name: building addon
       run: uv run scons && uv run scons pot
