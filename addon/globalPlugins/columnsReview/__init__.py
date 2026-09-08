@@ -39,6 +39,7 @@ from tones import beep
 import addonHandler
 import api
 import braille
+from braille.regions.base import TextRegion
 import config
 import core
 import ctypes
@@ -690,7 +691,7 @@ class CRList(object):
 			return
 		brlText = " {0}".format(text)
 		if regions[-1].rawText != brlText:
-			newRegion = braille.TextRegion(brlText)
+			newRegion = TextRegion(brlText)
 			newRegion.focusToHardLeft = True
 			newRegion.update()
 			regions.append(newRegion)
