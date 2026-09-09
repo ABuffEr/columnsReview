@@ -4,6 +4,12 @@
 import controlTypes
 
 try:
+	from braille.regions.base import TextRegion as TextRegion
+except ImportError:
+	# NVDA before 2027.1 exposes TextRegion directly in braille.
+	from braille import TextRegion as TextRegion
+
+try:
 	from buildVersion import version_year, version_major, version_minor
 except ImportError:
 	from versionInfo import version_year, version_major, version_minor

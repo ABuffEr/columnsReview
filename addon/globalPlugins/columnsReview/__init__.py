@@ -39,7 +39,6 @@ from tones import beep
 import addonHandler
 import api
 import braille
-from braille.regions.base import TextRegion
 import config
 import core
 import ctypes
@@ -60,7 +59,7 @@ from NVDAObjects.IAccessible.mozilla import TextLeaf as MozillaTextLeaf
 
 from .actions import ACTIONS, actionFromName, configuredActions
 from .commonFunc import NVDALocale, findAllDescendantWindows, getScriptGestures
-from .compat import CTWRAPPER, zeroItemsTemplate, rangeFunc
+from .compat import CTWRAPPER, TextRegion, zeroItemsTemplate, rangeFunc
 from . import configManager
 from . import configSpec
 from . import dialogs
@@ -928,7 +927,7 @@ class CRList32(CRList):
 				parentHandle,
 				sysListView32.LVM_GETNEXTITEM,
 				selItemIndex,
-				ctypes.c_void_p(sysListView32.LVNI_SELECTED)
+				ctypes.c_void_p(sysListView32.LVNI_SELECTED),
 			)
 		return items
 
