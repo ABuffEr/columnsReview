@@ -59,7 +59,7 @@ from NVDAObjects.IAccessible.mozilla import TextLeaf as MozillaTextLeaf
 
 from .actions import ACTIONS, actionFromName, configuredActions
 from .commonFunc import NVDALocale, findAllDescendantWindows, getScriptGestures
-from .compat import CTWRAPPER, zeroItemsTemplate, rangeFunc
+from .compat import CTWRAPPER, TextRegion, zeroItemsTemplate, rangeFunc
 from . import configManager
 from . import configSpec
 from . import dialogs
@@ -690,7 +690,7 @@ class CRList(object):
 			return
 		brlText = " {0}".format(text)
 		if regions[-1].rawText != brlText:
-			newRegion = braille.TextRegion(brlText)
+			newRegion = TextRegion(brlText)
 			newRegion.focusToHardLeft = True
 			newRegion.update()
 			regions.append(newRegion)
@@ -927,7 +927,7 @@ class CRList32(CRList):
 				parentHandle,
 				sysListView32.LVM_GETNEXTITEM,
 				selItemIndex,
-				ctypes.c_void_p(sysListView32.LVNI_SELECTED)
+				ctypes.c_void_p(sysListView32.LVNI_SELECTED),
 			)
 		return items
 
